@@ -31,7 +31,7 @@ jobs:
       - name: Build jd3-main snapshots
         run: |
           git clone -b develop --single-branch --depth=1 https://github.com/jdemetra/jd3-main.git jd3-main
-          mvn -B install -Denforcer.skip -Dmodernizer.skip -Dheylogs.skip -DskipTests -T1C -f ./jd3-main/pom.xml
+          mvn -B install -Pfast-build -DskipTests -T1C -f ./jd3-main/pom.xml
 
       - name: Build and (headless) test with Maven
         uses: GabrielBB/xvfb-action@v1
