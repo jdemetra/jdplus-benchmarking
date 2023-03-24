@@ -51,7 +51,7 @@ public class CubicSpline {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT)
+    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
     public interface Processor {
 
         TsData benchmark(TsData highFreqSeries, TsData aggregationConstraint, CubicSplineSpec spec);

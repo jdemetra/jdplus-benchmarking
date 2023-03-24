@@ -53,7 +53,7 @@ public class TemporalDisaggregation {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT)
+    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
     public interface Processor {
 
         ProcResults process(TsData aggregatedSeries, TsData[] indicators, TemporalDisaggregationSpec spec, List<String> items);

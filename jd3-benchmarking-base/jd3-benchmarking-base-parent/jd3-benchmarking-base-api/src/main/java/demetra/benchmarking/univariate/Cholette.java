@@ -46,7 +46,7 @@ public class Cholette {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT)
+    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
     @FunctionalInterface
     public static interface Processor {
 
