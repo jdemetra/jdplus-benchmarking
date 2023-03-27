@@ -5,14 +5,14 @@
 
     <parent>
         <groupId>eu.europa.ec.joinup.sat</groupId>
-        <artifactId>jd3-benchmarking</artifactId>
+        <artifactId>jdplus-benchmarking</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jd3-benchmarking-desktop</artifactId>
+    <artifactId>jdplus-benchmarking-desktop</artifactId>
     <packaging>pom</packaging>
 
-    <name>jd3-benchmarking-desktop</name>
+    <name>jdplus-benchmarking-desktop</name>
 
     <properties>
         <!-- dependencies -->
@@ -20,7 +20,7 @@
     </properties>
 
     <modules>
-        <module>jd3-benchmarking-desktop-plugin</module>
+        <module>jdplus-benchmarking-desktop-plugin</module>
     </modules>
 
     <build>

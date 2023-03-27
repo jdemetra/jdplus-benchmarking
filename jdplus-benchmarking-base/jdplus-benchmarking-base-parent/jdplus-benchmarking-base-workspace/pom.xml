@@ -4,33 +4,28 @@
 
     <parent>
         <groupId>eu.europa.ec.joinup.sat</groupId>
-        <artifactId>jd3-benchmarking-base-parent</artifactId>
+        <artifactId>jdplus-benchmarking-base-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jd3-benchmarking-base-api</artifactId>
+    <artifactId>jdplus-benchmarking-base-workspace</artifactId>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
     <description>${project.parent.artifactId} - ${project.artifactId}</description>
     <url>${project.parent.url}</url>
-    
+
     <dependencies>
         <!-- compile and runtime -->
         <dependency>
             <groupId>eu.europa.ec.joinup.sat</groupId>
-            <artifactId>jd3-toolkit-base-api</artifactId>
-            <version>${jd3-main.version}</version>
+            <artifactId>jdplus-benchmarking-base-information</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
-        <!-- test only -->
         <dependency>
             <groupId>eu.europa.ec.joinup.sat</groupId>
-            <artifactId>jd3-toolkit-base-api</artifactId>
-            <version>${jd3-main.version}</version>
-            <classifier>tests</classifier>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <artifactId>jdplus-toolkit-base-workspace</artifactId>
+            <version>${jdplus-main.version}</version>
         </dependency>
-    </dependencies>
+     </dependencies>
 </project>

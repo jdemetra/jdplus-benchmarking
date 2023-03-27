@@ -4,11 +4,11 @@
 
     <parent>
         <groupId>eu.europa.ec.joinup.sat</groupId>
-        <artifactId>jd3-benchmarking-base</artifactId>
+        <artifactId>jdplus-benchmarking-base</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jd3-benchmarking-base-parent</artifactId>
+    <artifactId>jdplus-benchmarking-base-parent</artifactId>
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
@@ -16,11 +16,11 @@
     <url>${project.parent.url}</url>
 
     <modules>
-        <module>jd3-benchmarking-base-api</module>
-        <module>jd3-benchmarking-base-core</module>
-        <module>jd3-benchmarking-base-information</module>
-        <module>jd3-benchmarking-base-protobuf</module>
-        <module>jd3-benchmarking-base-r</module>
-        <module>jd3-benchmarking-base-workspace</module>
+        <module>jdplus-benchmarking-base-api</module>
+        <module>jdplus-benchmarking-base-core</module>
+        <module>jdplus-benchmarking-base-information</module>
+        <module>jdplus-benchmarking-base-protobuf</module>
+        <module>jdplus-benchmarking-base-r</module>
+        <module>jdplus-benchmarking-base-workspace</module>
     </modules>
 </project>
