@@ -7,5 +7,5 @@ module jdplus.benchmarking.base.protobuf {
 
     requires transitive jdplus.benchmarking.base.api;
 
-    exports demetra.benchmarking.io.protobuf;
+    exports jdplus.benchmarking.base.protobuf;
 }

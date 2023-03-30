@@ -10,5 +10,5 @@ module jdplus.benchmarking.base.r {
     requires jdplus.benchmarking.base.core;
     requires jdplus.toolkit.base.r;
 
-    exports demetra.benchmarking.r;
+    exports jdplus.benchmarking.base.r;
 }

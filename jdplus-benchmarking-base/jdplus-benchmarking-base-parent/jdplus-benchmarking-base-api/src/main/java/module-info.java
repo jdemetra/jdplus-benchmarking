@@ -1,3 +1,11 @@
+import jdplus.benchmarking.base.api.benchmarking.multivariate.MultivariateCholette;
+import jdplus.benchmarking.base.api.benchmarking.univariate.Cholette;
+import jdplus.benchmarking.base.api.benchmarking.univariate.CubicSpline;
+import jdplus.benchmarking.base.api.benchmarking.univariate.Denton;
+import jdplus.benchmarking.base.api.benchmarking.univariate.GrowthRatePreservation;
+import jdplus.benchmarking.base.api.calendarization.Calendarization;
+import jdplus.benchmarking.base.api.univariate.TemporalDisaggregation;
+
 module jdplus.benchmarking.base.api {
 
     requires static lombok;
@@ -7,17 +15,17 @@ module jdplus.benchmarking.base.api {
 
     requires jdplus.toolkit.base.api;
 
-    exports demetra.benchmarking;
-    exports demetra.benchmarking.multivariate;
-    exports demetra.benchmarking.univariate;
-    exports demetra.calendarization;
-    exports demetra.tempdisagg.univariate;
+    exports jdplus.benchmarking.base.api.benchmarking;
+    exports jdplus.benchmarking.base.api.benchmarking.multivariate;
+    exports jdplus.benchmarking.base.api.benchmarking.univariate;
+    exports jdplus.benchmarking.base.api.calendarization;
+    exports jdplus.benchmarking.base.api.univariate;
 
-    uses demetra.benchmarking.univariate.Denton.Processor;
-    uses demetra.benchmarking.univariate.CubicSpline.Processor;
-    uses demetra.benchmarking.multivariate.MultivariateCholette.Processor;
-    uses demetra.calendarization.Calendarization.Processor;
-    uses demetra.benchmarking.univariate.Cholette.Processor;
-    uses demetra.tempdisagg.univariate.TemporalDisaggregation.Processor;
-    uses demetra.benchmarking.univariate.GrowthRatePreservation.Processor;
+    uses Denton.Processor;
+    uses CubicSpline.Processor;
+    uses MultivariateCholette.Processor;
+    uses Calendarization.Processor;
+    uses Cholette.Processor;
+    uses TemporalDisaggregation.Processor;
+    uses GrowthRatePreservation.Processor;
 }

@@ -1,3 +1,17 @@
+import jdplus.benchmarking.base.api.benchmarking.multivariate.MultivariateCholette;
+import jdplus.benchmarking.base.api.benchmarking.univariate.Cholette;
+import jdplus.benchmarking.base.api.benchmarking.univariate.CubicSpline;
+import jdplus.benchmarking.base.api.benchmarking.univariate.Denton;
+import jdplus.benchmarking.base.api.benchmarking.univariate.GrowthRatePreservation;
+import jdplus.benchmarking.base.api.calendarization.Calendarization;
+import jdplus.benchmarking.base.core.benchmarking.multivariate.MultivariateCholetteProcessor;
+import jdplus.benchmarking.base.core.benchmarking.univariate.CholetteProcessor;
+import jdplus.benchmarking.base.core.benchmarking.univariate.CubicSplineProcessor;
+import jdplus.benchmarking.base.core.benchmarking.univariate.DentonProcessor;
+import jdplus.benchmarking.base.core.benchmarking.univariate.GRPProcessor;
+import jdplus.benchmarking.base.core.calendarization.CalendarizationProcessor;
+import jdplus.toolkit.base.api.information.InformationExtractor;
+
 module jdplus.benchmarking.base.core {
 
     requires static lombok;
@@ -9,35 +23,35 @@ module jdplus.benchmarking.base.core {
     requires jdplus.toolkit.base.api;
     requires jdplus.toolkit.base.core;
 
-    exports jdplus.benchmarking.extractors;
-    exports jdplus.benchmarking.multivariate;
-    exports jdplus.benchmarking.univariate;
-    exports jdplus.calendarization;
-    exports jdplus.tempdisagg.univariate;
+    exports jdplus.benchmarking.base.core.benchmarking.extractors;
+    exports jdplus.benchmarking.base.core.benchmarking.multivariate;
+    exports jdplus.benchmarking.base.core.benchmarking.univariate;
+    exports jdplus.benchmarking.base.core.calendarization;
+    exports jdplus.benchmarking.base.core.univariate;
 
-    provides demetra.benchmarking.multivariate.MultivariateCholette.Processor with
-            jdplus.benchmarking.multivariate.MultivariateCholetteProcessor;
+    provides MultivariateCholette.Processor with
+            MultivariateCholetteProcessor;
 
-    provides demetra.information.InformationExtractor with
-            jdplus.benchmarking.extractors.TemporalDisaggregationExtractor,
-            jdplus.benchmarking.extractors.TemporalDisaggregationIExtractor,
-            jdplus.benchmarking.extractors.ModelBasedDentonExtractor,
-            jdplus.benchmarking.extractors.BenchmarkingResultsExtractor,
-            jdplus.benchmarking.extractors.CalendarizationExtractor,
-            jdplus.benchmarking.extractors.ResidualsDiagnosticsExtractor;
+    provides InformationExtractor with
+            jdplus.benchmarking.base.core.benchmarking.extractors.TemporalDisaggregationExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.TemporalDisaggregationIExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.ModelBasedDentonExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.BenchmarkingResultsExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.CalendarizationExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor;
 
-    provides demetra.calendarization.Calendarization.Processor with
-            jdplus.calendarization.CalendarizationProcessor;
+    provides Calendarization.Processor with
+            CalendarizationProcessor;
 
-    provides demetra.benchmarking.univariate.CubicSpline.Processor with
-            jdplus.benchmarking.univariate.CubicSplineProcessor;
+    provides CubicSpline.Processor with
+            CubicSplineProcessor;
 
-    provides demetra.benchmarking.univariate.Cholette.Processor with
-            jdplus.benchmarking.univariate.CholetteProcessor;
+    provides Cholette.Processor with
+            CholetteProcessor;
 
-    provides demetra.benchmarking.univariate.Denton.Processor with
-            jdplus.benchmarking.univariate.DentonProcessor;
+    provides Denton.Processor with
+            DentonProcessor;
 
-    provides demetra.benchmarking.univariate.GrowthRatePreservation.Processor with
-            jdplus.benchmarking.univariate.GRPProcessor;
+    provides GrowthRatePreservation.Processor with
+            GRPProcessor;
 }

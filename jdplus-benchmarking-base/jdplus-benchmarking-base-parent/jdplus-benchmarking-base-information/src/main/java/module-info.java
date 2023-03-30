@@ -8,5 +8,5 @@ module jdplus.benchmarking.base.information {
     requires transitive jdplus.benchmarking.base.api;
     requires jdplus.toolkit.base.api;
 
-    exports demetra.benchmarking.io.information;
+    exports jdplus.benchmarking.base.information;
 }

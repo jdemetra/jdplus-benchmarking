@@ -1,3 +1,6 @@
+import jdplus.benchmarking.base.workspace.BenchmarkingHandlers;
+import jdplus.toolkit.base.workspace.file.spi.FamilyHandler;
+
 module jdplus.benchmarking.base.workspace {
 
     requires static lombok;
@@ -12,10 +15,10 @@ module jdplus.benchmarking.base.workspace {
     requires jdplus.toolkit.base.workspace;
     requires jdplus.benchmarking.base.core;
 
-    exports demetra.benchmarking.workspace;
+    exports jdplus.benchmarking.base.workspace;
 
-    provides demetra.workspace.file.spi.FamilyHandler with
-            demetra.benchmarking.workspace.BenchmarkingHandlers.DocDenton,
-            demetra.benchmarking.workspace.BenchmarkingHandlers.DocCholette,
-            demetra.benchmarking.workspace.BenchmarkingHandlers.DocTemporalDisaggregation;
+    provides FamilyHandler with
+            BenchmarkingHandlers.DocDenton,
+            BenchmarkingHandlers.DocCholette,
+            BenchmarkingHandlers.DocTemporalDisaggregation;
 }
