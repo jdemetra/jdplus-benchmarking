@@ -17,8 +17,8 @@
 package jdplus.benchmarking.desktop.plugin.benchmarking.descriptors;
 
 import jdplus.benchmarking.base.api.benchmarking.univariate.DentonSpec;
-import demetra.desktop.descriptors.EnhancedPropertyDescriptor;
-import demetra.desktop.descriptors.IObjectDescriptor;
+import jdplus.toolkit.desktop.plugin.descriptors.EnhancedPropertyDescriptor;
+import jdplus.toolkit.desktop.plugin.descriptors.IObjectDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;

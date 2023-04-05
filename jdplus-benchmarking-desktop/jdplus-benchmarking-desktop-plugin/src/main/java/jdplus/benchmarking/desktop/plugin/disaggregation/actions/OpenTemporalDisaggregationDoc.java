@@ -5,9 +5,9 @@
 package jdplus.benchmarking.desktop.plugin.disaggregation.actions;
 
 import jdplus.benchmarking.desktop.plugin.disaggregation.documents.TemporalDisaggregationDocumentManager;
-import demetra.desktop.workspace.WorkspaceItem;
-import demetra.desktop.workspace.nodes.WsNode;
-import demetra.desktop.workspace.DocumentUIServices;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
+import jdplus.toolkit.desktop.plugin.workspace.nodes.WsNode;
+import jdplus.toolkit.desktop.plugin.workspace.DocumentUIServices;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationDocument;

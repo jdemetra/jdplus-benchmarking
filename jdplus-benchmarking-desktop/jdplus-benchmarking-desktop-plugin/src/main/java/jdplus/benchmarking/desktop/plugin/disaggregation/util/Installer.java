@@ -20,10 +20,10 @@ import jdplus.benchmarking.desktop.plugin.disaggregation.descriptors.BiRatioDesc
 import jdplus.benchmarking.desktop.plugin.disaggregation.descriptors.BiRatioEditor;
 import jdplus.benchmarking.desktop.plugin.disaggregation.descriptors.ShockDescriptor;
 import jdplus.benchmarking.desktop.plugin.disaggregation.descriptors.ShocksEditor;
-import demetra.desktop.ui.properties.l2fprod.ArrayRenderer;
-import demetra.desktop.ui.properties.l2fprod.CustomPropertyEditorRegistry;
-import demetra.desktop.ui.properties.l2fprod.CustomPropertyRendererFactory;
-import demetra.desktop.util.InstallerStep;
+import jdplus.toolkit.desktop.plugin.ui.properties.l2fprod.ArrayRenderer;
+import jdplus.toolkit.desktop.plugin.ui.properties.l2fprod.CustomPropertyEditorRegistry;
+import jdplus.toolkit.desktop.plugin.ui.properties.l2fprod.CustomPropertyRendererFactory;
+import jdplus.toolkit.desktop.plugin.util.InstallerStep;
 import org.openide.modules.ModuleInstall;
 
 

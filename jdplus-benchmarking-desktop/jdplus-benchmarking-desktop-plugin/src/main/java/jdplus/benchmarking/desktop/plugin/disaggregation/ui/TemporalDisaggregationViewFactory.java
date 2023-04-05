@@ -17,18 +17,18 @@
 package jdplus.benchmarking.desktop.plugin.disaggregation.ui;
 
 import jdplus.toolkit.base.api.data.AggregationType;
-import demetra.desktop.ui.processing.GenericChartUI;
-import demetra.desktop.ui.processing.GenericTableUI;
-import demetra.desktop.ui.processing.HtmlItemUI;
-import demetra.desktop.ui.processing.IProcDocumentItemFactory;
-import demetra.desktop.ui.processing.IProcDocumentViewFactory;
-import demetra.desktop.ui.processing.ProcDocumentItemFactory;
-import demetra.desktop.ui.processing.ProcDocumentViewFactory;
-import demetra.desktop.ui.processing.StaticChartUI;
-import demetra.desktop.ui.processing.StaticGrowthChartUI;
-import demetra.desktop.ui.processing.stats.ResidualsDistUI;
-import demetra.desktop.ui.processing.stats.ResidualsUI;
-import demetra.html.HtmlElement;
+import jdplus.toolkit.desktop.plugin.ui.processing.GenericChartUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.GenericTableUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.HtmlItemUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentItemFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentViewFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.ProcDocumentItemFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.ProcDocumentViewFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.StaticChartUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.StaticGrowthChartUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.stats.ResidualsDistUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.stats.ResidualsUI;
+import jdplus.toolkit.desktop.plugin.html.HtmlElement;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationDictionaries;
 import jdplus.toolkit.base.api.timeseries.Ts;
 import jdplus.toolkit.base.api.timeseries.TsData;
@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationDocument;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
+import jdplus.toolkit.desktop.plugin.html.stats.HtmlNiidTest;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -255,7 +256,7 @@ public class TemporalDisaggregationViewFactory extends ProcDocumentViewFactory<T
                         if (result == null) {
                             return null;
                         }
-                        return new demetra.html.stats.HtmlNiidTest(result.getResidualsDiagnostics().getNiid());
+                        return new HtmlNiidTest(result.getResidualsDiagnostics().getNiid());
                     },
                     new HtmlItemUI());
         }

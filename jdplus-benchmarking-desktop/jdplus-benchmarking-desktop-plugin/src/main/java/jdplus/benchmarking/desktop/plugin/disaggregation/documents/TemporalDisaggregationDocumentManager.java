@@ -16,8 +16,8 @@
  */
 package jdplus.benchmarking.desktop.plugin.disaggregation.documents;
 
-import demetra.desktop.workspace.AbstractWorkspaceItemManager;
-import demetra.desktop.workspace.WorkspaceItemManager;
+import jdplus.toolkit.desktop.plugin.workspace.AbstractWorkspaceItemManager;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItemManager;
 import jdplus.toolkit.base.api.util.Id;
 import jdplus.toolkit.base.api.util.LinearId;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationDocument;

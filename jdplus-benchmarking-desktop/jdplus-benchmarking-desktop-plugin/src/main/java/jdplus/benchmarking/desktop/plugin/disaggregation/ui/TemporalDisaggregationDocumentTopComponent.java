@@ -17,12 +17,12 @@
 package jdplus.benchmarking.desktop.plugin.disaggregation.ui;
 
 import jdplus.benchmarking.desktop.plugin.disaggregation.documents.TemporalDisaggregationDocumentManager;
-import demetra.desktop.ui.processing.TsRegressionProcessingViewer;
-import demetra.desktop.util.NbUtilities;
-import demetra.desktop.workspace.DocumentUIServices;
-import demetra.desktop.workspace.WorkspaceFactory;
-import demetra.desktop.workspace.WorkspaceItem;
-import demetra.desktop.workspace.ui.WorkspaceTsRegressionTopComponent;
+import jdplus.toolkit.desktop.plugin.ui.processing.TsRegressionProcessingViewer;
+import jdplus.toolkit.desktop.plugin.util.NbUtilities;
+import jdplus.toolkit.desktop.plugin.workspace.DocumentUIServices;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
+import jdplus.toolkit.desktop.plugin.workspace.ui.WorkspaceTsRegressionTopComponent;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationDocument;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

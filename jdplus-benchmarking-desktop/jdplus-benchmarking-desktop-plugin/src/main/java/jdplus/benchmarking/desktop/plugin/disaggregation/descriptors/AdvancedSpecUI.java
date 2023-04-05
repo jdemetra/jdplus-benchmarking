@@ -16,8 +16,8 @@
  */
 package jdplus.benchmarking.desktop.plugin.disaggregation.descriptors;
 
-import demetra.desktop.DemetraUI;
-import demetra.desktop.descriptors.EnhancedPropertyDescriptor;
+import jdplus.toolkit.desktop.plugin.DemetraUI;
+import jdplus.toolkit.desktop.plugin.descriptors.EnhancedPropertyDescriptor;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import java.beans.IntrospectionException;

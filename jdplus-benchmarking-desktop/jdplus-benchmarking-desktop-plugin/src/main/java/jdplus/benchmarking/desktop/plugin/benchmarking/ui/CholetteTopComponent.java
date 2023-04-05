@@ -17,11 +17,11 @@
 package jdplus.benchmarking.desktop.plugin.benchmarking.ui;
 
 import jdplus.benchmarking.desktop.plugin.benchmarking.documents.CholetteDocumentManager;
-import demetra.desktop.ui.processing.Ts2ProcessingViewer;
-import demetra.desktop.workspace.DocumentUIServices;
-import demetra.desktop.workspace.WorkspaceFactory;
-import demetra.desktop.workspace.WorkspaceItem;
-import demetra.desktop.workspace.ui.WorkspaceTs2TopComponent;
+import jdplus.toolkit.desktop.plugin.ui.processing.Ts2ProcessingViewer;
+import jdplus.toolkit.desktop.plugin.workspace.DocumentUIServices;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
+import jdplus.toolkit.desktop.plugin.workspace.ui.WorkspaceTs2TopComponent;
 import jdplus.benchmarking.base.core.benchmarking.univariate.CholetteDocument;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;

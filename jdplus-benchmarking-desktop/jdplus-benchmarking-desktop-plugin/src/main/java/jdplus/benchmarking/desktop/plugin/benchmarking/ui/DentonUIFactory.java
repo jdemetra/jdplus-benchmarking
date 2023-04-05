@@ -18,10 +18,10 @@ package jdplus.benchmarking.desktop.plugin.benchmarking.ui;
 
 import jdplus.benchmarking.base.api.benchmarking.univariate.DentonSpec;
 import jdplus.benchmarking.desktop.plugin.benchmarking.descriptors.DentonSpecUI;
-import demetra.desktop.descriptors.IObjectDescriptor;
-import demetra.desktop.ui.processing.IProcDocumentView;
-import demetra.desktop.workspace.DocumentUIServices;
-import demetra.desktop.workspace.WorkspaceItem;
+import jdplus.toolkit.desktop.plugin.descriptors.IObjectDescriptor;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentView;
+import jdplus.toolkit.desktop.plugin.workspace.DocumentUIServices;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
 import java.awt.Color;
 import javax.swing.Icon;
 import jdplus.benchmarking.base.core.benchmarking.univariate.DentonDocument;
@@ -62,7 +62,7 @@ public class DentonUIFactory implements DocumentUIServices<DentonSpec, DentonDoc
 
     @Override
     public Icon getIcon() {
-        return ImageUtilities.loadImageIcon("demetra/desktop/benchmarking/resource-monitor_16x16.png", false);
+        return ImageUtilities.loadImageIcon("jdplus/benchmarking/desktop/plugin/resource-monitor_16x16.png", false);
     }
 
     @Override

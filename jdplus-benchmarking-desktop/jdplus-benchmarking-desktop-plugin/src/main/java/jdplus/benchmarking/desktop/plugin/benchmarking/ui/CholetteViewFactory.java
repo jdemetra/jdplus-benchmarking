@@ -17,12 +17,12 @@
 package jdplus.benchmarking.desktop.plugin.benchmarking.ui;
 
 import jdplus.benchmarking.base.api.benchmarking.BenchmarkingDictionaries;
-import demetra.desktop.ui.processing.GenericChartUI;
-import demetra.desktop.ui.processing.GenericTableUI;
-import demetra.desktop.ui.processing.IProcDocumentItemFactory;
-import demetra.desktop.ui.processing.IProcDocumentViewFactory;
-import demetra.desktop.ui.processing.ProcDocumentItemFactory;
-import demetra.desktop.ui.processing.ProcDocumentViewFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.GenericChartUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.GenericTableUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentItemFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentViewFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.ProcDocumentItemFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.ProcDocumentViewFactory;
 import jdplus.toolkit.base.api.util.Id;
 import java.util.concurrent.atomic.AtomicReference;
 import jdplus.benchmarking.base.core.benchmarking.univariate.CholetteDocument;

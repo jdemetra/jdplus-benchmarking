@@ -17,9 +17,9 @@
 package jdplus.benchmarking.desktop.plugin.disaggregation.actions;
 
 import jdplus.benchmarking.desktop.plugin.disaggregation.documents.TemporalDisaggregationDocumentManager;
-import demetra.desktop.nodes.SingleNodeAction;
-import demetra.desktop.workspace.WorkspaceItem;
-import demetra.desktop.workspace.nodes.ItemWsNode;
+import jdplus.toolkit.desktop.plugin.nodes.SingleNodeAction;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
+import jdplus.toolkit.desktop.plugin.workspace.nodes.ItemWsNode;
 import jdplus.toolkit.base.api.timeseries.MultiTsDocument;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;

@@ -16,8 +16,8 @@
  */
 package jdplus.benchmarking.desktop.plugin.benchmarking.documents;
 
-import demetra.desktop.workspace.AbstractWorkspaceItemManager;
-import demetra.desktop.workspace.WorkspaceItemManager;
+import jdplus.toolkit.desktop.plugin.workspace.AbstractWorkspaceItemManager;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItemManager;
 import jdplus.toolkit.base.api.util.Id;
 import jdplus.toolkit.base.api.util.LinearId;
 import javax.swing.Icon;
@@ -72,6 +72,6 @@ public class DentonDocumentManager extends AbstractWorkspaceItemManager<DentonDo
 
     @Override
     public Icon getManagerIcon() {
-        return ImageUtilities.loadImageIcon("demetra/desktop/benchmarking/resource-monitor_16x16.png", false);
+        return ImageUtilities.loadImageIcon("jdplus/benchmarking/desktop/plugin/resource-monitor_16x16.png", false);
     }
 }

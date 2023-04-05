@@ -17,14 +17,14 @@
 package jdplus.benchmarking.desktop.plugin.disaggregation.ui;
 
 import jdplus.toolkit.base.api.data.AggregationType;
-import demetra.desktop.ui.processing.GenericChartUI;
-import demetra.desktop.ui.processing.GenericTableUI;
-import demetra.desktop.ui.processing.IProcDocumentItemFactory;
-import demetra.desktop.ui.processing.IProcDocumentViewFactory;
-import demetra.desktop.ui.processing.ProcDocumentItemFactory;
-import demetra.desktop.ui.processing.ProcDocumentViewFactory;
-import demetra.desktop.ui.processing.StaticChartUI;
-import demetra.desktop.ui.processing.StaticGrowthChartUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.GenericChartUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.GenericTableUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentItemFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentViewFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.ProcDocumentItemFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.ProcDocumentViewFactory;
+import jdplus.toolkit.desktop.plugin.ui.processing.StaticChartUI;
+import jdplus.toolkit.desktop.plugin.ui.processing.StaticGrowthChartUI;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationDictionaries;
 import jdplus.toolkit.base.api.timeseries.Ts;
 import jdplus.toolkit.base.api.timeseries.TsData;

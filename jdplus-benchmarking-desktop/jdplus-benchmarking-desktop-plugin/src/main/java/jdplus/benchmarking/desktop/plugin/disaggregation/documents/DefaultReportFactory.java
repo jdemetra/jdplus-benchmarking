@@ -18,9 +18,9 @@ package jdplus.benchmarking.desktop.plugin.disaggregation.documents;
 
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
-import demetra.desktop.ui.mru.SourceId;
-import demetra.desktop.util.NbComponents;
-import demetra.desktop.workspace.WorkspaceFactory;
+import jdplus.toolkit.desktop.plugin.ui.mru.SourceId;
+import jdplus.toolkit.desktop.plugin.util.NbComponents;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.toolkit.base.api.timeseries.Ts;
 import jdplus.toolkit.base.api.timeseries.TsData;

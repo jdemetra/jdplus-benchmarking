@@ -16,8 +16,8 @@
  */
 package jdplus.benchmarking.desktop.plugin.disaggregation.descriptors;
 
-import demetra.desktop.descriptors.EnhancedPropertyDescriptor;
-import demetra.desktop.descriptors.IObjectDescriptor;
+import jdplus.toolkit.desktop.plugin.descriptors.EnhancedPropertyDescriptor;
+import jdplus.toolkit.desktop.plugin.descriptors.IObjectDescriptor;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;

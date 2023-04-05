@@ -17,11 +17,11 @@
 package jdplus.benchmarking.desktop.plugin.disaggregation.actions;
 
 import jdplus.benchmarking.desktop.plugin.disaggregation.documents.TemporalDisaggregationDocumentManager;
-import demetra.desktop.workspace.Workspace;
-import demetra.desktop.workspace.WorkspaceFactory;
-import demetra.desktop.workspace.WorkspaceItem;
-import demetra.desktop.workspace.WorkspaceItemManager;
-import demetra.desktop.workspace.nodes.WsNode;
+import jdplus.toolkit.desktop.plugin.workspace.Workspace;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItemManager;
+import jdplus.toolkit.desktop.plugin.workspace.nodes.WsNode;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;

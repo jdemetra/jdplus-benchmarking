@@ -16,11 +16,11 @@
  */
 package jdplus.benchmarking.desktop.plugin.disaggregation.ui;
 
-import demetra.desktop.descriptors.IObjectDescriptor;
+import jdplus.toolkit.desktop.plugin.descriptors.IObjectDescriptor;
 import jdplus.benchmarking.desktop.plugin.disaggregation.descriptors.TemporalDisaggregationSpecUI;
-import demetra.desktop.ui.processing.IProcDocumentView;
-import demetra.desktop.workspace.DocumentUIServices;
-import demetra.desktop.workspace.WorkspaceItem;
+import jdplus.toolkit.desktop.plugin.ui.processing.IProcDocumentView;
+import jdplus.toolkit.desktop.plugin.workspace.DocumentUIServices;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import java.awt.Color;
 import javax.swing.Icon;
@@ -62,7 +62,7 @@ public class TemporalDisaggregationUIFactory implements DocumentUIServices<Tempo
 
     @Override
     public Icon getIcon() {
-        return ImageUtilities.loadImageIcon("demetra/desktop/benchmarking/resource-monitor_16x16.png", false);
+        return ImageUtilities.loadImageIcon("jdplus/benchmarking/desktop/plugin/resource-monitor_16x16.png", false);
     }
 
     @Override

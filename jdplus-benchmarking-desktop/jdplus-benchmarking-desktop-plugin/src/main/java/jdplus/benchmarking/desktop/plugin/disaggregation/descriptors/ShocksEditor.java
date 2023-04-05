@@ -5,7 +5,7 @@
 package jdplus.benchmarking.desktop.plugin.disaggregation.descriptors;
 
 import com.l2fprod.common.beans.editor.AbstractPropertyEditor;
-import demetra.desktop.ui.properties.l2fprod.ArrayEditorDialog;
+import jdplus.toolkit.desktop.plugin.ui.properties.l2fprod.ArrayEditorDialog;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.util.List;

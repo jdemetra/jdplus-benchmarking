@@ -19,6 +19,7 @@ package jdplus.benchmarking.desktop.plugin.benchmarking.actions;
 import jdplus.benchmarking.desktop.plugin.benchmarking.documents.CholetteDocumentManager;
 import jdplus.benchmarking.desktop.plugin.benchmarking.documents.DentonDocumentManager;
 import jdplus.benchmarking.desktop.plugin.disaggregation.documents.TemporalDisaggregationDocumentManager;
+import jdplus.toolkit.desktop.plugin.workspace.nodes.*;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -33,8 +34,8 @@ public class Actions {
         @ActionReference(path = CholetteDocumentManager.ITEMPATH, position = 1050),
         @ActionReference(path = DentonDocumentManager.ITEMPATH, position = 1050)
     })
-    public static demetra.desktop.workspace.nodes.RenameAction renameAction() {
-        return new demetra.desktop.workspace.nodes.RenameAction();
+    public static RenameAction renameAction() {
+        return new RenameAction();
     }
 
     @ActionID(category = "Edit",
@@ -44,8 +45,8 @@ public class Actions {
         @ActionReference(path = CholetteDocumentManager.ITEMPATH, position = 1150),
         @ActionReference(path = DentonDocumentManager.ITEMPATH, position = 1150)
     })
-    public static demetra.desktop.workspace.nodes.CommentAction commentAction() {
-        return new demetra.desktop.workspace.nodes.CommentAction();
+    public static CommentAction commentAction() {
+        return new CommentAction();
     }
 
     @ActionID(category = "Edit",
@@ -55,8 +56,8 @@ public class Actions {
         @ActionReference(path = CholetteDocumentManager.ITEMPATH, position = 1100),
         @ActionReference(path = DentonDocumentManager.ITEMPATH, position = 1100)
     })
-    public static demetra.desktop.workspace.nodes.DeleteAction deleteAction() {
-        return new demetra.desktop.workspace.nodes.DeleteAction();
+    public static DeleteAction deleteAction() {
+        return new DeleteAction();
     }
 
     @ActionID(category = "Edit",
@@ -66,8 +67,8 @@ public class Actions {
         @ActionReference(path = CholetteDocumentManager.PATH, position = 1000),
         @ActionReference(path = DentonDocumentManager.PATH, position = 1000)
     })
-    public static demetra.desktop.workspace.nodes.NewAction newAction() {
-        return new demetra.desktop.workspace.nodes.NewAction();
+    public static NewAction newAction() {
+        return new NewAction();
     }
 
     @ActionID(
@@ -79,8 +80,8 @@ public class Actions {
         @ActionReference(path = CholetteDocumentManager.PATH, position = 1200),
         @ActionReference(path = DentonDocumentManager.PATH, position = 1200)
     })
-    public static demetra.desktop.workspace.nodes.SortAction sortAction() {
-        return new demetra.desktop.workspace.nodes.SortAction();
+    public static SortAction sortAction() {
+        return new SortAction();
     }
 
 }

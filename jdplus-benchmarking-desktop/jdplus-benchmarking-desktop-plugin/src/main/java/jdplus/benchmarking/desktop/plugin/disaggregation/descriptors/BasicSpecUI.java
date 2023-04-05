@@ -18,8 +18,8 @@ package jdplus.benchmarking.desktop.plugin.disaggregation.descriptors;
 
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.benchmarking.desktop.plugin.benchmarking.descriptors.Utility;
-import demetra.desktop.descriptors.DateSelectorUI;
-import demetra.desktop.descriptors.EnhancedPropertyDescriptor;
+import jdplus.toolkit.desktop.plugin.descriptors.DateSelectorUI;
+import jdplus.toolkit.desktop.plugin.descriptors.EnhancedPropertyDescriptor;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.toolkit.base.api.timeseries.TimeSelector;
 import java.beans.IntrospectionException;

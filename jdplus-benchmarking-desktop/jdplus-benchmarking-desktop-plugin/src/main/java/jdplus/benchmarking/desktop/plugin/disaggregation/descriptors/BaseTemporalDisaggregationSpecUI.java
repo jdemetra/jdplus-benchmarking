@@ -16,7 +16,7 @@
  */
 package jdplus.benchmarking.desktop.plugin.disaggregation.descriptors;
 
-import demetra.desktop.descriptors.IPropertyDescriptors;
+import jdplus.toolkit.desktop.plugin.descriptors.IPropertyDescriptors;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 
 
