@@ -1,5 +1,6 @@
 Manifest-Version: 1.0
 OpenIDE-Module-Localizing-Bundle: /Bundle.properties
+OpenIDE-Module-Display-Category: JD+ Benchmarking
 OpenIDE-Module-Java-Dependencies: Java > 17
 OpenIDE-Module-Install: jdplus/benchmarking/desktop/plugin/disaggregation/util/Installer.class
 
