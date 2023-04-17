@@ -33,10 +33,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.text.NumberFormat;
+import java.util.*;
 import java.util.Map.Entry;
 import javax.swing.JTextPane;
 import jdplus.toolkit.base.core.dstats.T;
@@ -61,8 +59,9 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
     }
     public static final String NAME = "Default report";
     private static final String NL = "\r\n", NL2 = "\r\n\r\n";
-    private static final DecimalFormat pc2 = new DecimalFormat();
-    private static final DecimalFormat d2 = new DecimalFormat(), d3 = new DecimalFormat();
+    private static final DecimalFormat pc2 = (DecimalFormat) NumberFormat.getInstance(Locale.getDefault(Locale.Category.FORMAT));
+    private static final DecimalFormat d2 = (DecimalFormat) NumberFormat.getInstance(Locale.getDefault(Locale.Category.FORMAT));
+    private static final DecimalFormat d3 = (DecimalFormat) NumberFormat.getInstance(Locale.getDefault(Locale.Category.FORMAT));
     private final FileChooserBuilder fileChooserBuilder;
     public final List<ReportItem> items = new ArrayList<>();
     

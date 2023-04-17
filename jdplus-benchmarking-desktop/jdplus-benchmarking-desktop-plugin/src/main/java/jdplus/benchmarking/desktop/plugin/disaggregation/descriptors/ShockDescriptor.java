@@ -20,6 +20,7 @@ import jdplus.toolkit.desktop.plugin.descriptors.EnhancedPropertyDescriptor;
 import jdplus.toolkit.desktop.plugin.descriptors.IPropertyDescriptors;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,7 @@ public class ShockDescriptor implements IPropertyDescriptors {
     double variance;
 
     public ShockDescriptor() {
-        position = LocalDate.now();
+        position = LocalDate.now(Clock.systemDefaultZone());
         variance = 100;
     }
 
