@@ -1,12 +1,12 @@
 /*
- * Copyright 2022 National Bank of Belgium
- * 
- * Licensed under the EUPL, Version 1.2 or – as soon they will be approved 
+ * Copyright 2013 National Bank of Belgium
+ *
+ * Licensed under the EUPL, Version 1.1 or – as soon they will be approved 
  * by the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
  * You may obtain a copy of the Licence at:
  * 
- * https://joinup.ec.europa.eu/software/page/eupl
+ * http://ec.europa.eu/idabc/eupl
  * 
  * Unless required by applicable law or agreed to in writing, software 
  * distributed under the Licence is distributed on an "AS IS" basis,
@@ -16,79 +16,90 @@
  */
 package jdplus.benchmarking.desktop.plugin.benchmarking.ui;
 
-
-import jdplus.benchmarking.desktop.plugin.benchmarking.documents.DentonDocumentManager;
+import jdplus.benchmarking.desktop.plugin.benchmarking.documents.CubicSplineDocumentManager;
 import jdplus.toolkit.desktop.plugin.ui.processing.Ts2ProcessingViewer;
 import jdplus.toolkit.desktop.plugin.workspace.DocumentUIServices;
 import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
 import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
 import jdplus.toolkit.desktop.plugin.workspace.ui.WorkspaceTs2TopComponent;
-import jdplus.benchmarking.base.core.benchmarking.univariate.DentonDocument;
+import jdplus.benchmarking.base.core.benchmarking.univariate.CubicSplineDocument;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
-import org.openide.util.NbBundle;
+import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 
 /**
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//jdplus.benchmarking.desktop.plugin.benchmarking.ui//Denton//EN",
+        dtd = "-//jdplus.benchmarking.desktop.plugin.benchmarking.ui//CubicSpline//EN",
         autostore = false)
 @TopComponent.Description(
-        preferredID = "DentonTopComponent",
+        preferredID = "CubicSplineTopComponent",
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_NEVER)
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
-@ActionID(category = "Window", id = "jdplus.benchmarking.desktop.plugin.benchmarking.ui.DentonTopComponent")
-@ActionReference(path = "Menu/Statistical methods/Benchmarking", position = 1000)
+@ActionID(category = "Window", id = "jdplus.benchmarking.desktop.plugin.benchmarking.ui.CubicSpline")
+@ActionReference(path = "Menu/Statistical methods/Benchmarking", position = 2500)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_DentonAction",
-        preferredID = "DentonTopComponent")
-@NbBundle.Messages({
-    "CTL_DentonAction=Denton",
-    "CTL_DentonTopComponent=Denton Window",
-    "HINT_DentonTopComponent=This is a Denton window"
+        displayName = "#CTL_CubicSplineAction")
+@Messages({
+    "CTL_CubicSplineAction=CubicSpline",
+    "CTL_CubicSplineTopComponent=CubicSpline Window",
+    "HINT_CubicSplineTopComponent=This is a CubicSpline window"
 })
-public final class DentonTopComponent extends WorkspaceTs2TopComponent<DentonDocument> {
+public final class CubicSplineTopComponent extends WorkspaceTs2TopComponent<CubicSplineDocument> {
 
     private final ExplorerManager mgr = new ExplorerManager();
 
-    private static DentonDocumentManager manager() {
-        return WorkspaceFactory.getInstance().getManager(DentonDocumentManager.class);
+    private static CubicSplineDocumentManager manager() {
+        return WorkspaceFactory.getInstance().getManager(CubicSplineDocumentManager.class);
     }
 
-    public DentonTopComponent() {
+    public CubicSplineTopComponent() {
         this(null);
     }
 
-    public DentonTopComponent(WorkspaceItem<DentonDocument> doc) {
+    public CubicSplineTopComponent(WorkspaceItem<CubicSplineDocument> doc) {
         super(doc);
         initComponents();
-        setToolTipText(Bundle.CTL_DentonTopComponent());
+        setToolTipText(Bundle.CTL_CubicSplineTopComponent());
     }
 
     @Override
     protected Ts2ProcessingViewer initViewer() {
         //       node=new InternalNode();
-        return Ts2ProcessingViewer.create(this.getElement(), DocumentUIServices.forDocument(DentonDocument.class), "Low-freq series", "High-freq series");
+        return Ts2ProcessingViewer.create(this.getElement(), DocumentUIServices.forDocument(CubicSplineDocument.class), "Low-freq series", "High-freq series");
     }
 
     @Override
-    public WorkspaceItem<DentonDocument> newDocument() {
+    public WorkspaceItem<CubicSplineDocument> newDocument() {
         return manager().create(WorkspaceFactory.getInstance().getActiveWorkspace());
     }
 
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    //    private UniCubicSplineSpecification getSpecification(){
+//        return getDocument().getElement().getSpecification();
+//    }
+//
+//    private void setSpecification(UniCubicSplineSpecification spec){
+//        getDocument().getElement().setSpecification(spec);
+//        updateView();
+//    }
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
-    }// </editor-fold>                        
+    }// </editor-fold>//GEN-END:initComponents
 
-    // Variables declaration - do not modify                     
-    // End of variables declaration                   
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -103,7 +114,7 @@ public final class DentonTopComponent extends WorkspaceTs2TopComponent<DentonDoc
 
     @Override
     protected String getContextPath() {
-        return DentonDocumentManager.CONTEXTPATH; //To change body of generated methods, choose Tools | Templates.
+        return CubicSplineDocumentManager.CONTEXTPATH; //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

@@ -20,6 +20,8 @@
  */
 package jdplus.benchmarking.base.core.calendarization;
 
+import jdplus.benchmarking.base.core.ssf.SsfCalendarizationEx;
+import jdplus.benchmarking.base.core.ssf.SsfCalendarization;
 import jdplus.benchmarking.base.api.calendarization.Calendarization;
 import jdplus.benchmarking.base.api.calendarization.CalendarizationResults;
 import jdplus.benchmarking.base.api.calendarization.CalendarizationSpec;

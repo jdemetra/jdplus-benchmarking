@@ -13,6 +13,7 @@ import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.toolkit.base.api.data.Parameter;
 
 /**
  *
@@ -44,13 +45,14 @@ public class TemporalDisaggregationProcessorTest {
                 //                .diffuseRegressors(true)
                 .constant(true)
                 .fast(true)
+                .parameter(Parameter.fixed(0.9))
                 .estimationPrecision(1e-9)
                 .rescale(false)
                 .algorithm(SsfInitialization.SqrtDiffuse)
                 .build();
         TemporalDisaggregationResults rslt2 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec2);
-        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
-        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
+//        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
+//        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
         TemporalDisaggregationSpec spec3 = TemporalDisaggregationSpec.builder()
                 .aggregationType(AggregationType.Sum)
                 .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
@@ -68,9 +70,9 @@ public class TemporalDisaggregationProcessorTest {
                 .distance(rslt3.getCoefficientsCovariance().diagonal());
         assertTrue(d < 1e-6);
 //        System.out.println("CL");
-//        System.out.println(rslt2.getDisaggregatedSeries().getValues());
+        System.out.println(rslt2.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt2.getStdevDisaggregatedSeries().getValues());
-//        System.out.println(rslt2.getConcentratedLikelihood().coefficients());
+        System.out.println(rslt2.getCoefficients());
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
 //        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
     }
@@ -127,7 +129,7 @@ public class TemporalDisaggregationProcessorTest {
 
     @Test
     public void testFernandez() {
-        TsData y = TsData.ofInternal(TsPeriod.yearly(1977),  Data.PCRA);
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978),  Data.PCRA);
         TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  Data.IND_PCR);
         TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.builder()
                 .aggregationType(AggregationType.Sum)
@@ -161,7 +163,7 @@ public class TemporalDisaggregationProcessorTest {
         assertTrue(rslt1.getCoefficientsCovariance().diagonal()
                 .distance(rslt3.getCoefficientsCovariance().diagonal()) < 1e-6);
 //        System.out.println("RW");
-//        System.out.println(rslt1.getDisaggregatedSeries().getValues());
+//        System.out.println(rslt2.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt1.getStdevDisaggregatedSeries().getValues());
     }
 

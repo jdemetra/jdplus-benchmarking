@@ -14,8 +14,9 @@
 * See the Licence for the specific language governing permissions and 
 * limitations under the Licence.
  */
-package jdplus.benchmarking.base.core.benchmarking.multivariate;
+package jdplus.benchmarking.base.core.ssf;
 
+import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.toolkit.base.core.data.DataBlock;
 import nbbrd.design.BuilderPattern;
 import nbbrd.design.Development;
@@ -34,14 +35,14 @@ import jdplus.toolkit.base.core.math.matrices.FastMatrix;
  */
 @Development(status = Development.Status.Alpha)
 @lombok.experimental.UtilityClass
-class MultivariateSsfCholette {
+public class MultivariateSsfCholette {
 
-    Builder builder(int nvars) {
+    public Builder builder(int nvars) {
         return new Builder(nvars);
     }
 
     @BuilderPattern(IMultivariateSsf.class)
-    static class Builder {
+    public static class Builder {
 
         private final int nvars;
         private int conversion = 4;
@@ -53,17 +54,17 @@ class MultivariateSsfCholette {
             this.nvars = nvars;
         }
 
-        Builder conversion(int c) {
+        public Builder conversion(int c) {
             this.conversion = c;
             return this;
         }
 
-        Builder rho(double rho) {
+        public Builder rho(double rho) {
             this.rho = rho;
             return this;
         }
 
-        Builder weights(double[][] weights) {
+        public Builder weights(double[][] weights) {
             if (weights.length != nvars) {
                 throw new IllegalArgumentException();
             }
@@ -71,12 +72,12 @@ class MultivariateSsfCholette {
             return this;
         }
 
-        Builder constraints(Constraint[] constraints) {
+        public Builder constraints(Constraint[] constraints) {
             this.constraints = constraints;
             return this;
         }
 
-        IMultivariateSsf build() {
+        public IMultivariateSsf build() {
             Data data = new Data(nvars, conversion, rho, w, constraints);
             return new MultivariateSsf(new Initialization(data), new Dynamics(data), new Measurements(data));
         }
@@ -325,10 +326,10 @@ class MultivariateSsfCholette {
             } else {
                 int k = v - info.nvars;
                 Constraint cnt = info.constraints[k];
-                for (int i = 0; i < cnt.index.length; ++i) {
-                    int l = cnt.index[i];
+                for (int i = 0; i < cnt.getIndex().length; ++i) {
+                    int l = cnt.getIndex()[i];
                     int il = 2 * l;
-                    z.set(il + 1, info.mweight(pos, l, cnt.weights[i]));
+                    z.set(il + 1, info.mweight(pos, l, cnt.getWeights()[i]));
                 }
             }
         }
@@ -343,10 +344,10 @@ class MultivariateSsfCholette {
                 int k = v - info.nvars;
                 Constraint cnt = info.constraints[k];
                 double sum = 0;
-                for (int i = 0; i < cnt.index.length; ++i) {
-                    int l = cnt.index[i];
+                for (int i = 0; i < cnt.getIndex().length; ++i) {
+                    int l = cnt.getIndex()[i];
                     int il = 2 * l;
-                    sum += info.mweight(pos, l, x.get(il + 1) * cnt.weights[i]);
+                    sum += info.mweight(pos, l, x.get(il + 1) * cnt.getWeights()[i]);
                 }
                 return sum;
             }
@@ -364,10 +365,10 @@ class MultivariateSsfCholette {
                 x.set(0);
                 int k = v - info.nvars;
                 Constraint cnt = info.constraints[k];
-                for (int i = 0; i < cnt.index.length; ++i) {
-                    int l = cnt.index[i];
+                for (int i = 0; i < cnt.getIndex().length; ++i) {
+                    int l = cnt.getIndex()[i];
                     int il = 2 * l;
-                    x.addAY(info.mweight(pos, l, cnt.weights[i]), m.row(il + 1));
+                    x.addAY(info.mweight(pos, l, cnt.getWeights()[i]), m.row(il + 1));
                 }
             }
         }
@@ -388,14 +389,14 @@ class MultivariateSsfCholette {
                 int w = v-info.nvars;
                 Constraint cnt = info.constraints[w];
                 double s = 0;
-                for (int i = 0; i < cnt.index.length; ++i) {
-                    int k = cnt.index[i];
+                for (int i = 0; i < cnt.getIndex().length; ++i) {
+                    int k = cnt.getIndex()[i];
                     int ik = 2 * k;
-                    double dk = info.mweight(pos, k, cnt.weights[i]);
-                    for (int j = 0; j < cnt.index.length; ++j) {
-                        int l = cnt.index[j];
+                    double dk = info.mweight(pos, k, cnt.getWeights()[i]);
+                    for (int j = 0; j < cnt.getIndex().length; ++j) {
+                        int l = cnt.getIndex()[j];
                         int il = 2 * l;
-                        double dl = info.mweight(pos, l, cnt.weights[j]);
+                        double dl = info.mweight(pos, l, cnt.getWeights()[j]);
                         s += dk * vm.get(ik + 1, il + 1) * dl;
                     }
                 }
@@ -418,14 +419,14 @@ class MultivariateSsfCholette {
             }  else {
                 int w = v-info.nvars;
                 Constraint cnt = info.constraints[w];
-                for (int i = 0; i < cnt.index.length; ++i) {
-                    int k = cnt.index[i];
+                for (int i = 0; i < cnt.getIndex().length; ++i) {
+                    int k = cnt.getIndex()[i];
                     int ik = 2 * k;
-                    double dk = info.mweight(pos, k, cnt.weights[i]);
-                    for (int j = 0; j < cnt.index.length; ++j) {
-                        int l = cnt.index[j];
+                    double dk = info.mweight(pos, k, cnt.getWeights()[i]);
+                    for (int j = 0; j < cnt.getIndex().length; ++j) {
+                        int l = cnt.getIndex()[j];
                         int il = 2 * l;
-                        double dl = info.mweight(pos, l, cnt.weights[j]);
+                        double dl = info.mweight(pos, l, cnt.getWeights()[j]);
                         vm.add(ik + 1, il + 1, d * dk * dl);
                     }
                 }
@@ -443,10 +444,10 @@ class MultivariateSsfCholette {
             } else {
                 int w= v- info.nvars;
                 Constraint cnt = info.constraints[w];
-                for (int i = 0; i < cnt.index.length; ++i) {
-                    int k = cnt.index[i];
+                for (int i = 0; i < cnt.getIndex().length; ++i) {
+                    int k = cnt.getIndex()[i];
                     int ik = 2 * k;
-                    x.add(ik + 1, info.mweight(pos, k, cnt.weights[i] * d));
+                    x.add(ik + 1, info.mweight(pos, k, cnt.getWeights()[i] * d));
                 }
             }
         }

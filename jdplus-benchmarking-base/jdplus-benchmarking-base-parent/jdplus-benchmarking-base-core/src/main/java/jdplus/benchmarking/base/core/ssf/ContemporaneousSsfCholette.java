@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jdplus.benchmarking.base.core.benchmarking.multivariate;
+package jdplus.benchmarking.base.core.ssf;
 
+import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.toolkit.base.core.data.DataBlock;
 import nbbrd.design.BuilderPattern;
 import nbbrd.design.Development;
@@ -34,14 +35,14 @@ import jdplus.toolkit.base.core.math.matrices.FastMatrix;
  */
 @Development(status = Development.Status.Alpha)
 @lombok.experimental.UtilityClass
-class ContemporaneousSsfCholette {
+public class ContemporaneousSsfCholette {
 
-    Builder builder(int nvars) {
+    public Builder builder(int nvars) {
         return new Builder(nvars);
     }
 
     @BuilderPattern(IMultivariateSsf.class)
-    static class Builder {
+    public static class Builder {
 
         private final int nvars;
         private double rho = 1;
@@ -52,12 +53,12 @@ class ContemporaneousSsfCholette {
             this.nvars = nvars;
         }
 
-        Builder rho(double rho) {
+        public Builder rho(double rho) {
             this.rho = rho;
             return this;
         }
 
-        Builder weights(double[][] weights) {
+        public Builder weights(double[][] weights) {
             if (weights.length != nvars) {
                 throw new IllegalArgumentException();
             }
@@ -65,12 +66,12 @@ class ContemporaneousSsfCholette {
             return this;
         }
 
-        Builder constraints(Constraint[] constraints) {
+        public Builder constraints(Constraint[] constraints) {
             this.constraints = constraints;
             return this;
         }
 
-        IMultivariateSsf build() {
+        public IMultivariateSsf build() {
             Data data = new Data(nvars, rho, w, constraints);
             return new MultivariateSsf(new Initialization(data), new Dynamics(data), new Measurements(data));
         }
@@ -279,18 +280,18 @@ class ContemporaneousSsfCholette {
         
         @Override
         public void Z(int pos, DataBlock z) {
-             for (int i = 0; i < cnt.index.length; ++i) {
-                int l = cnt.index[i];
-                z.set(l, info.mweight(pos, l, cnt.weights[i]));
+             for (int i = 0; i < cnt.getIndex().length; ++i) {
+                int l = cnt.getIndex()[i];
+                z.set(l, info.mweight(pos, l, cnt.getWeights()[i]));
             }
         }
  
         @Override
         public double ZX(int pos, DataBlock x) {
             double sum = 0;
-            for (int i = 0; i < cnt.index.length; ++i) {
-                int l = cnt.index[i];
-                sum += info.mweight(pos, l, x.get(l) * cnt.weights[i]);
+            for (int i = 0; i < cnt.getIndex().length; ++i) {
+                int l = cnt.getIndex()[i];
+                sum += info.mweight(pos, l, x.get(l) * cnt.getWeights()[i]);
             }
             return sum;
         }
@@ -298,21 +299,21 @@ class ContemporaneousSsfCholette {
         @Override
         public void ZM(int pos, FastMatrix m, DataBlock x) {
             x.set(0);
-            for (int i = 0; i < cnt.index.length; ++i) {
-                int l = cnt.index[i];
-                x.addAY(info.mweight(pos, l, cnt.weights[i]), m.row(l));
+            for (int i = 0; i < cnt.getIndex().length; ++i) {
+                int l = cnt.getIndex()[i];
+                x.addAY(info.mweight(pos, l, cnt.getWeights()[i]), m.row(l));
             }
         }
 
         @Override
         public double ZVZ(int pos, FastMatrix vm) {
             double s = 0;
-            for (int i = 0; i < cnt.index.length; ++i) {
-                int k = cnt.index[i];
-                double dk = info.mweight(pos, k, cnt.weights[i]);
-                for (int j = 0; j < cnt.index.length; ++j) {
-                    int l = cnt.index[j];
-                    double dl = info.mweight(pos, l, cnt.weights[j]);
+            for (int i = 0; i < cnt.getIndex().length; ++i) {
+                int k = cnt.getIndex()[i];
+                double dk = info.mweight(pos, k, cnt.getWeights()[i]);
+                for (int j = 0; j < cnt.getIndex().length; ++j) {
+                    int l = cnt.getIndex()[j];
+                    double dl = info.mweight(pos, l, cnt.getWeights()[j]);
                     s += dk * vm.get(k, l) * dl;
                 }
             }
@@ -321,12 +322,12 @@ class ContemporaneousSsfCholette {
 
         @Override
         public void VpZdZ(int pos, FastMatrix vm, double d) {
-            for (int i = 0; i < cnt.index.length; ++i) {
-                int k = cnt.index[i];
-                double dk = info.mweight(pos, k, cnt.weights[i]);
-                for (int j = 0; j < cnt.index.length; ++j) {
-                    int l = cnt.index[j];
-                    double dl = info.mweight(pos, l, cnt.weights[j]);
+            for (int i = 0; i < cnt.getIndex().length; ++i) {
+                int k = cnt.getIndex()[i];
+                double dk = info.mweight(pos, k, cnt.getWeights()[i]);
+                for (int j = 0; j < cnt.getIndex().length; ++j) {
+                    int l = cnt.getIndex()[j];
+                    double dl = info.mweight(pos, l, cnt.getWeights()[j]);
                     vm.add(k, l, d * dk * dl);
                 }
             }
@@ -334,9 +335,9 @@ class ContemporaneousSsfCholette {
 
         @Override
         public void XpZd(int pos, DataBlock x, double d) {
-            for (int i = 0; i < cnt.index.length; ++i) {
-                int k = cnt.index[i];
-                x.add(k, info.mweight(pos, k, cnt.weights[i] * d));
+            for (int i = 0; i < cnt.getIndex().length; ++i) {
+                int k = cnt.getIndex()[i];
+                x.add(k, info.mweight(pos, k, cnt.getWeights()[i] * d));
             }
         }
 
