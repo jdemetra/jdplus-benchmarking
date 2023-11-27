@@ -16,13 +16,13 @@
  */
 package jdplus.benchmarking.desktop.plugin.benchmarking.ui;
 
-import jdplus.benchmarking.desktop.plugin.benchmarking.documents.CholetteDocumentManager;
+import jdplus.benchmarking.desktop.plugin.benchmarking.documents.GrpDocumentManager;
 import jdplus.toolkit.desktop.plugin.ui.processing.Ts2ProcessingViewer;
 import jdplus.toolkit.desktop.plugin.workspace.DocumentUIServices;
 import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
 import jdplus.toolkit.desktop.plugin.workspace.WorkspaceItem;
 import jdplus.toolkit.desktop.plugin.workspace.ui.WorkspaceTs2TopComponent;
-import jdplus.benchmarking.base.core.benchmarking.univariate.CholetteDocument;
+import jdplus.benchmarking.base.core.benchmarking.univariate.GRPDocument;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -34,56 +34,56 @@ import org.openide.windows.TopComponent;
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//jdplus.benchmarking.desktop.plugin.benchmarking.ui//Cholette//EN",
+        dtd = "-//jdplus.benchmarking.desktop.plugin.benchmarking.ui//Grp//EN",
         autostore = false)
 @TopComponent.Description(
-        preferredID = "CholetteTopComponent",
+        preferredID = "GrpTopComponent",
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_NEVER)
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
-@ActionID(category = "Window", id = "jdplus.benchmarking.desktop.plugin.benchmarking.ui.CholetteTopComponent")
-@ActionReference(path = "Menu/Statistical methods/Benchmarking", position = 2000)
+@ActionID(category = "Window", id = "jdplus.benchmarking.desktop.plugin.benchmarking.ui.GrpTopComponent")
+@ActionReference(path = "Menu/Statistical methods/Benchmarking", position = 3000)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_CholetteAction")
+        displayName = "#CTL_GrpAction")
 @Messages({
-    "CTL_CholetteAction=Cholette",
-    "CTL_CholetteTopComponent=Cholette Window",
-    "HINT_CholetteTopComponent=This is a Cholette window"
+    "CTL_GrpAction=Grp",
+    "CTL_GrpTopComponent=Grp Window",
+    "HINT_GrpTopComponent=This is a Grp window"
 })
-public final class CholetteTopComponent extends WorkspaceTs2TopComponent<CholetteDocument> {
+public final class GrpTopComponent extends WorkspaceTs2TopComponent<GRPDocument> {
 
     private final ExplorerManager mgr = new ExplorerManager();
 
-    private static CholetteDocumentManager manager() {
-        return WorkspaceFactory.getInstance().getManager(CholetteDocumentManager.class);
+    private static GrpDocumentManager manager() {
+        return WorkspaceFactory.getInstance().getManager(GrpDocumentManager.class);
     }
 
-    public CholetteTopComponent() {
+    public GrpTopComponent() {
         this(null);
     }
 
-    public CholetteTopComponent(WorkspaceItem<CholetteDocument> doc) {
+    public GrpTopComponent(WorkspaceItem<GRPDocument> doc) {
         super(doc);
         initComponents();
-        setToolTipText(Bundle.CTL_CholetteTopComponent());
+        setToolTipText(Bundle.CTL_GrpTopComponent());
     }
 
     @Override
     protected Ts2ProcessingViewer initViewer() {
         //       node=new InternalNode();
-        return Ts2ProcessingViewer.create(this.getElement(), DocumentUIServices.forDocument(CholetteDocument.class), "Low-freq series", "High-freq series");
+        return Ts2ProcessingViewer.create(this.getElement(), DocumentUIServices.forDocument(GRPDocument.class), "Low-freq series", "High-freq series");
     }
 
     @Override
-    public WorkspaceItem<CholetteDocument> newDocument() {
+    public WorkspaceItem<GRPDocument> newDocument() {
         return manager().create(WorkspaceFactory.getInstance().getActiveWorkspace());
     }
 
-    //    private UniCholetteSpecification getSpecification(){
+    //    private UniGrpSpecification getSpecification(){
 //        return getDocument().getElement().getSpecification();
 //    }
 //
-//    private void setSpecification(UniCholetteSpecification spec){
+//    private void setSpecification(UniGrpSpecification spec){
 //        getDocument().getElement().setSpecification(spec);
 //        updateView();
 //    }
@@ -114,7 +114,7 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 
     @Override
     protected String getContextPath() {
-        return CholetteDocumentManager.CONTEXTPATH; //To change body of generated methods, choose Tools | Templates.
+        return GrpDocumentManager.CONTEXTPATH; //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -130,7 +130,7 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 //
 //        InternalNode() {
 //            super(Children.LEAF);
-//            setDisplayName("Cholette method");
+//            setDisplayName("Grp method");
 //        }
 //
 //        @Override
@@ -147,7 +147,7 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 //
 //                @Override
 //                public Object getValue() throws IllegalAccessException, InvocationTargetException {
-//                    UniCholetteSpecification spec=getSpecification();
+//                    UniGrpSpecification spec=getSpecification();
 //                    return spec.getRho();
 //                }
 //
@@ -158,8 +158,8 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 //
 //                @Override
 //                public void setValue(Object t) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-//                    CholetteDocument document = getDocument().getElement();
-//                    UniCholetteSpecification nspec = document.getSpecification().clone();
+//                    GrpDocument document = getDocument().getElement();
+//                    UniGrpSpecification nspec = document.getSpecification().clone();
 //                    nspec.setRho((Double)t);
 //                    document.setSpecification(nspec);
 //                    updateView();
@@ -175,7 +175,7 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 //
 //                @Override
 //                public Object getValue() throws IllegalAccessException, InvocationTargetException {
-//                    UniCholetteSpecification spec=getSpecification();
+//                    UniGrpSpecification spec=getSpecification();
 //                    return spec.getLambda();
 //                }
 //
@@ -186,8 +186,8 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 //
 //                @Override
 //                public void setValue(Object t) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-//                    CholetteDocument document = getDocument().getElement();
-//                    UniCholetteSpecification nspec = document.getSpecification().clone();
+//                    GrpDocument document = getDocument().getElement();
+//                    UniGrpSpecification nspec = document.getSpecification().clone();
 //                    nspec.setLambda((Double)t);
 //                    setSpecification(nspec);
 //                }
@@ -207,7 +207,7 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 ////
 ////                @Override
 ////                public Object getValue() throws IllegalAccessException, InvocationTargetException {
-////                    UniCholetteSpecification spec=getSpecification();
+////                    UniGrpSpecification spec=getSpecification();
 ////                    return AggregationType.Sum;
 ////                }
 ////
@@ -218,8 +218,8 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 ////
 ////                @Override
 ////                public void setValue(Object t) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-////                    CholetteDocument document = getDocument().getElement();
-////                    UniCholetteSpecification nspec = document.getSpecification().clone();
+////                    GrpDocument document = getDocument().getElement();
+////                    UniGrpSpecification nspec = document.getSpecification().clone();
 ////                    // to do
 ////                    document.setSpecification(nspec);
 ////                    updateView();
@@ -235,7 +235,7 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 //
 //                @Override
 //                public Object getValue() throws IllegalAccessException, InvocationTargetException {
-//                    UniCholetteSpecification spec=getSpecification();
+//                    UniGrpSpecification spec=getSpecification();
 //                    return spec.getAggregationFrequency();
 //                }
 //
@@ -246,8 +246,8 @@ public final class CholetteTopComponent extends WorkspaceTs2TopComponent<Cholett
 //
 //                @Override
 //                public void setValue(Object t) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-//                    CholetteDocument document = getDocument().getElement();
-//                    UniCholetteSpecification nspec = document.getSpecification().clone();
+//                    GrpDocument document = getDocument().getElement();
+//                    UniGrpSpecification nspec = document.getSpecification().clone();
 //                    nspec.setAggregationFrequency((TsFrequency)t);
 //                    document.setSpecification(nspec);
 //                    updateView();

@@ -55,12 +55,13 @@ public class GRP {
     public double[] process(DoubleSeq highSeries, DoubleSeq lowSeries) {
         double[] start;
         int n = flow ? conversion * lowSeries.length() : (1 + conversion * (lowSeries.length() - 1));
+        boolean avg = spec.getAggregationType() == AggregationType.Average;
         if (spec.isDentonInitialization()) {
             DentonSpec dspec = DentonSpec.builder()
                     .modified(true)
                     .multiplicative(true)
                     .differencing(1)
-                    .aggregationType(spec.getAggregationType())
+                    .aggregationType(avg ? AggregationType.Sum : spec.getAggregationType())
                     .observationPosition(0)
                     .buildWithoutValidation();
             MatrixDenton denton = new MatrixDenton(dspec, conversion, 0);
@@ -391,7 +392,12 @@ class GRPFunction implements IFunction {
 
         @Override
         public double getValue() {
-            return GRP.f(x, p);
+            double f = GRP.f(x, p);
+            if (!Double.isFinite(f)) {
+                return Double.MAX_VALUE;
+            } else {
+                return f;
+            }
         }
 
     }

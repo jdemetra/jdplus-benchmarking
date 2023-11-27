@@ -23,7 +23,7 @@ import java.util.HashMap;
  * @author Jean Palate
  */
 @lombok.Data
-class Constraint {
+public class Constraint {
 
     /**
      *
@@ -38,7 +38,7 @@ class Constraint {
      *
      * @param cnt
      */
-    Constraint(HashMap<Integer, Double> cnt) {
+    public Constraint(HashMap<Integer, Double> cnt) {
         index = new int[cnt.size()];
         int j = 0;
         for (Integer i : cnt.keySet()) {

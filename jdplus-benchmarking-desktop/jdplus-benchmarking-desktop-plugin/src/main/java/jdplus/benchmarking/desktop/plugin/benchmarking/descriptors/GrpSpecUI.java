@@ -16,7 +16,7 @@
  */
 package jdplus.benchmarking.desktop.plugin.benchmarking.descriptors;
 
-import jdplus.benchmarking.base.api.benchmarking.univariate.CholetteSpec;
+import jdplus.benchmarking.base.api.benchmarking.univariate.GrpSpec;
 import jdplus.toolkit.desktop.plugin.descriptors.EnhancedPropertyDescriptor;
 import jdplus.toolkit.desktop.plugin.descriptors.IObjectDescriptor;
 import java.beans.IntrospectionException;
@@ -28,23 +28,23 @@ import java.util.List;
  *
  * @author Jean Palate
  */
-public class CholetteSpecUI implements IObjectDescriptor<CholetteSpec> {
+public class GrpSpecUI implements IObjectDescriptor<GrpSpec> {
     
-    public static final String CHOLETTE = "Cholette";
+    public static final String GRP = "Grp";
 
     @Override
     public String toString() {
-        return CHOLETTE;
+        return GRP;
     }
 
-    CholetteSpec core;
+    GrpSpec core;
 
-    public CholetteSpecUI(CholetteSpec spec) {
+    public GrpSpecUI(GrpSpec spec) {
         core = spec;
     }
 
     @Override
-    public CholetteSpec getCore() {
+    public GrpSpec getCore() {
         return core;
     }
 
@@ -56,37 +56,37 @@ public class CholetteSpecUI implements IObjectDescriptor<CholetteSpec> {
         core=core.toBuilder().aggregationType(Utility.convert(type)).build();
     }
 
-    public double getRho() {
-        return core.getRho();
+    public double getPrecision() {
+        return core.getPrecision();
     }
 
-    public void setRho(double r) {
-        core=core.toBuilder().rho(r).build();
+    public void setPrecision(double p) {
+        core=core.toBuilder().precision(p).build();
     }
 
-    public double getLambda() {
-        return core.getLambda();
+    public boolean isDenton() {
+        return core.isDentonInitialization();
     }
 
-    public void setLambda(double r) {
-        core=core.toBuilder().lambda(r).build();
+    public void setDenton(boolean denton) {
+        core=core.toBuilder().dentonInitialization(denton).build();
     }
 
-    public CholetteSpec.BiasCorrection getBias() {
-        return core.getBias();
+    public int getMaxIter() {
+        return core.getMaxIter();
     }
 
-    public void setBias(CholetteSpec.BiasCorrection r) {
-        core=core.toBuilder().bias(r).build();
+    public void setMaxIter(int niter) {
+        core=core.toBuilder().maxIter(niter).build();
     }
 
-    public int getFrequency() {
-        return core.getDefaultPeriod();
-    }
-
-    public void setFrequency(int period) {
-        core=core.toBuilder().defaultPeriod(period).build();
-    }
+//    public int getFrequency() {
+//        return core.getDefaultPeriod();
+//    }
+//
+//    public void setFrequency(int period) {
+//        core=core.toBuilder().defaultPeriod(period).build();
+//    }
 
     @Override
     public List<EnhancedPropertyDescriptor> getProperties() {
@@ -95,15 +95,15 @@ public class CholetteSpecUI implements IObjectDescriptor<CholetteSpec> {
         if (desc != null) {
             props.add(desc);
         }
-        desc = rhoDesc();
+        desc = dentonDesc();
         if (desc != null) {
             props.add(desc);
         }
-        desc = lambdaDesc();
+        desc = precisionDesc();
         if (desc != null) {
             props.add(desc);
         }
-        desc = biasDesc();
+        desc = iterDesc();
         if (desc != null) {
             props.add(desc);
         }
@@ -127,39 +127,39 @@ public class CholetteSpecUI implements IObjectDescriptor<CholetteSpec> {
         }
     }
 
-    private EnhancedPropertyDescriptor biasDesc() {
+    private EnhancedPropertyDescriptor precisionDesc() {
         try {
-            PropertyDescriptor desc = new PropertyDescriptor("Bias", this.getClass());
-            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, BIAS_ID);
+            PropertyDescriptor desc = new PropertyDescriptor("Precision", this.getClass());
+            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, PRECISION_ID);
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
-            desc.setDisplayName(BIAS_NAME);
-            desc.setShortDescription(BIAS_DESC);
+            desc.setDisplayName(PRECISION_NAME);
+            desc.setShortDescription(PRECISION_DESC);
             return edesc;
         } catch (IntrospectionException ex) {
             return null;
         }
     }
 
-    private EnhancedPropertyDescriptor rhoDesc() {
+    private EnhancedPropertyDescriptor iterDesc() {
         try {
-            PropertyDescriptor desc = new PropertyDescriptor("Rho", this.getClass());
-            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, RHO_ID);
+            PropertyDescriptor desc = new PropertyDescriptor("MaxIter", this.getClass());
+            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, ITER_ID);
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
-            desc.setDisplayName(RHO_NAME);
-            desc.setShortDescription(RHO_DESC);
+            desc.setDisplayName(ITER_NAME);
+            desc.setShortDescription(ITER_DESC);
             return edesc;
         } catch (IntrospectionException ex) {
             return null;
         }
     }
 
-    private EnhancedPropertyDescriptor lambdaDesc() {
+    private EnhancedPropertyDescriptor dentonDesc() {
         try {
-            PropertyDescriptor desc = new PropertyDescriptor("Lambda", this.getClass());
-            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, LAMBDA_ID);
+            PropertyDescriptor desc = new PropertyDescriptor("Denton", this.getClass());
+            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, INIT_ID);
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
-            desc.setDisplayName(LAMBDA_NAME);
-            desc.setShortDescription(LAMBDA_DESC);
+            desc.setDisplayName(INIT_NAME);
+            desc.setShortDescription(INIT_DESC);
             return edesc;
         } catch (IntrospectionException ex) {
             return null;
@@ -181,12 +181,12 @@ public class CholetteSpecUI implements IObjectDescriptor<CholetteSpec> {
 
     @Override
     public String getDisplayName() {
-        return CHOLETTE; //To change body of generated methods, choose Tools | Templates.
+        return GRP; //To change body of generated methods, choose Tools | Templates.
     }
 
-    private static final int TYPE_ID = 0, BIAS_ID = 10, RHO_ID = 20, LAMBDA_ID = 30;
-    private static final String TYPE_NAME = "Type", BIAS_NAME = "Bias correction",
-            RHO_NAME = "Rho", LAMBDA_NAME = "Lambda",
-            TYPE_DESC = "Type", BIAS_DESC = "Bias correction",
-            RHO_DESC = "Rho", LAMBDA_DESC = "Lambda";
+    private static final int TYPE_ID = 0, PRECISION_ID = 10, ITER_ID = 20, INIT_ID = 30;
+    private static final String TYPE_NAME = "Type", PRECISION_NAME = "Precision",
+            ITER_NAME = "iterations", INIT_NAME = "Denton initialization",
+            TYPE_DESC = "Type", PRECISION_DESC = "Precision",
+            ITER_DESC = "Max number of iterations", INIT_DESC = "Denton initialisation";
 }

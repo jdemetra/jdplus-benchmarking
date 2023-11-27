@@ -5,6 +5,8 @@
  */
 package jdplus.benchmarking.base.core.benchmarking.multivariate;
 
+import jdplus.benchmarking.base.core.ssf.ContemporaneousSsfCholette;
+import jdplus.benchmarking.base.core.ssf.MultivariateSsfCholette;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.MultivariateCholetteSpec;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.TemporalConstraint;

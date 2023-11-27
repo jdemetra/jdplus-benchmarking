@@ -14,7 +14,7 @@
  * See the Licence for the specific language governing permissions and 
  * limitations under the Licence.
  */
-package jdplus.benchmarking.base.core.calendarization;
+package jdplus.benchmarking.base.core.ssf;
 
 import jdplus.toolkit.base.core.data.DataBlock;
 import nbbrd.design.Development;
