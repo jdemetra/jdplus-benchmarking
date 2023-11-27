@@ -19,6 +19,7 @@ package jdplus.benchmarking.base.core.univariate;
 import java.util.ArrayList;
 import java.util.List;
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
+import jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodStatistics;
 import jdplus.benchmarking.base.core.ssf.SsfADL;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
@@ -154,7 +155,7 @@ public class ADLProcessor {
 
     private ADLResults disaggregate(DisaggregationModel model, ADLSpec spec) {
         ADLDefinition definition = definitionOf(spec);
-        double limit = spec.getTruncation() == null ? -1 : spec.getTruncation();
+        double limit = spec.getTruncation() == null ? -1 : spec.getTruncation() == null ? -1 : spec.getTruncation();
         ObjectiveFunctionPoint ml=null;
         ADLFunction fn = ADLFunction.builder()
                 .definition(definition)
@@ -186,22 +187,23 @@ public class ADLProcessor {
         Ssf ssf = SsfADL.ssfRepresentation(definition, model.getHX(), model.getFrequencyRatio(), model.getStart());
         DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, new SsfData(model.getHY()), true, true);
         DataBlock coeff = ss.a(0).drop(2, 0);
+        FastMatrix cvar = ss.P(0).extract(2,coeff.length(), 2, coeff.length());
+        int nparams = spec.isParameterEstimation() ? 1 : 0;
 
         return ADLResults.builder()
                 .originalSeries(model.getOriginalSeries())
                 .disaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), ss.getComponent(1)))
                 .stdevDisaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), ss.getComponentVariance(1).fn(z -> z < 0 ? 0 : Math.sqrt(z))))
                 .disaggregationDomain(model.getHDom())
-                .likelihood(rslt.likelihood())
-                .coefficient(DoubleSeq.of(coeff.toArray()))
+                .likelihood(MarginalLikelihoodStatistics.stats(rslt.likelihood(), 0, nparams))
+                .coefficients(DoubleSeq.of(coeff.toArray()))
+                .coefficientsCovariance(cvar.deepClone())
                 .maximum(ml)
                 .build();
     }
 
     private ADLResults interpolate(DisaggregationModel model, ADLSpec spec) {
-        return null;
-    }
-
+        throw new UnsupportedOperationException("Not supported yet."); 
 //    private SsfFunction<Parameter, Ssf> ssfFunction(DisaggregationModel model, TemporalDisaggregationSpec spec) {
 //        SsfData data = new SsfData(model.getHEY());
 //        Double lbound = spec.getTruncatedParameter();
@@ -213,5 +215,5 @@ public class ADLProcessor {
 //                .regression(model.getHEX(), diffuseRegressors(model.nx(), spec))
 //                .useMaximumLikelihood(true)
 //                .build();
-//    }
+    }
 }

@@ -31,10 +31,18 @@ import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import jdplus.benchmarking.base.api.univariate.ADLSpec;
+import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_ALGORITHM;
+import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_EPS;
+import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_RESCALE;
+import static jdplus.benchmarking.base.api.univariate.ADLSpec.builder;
+import jdplus.benchmarking.base.core.univariate.ADLProcessor;
+import jdplus.benchmarking.base.core.univariate.ADLResults;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonProcessor;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonResults;
 import jdplus.benchmarking.base.core.univariate.ProcessorI;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationProcessor;
+import jdplus.toolkit.base.api.timeseries.TimeSelector;
 
 /**
  *
@@ -42,7 +50,6 @@ import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationProcessor;
  */
 @lombok.experimental.UtilityClass
 public class TemporalDisaggregation {
-
 
     public TemporalDisaggregationIResults processI(TsData y, TsData indicator, String model, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho) {
@@ -56,24 +63,26 @@ public class TemporalDisaggregation {
                 .build();
         return ProcessorI.process(y, indicator, spec);
     }
-    
-    public ModelBasedDentonResults processModelBasedDenton(TsData y, TsData indicator, int differencing, String aggregation, int obspos, String[] odates, double[] ovar, String[] fdates, double[] fval){
+
+    public ModelBasedDentonResults processModelBasedDenton(TsData y, TsData indicator, int differencing, String aggregation, int obspos, String[] odates, double[] ovar, String[] fdates, double[] fval) {
         ModelBasedDentonSpec.Builder builder = ModelBasedDentonSpec.builder()
                 .aggregationType(AggregationType.valueOf(aggregation));
-        if (odates != null && ovar != null){
-            if (odates.length != ovar.length)
+        if (odates != null && ovar != null) {
+            if (odates.length != ovar.length) {
                 throw new IllegalArgumentException();
-            for (int i=0; i<odates.length; ++i){
+            }
+            for (int i = 0; i < odates.length; ++i) {
                 builder.shockVariance(LocalDate.parse(odates[i], DateTimeFormatter.ISO_DATE), ovar[i]);
             }
-        }  
-        if (fdates != null && fval != null){
-            if (fdates.length != fval.length)
+        }
+        if (fdates != null && fval != null) {
+            if (fdates.length != fval.length) {
                 throw new IllegalArgumentException();
-            for (int i=0; i<fdates.length; ++i){
+            }
+            for (int i = 0; i < fdates.length; ++i) {
                 builder.fixedBiRatio(LocalDate.parse(fdates[i], DateTimeFormatter.ISO_DATE), fval[i]);
             }
-        }  
+        }
         return ModelBasedDentonProcessor.process(y, indicator, builder.build());
     }
 
@@ -109,4 +118,27 @@ public class TemporalDisaggregation {
         }
     }
 
+    public ADLResults processADL(TsData y, boolean constant, boolean trend, TsData[] indicators,
+            String aggregation, double phi, boolean fixedphi, double truncatedPhi, String xar) {
+        if (indicators == null) {
+            return null;
+        }
+        ADLSpec spec = builder()
+                .estimationSpan(TimeSelector.all())
+                .aggregationType(AggregationType.valueOf(aggregation))
+                .mean(constant)
+                .trend(trend)
+                .xar(ADLSpec.XAR.valueOf(xar))
+                .phi(fixedphi ? Parameter.fixed(phi) : (Double.isFinite(phi) ? Parameter.initial(phi) : Parameter.undefined()))
+                .truncation(truncatedPhi <= -1 ? null : truncatedPhi)
+                .estimationPrecision(DEF_EPS)
+                .rescale(DEF_RESCALE)
+//                .algorithm(SsfInitialization.valueOf(algorithm))
+                .build();
+        for (int i = 0; i < indicators.length; ++i) {
+            indicators[i] = indicators[i].cleanExtremities();
+        }
+        return ADLProcessor.process(y, indicators, spec);
+
+    }
 }

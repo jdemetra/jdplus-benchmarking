@@ -16,6 +16,7 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodStatistics;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.information.GenericExplorable;
 import jdplus.toolkit.base.api.math.functions.ObjectiveFunctionPoint;
@@ -23,10 +24,6 @@ import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
-import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
-import jdplus.toolkit.base.core.stats.likelihood.DiffuseConcentratedLikelihood;
-import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
-import jdplus.toolkit.base.core.stats.likelihood.Likelihood;
 
 /**
  *
@@ -53,9 +50,10 @@ public class ADLResults implements GenericExplorable {
      */
     int hyperParametersCount;
     
-    MarginalLikelihood likelihood;
+    MarginalLikelihoodStatistics likelihood;
     
-    DoubleSeq coefficient;
+    DoubleSeq coefficients;
+    Matrix coefficientsCovariance;
     
     ObjectiveFunctionPoint maximum;
     

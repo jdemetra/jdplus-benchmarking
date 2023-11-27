@@ -133,7 +133,7 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
                 .estimationSpan(TimeSelector.all())
                 .algorithm(DEF_ALGORITHM)
                 .rescale(DEF_RESCALE)
-                .truncation(Double.valueOf(0.0))
+                .truncation(0.0)
                 .phi(Parameter.undefined())
                 .estimationPrecision(DEF_EPS);
     }
