@@ -19,9 +19,17 @@ package jdplus.benchmarking.base.core.benchmarking.extractors;
 import jdplus.toolkit.base.api.information.InformationExtractor;
 import jdplus.toolkit.base.api.information.InformationMapping;
 import jdplus.toolkit.base.api.dictionaries.LikelihoodDictionaries;
-import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
-import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
 import nbbrd.service.ServiceProvider;
+
+import jdplus.toolkit.base.api.information.InformationMapping;
+
+import nbbrd.service.ServiceProvider;
+
+import jdplus.toolkit.base.api.information.InformationMapping;
+
+import jdplus.toolkit.base.api.information.InformationMapping;
+
+import jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodStatistics;
 
 /**
  *
@@ -43,7 +51,8 @@ public class MarginalLikelihoodExtractor extends InformationMapping<MarginalLike
         set(LikelihoodDictionaries.AICC, Double.class, source -> source.aicc());
         set(LikelihoodDictionaries.BIC, Double.class, source -> source.bic());
         set(LikelihoodDictionaries.HQ, Double.class, source -> source.hannanQuinn());
-
+        set("dcorrection", Double.class, source -> source.getDiffuseCorrection());
+        set("mcorrection", Double.class, source -> source.getMarginalCorrection());
      }
 
     @Override

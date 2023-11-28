@@ -19,8 +19,6 @@ package jdplus.benchmarking.base.core.benchmarking.extractors;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationDictionaries;
 import jdplus.benchmarking.base.core.univariate.ADLResults;
 import jdplus.benchmarking.base.core.univariate.ResidualsDiagnostics;
-import jdplus.toolkit.base.api.data.DoubleSeq;
-import jdplus.toolkit.base.api.data.DoublesMath;
 import jdplus.toolkit.base.api.information.InformationExtractor;
 import jdplus.toolkit.base.api.information.InformationMapping;
 import jdplus.toolkit.base.api.math.matrices.Matrix;

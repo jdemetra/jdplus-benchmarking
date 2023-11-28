@@ -175,12 +175,11 @@ public class ADLProcessor {
             rslt = (ADLFunction.Point) fmin.getResult();
             double phi = rslt.getParameters().get(0);
             definition = definition.withPhi(phi);
-            double c = -.5 * (rslt.likelihood().dim() - 1 - model.nx()) / rslt.getValue();
             double[] grad = fmin.gradientAtMinimum().toArray();
             for (int i = 0; i < grad.length; ++i) {
-                grad[i] *= c;
+                grad[i] = -grad[i];
             }
-            FastMatrix hessian = fmin.curvatureAtMinimum().times(c);
+            FastMatrix hessian = rslt.derivatives().hessian();
             ml = new ObjectiveFunctionPoint(rslt.likelihood().logLikelihood(),
                     new double[]{phi}, grad, hessian);
         }
