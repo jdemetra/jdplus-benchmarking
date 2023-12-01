@@ -63,7 +63,7 @@ public class MarginalLikelihoodStatistics {
                 .marginalCorrection(ml.getMarginalCorrection())
                 .observationsCount(ml.dim())
                 .diffuseCount(ml.getD())
-                .estimatedParametersCount(ml.isScalingFactor() ? nparams + 1 : nparams)
+                .estimatedParametersCount(nparams)
                 .ssqErr(ml.ssq())
                 .build();
     }
