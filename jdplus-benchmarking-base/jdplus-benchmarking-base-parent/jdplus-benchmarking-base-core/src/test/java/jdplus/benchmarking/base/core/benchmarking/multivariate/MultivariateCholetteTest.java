@@ -39,6 +39,98 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class MultivariateCholetteTest {
     
+    // The following test works...
+    @Test
+    public void testTableFictiveData() {
+        
+        Map<String, TsData> input = new HashMap<>();
+        
+        double[] s1 = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4};
+        input.put("s1", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1));
+        
+        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
+        input.put("s2", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2));
+        
+        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
+        input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
+        
+        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
+        input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
+        
+        double[] y1 = {30.0,30.6};
+        input.put("y1", TsData.ofInternal(TsPeriod.yearly(2021), y1));
+        
+        double[] y2 = {80.0,81.2};
+        input.put("y2", TsData.ofInternal(TsPeriod.yearly(2021), y2));
+        
+        double[] y3 = {8.0,8.1};
+        input.put("y3", TsData.ofInternal(TsPeriod.yearly(2021), y3));        
+        
+        ContemporaneousConstraint c1 = ContemporaneousConstraint.parse("a=s1+s2+s3");
+        
+        TemporalConstraint c2 = TemporalConstraint.parse("y1=sum(s1)");
+        TemporalConstraint c3 = TemporalConstraint.parse("y2=sum(s2)");
+        TemporalConstraint c4 = TemporalConstraint.parse("y3=sum(s3)");
+        
+        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
+                .lambda(.5)
+                .rho(1)
+                .contemporaneousConstraint(c1)
+                .temporalConstraint(c2)
+                .temporalConstraint(c3)
+                .temporalConstraint(c4)
+                .build();
+        
+        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
+    }
+    
+    // The following test does not work... (the only difference is that I added 2 more decimals to the second figure of s1)
+    // Note that if I change the decimal, it works again...
+    @Test
+    public void testTableFictiveData2() {
+        
+        Map<String, TsData> input = new HashMap<>();
+        
+        double[] s1 = {7,7.228,8.1,7.5,8.5,7.8,8.1,8.4};
+        input.put("s1", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1));
+        
+        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
+        input.put("s2", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2));
+        
+        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
+        input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
+        
+        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
+        input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
+        
+        double[] y1 = {30.0,30.6};
+        input.put("y1", TsData.ofInternal(TsPeriod.yearly(2021), y1));
+        
+        double[] y2 = {80.0,81.2};
+        input.put("y2", TsData.ofInternal(TsPeriod.yearly(2021), y2));
+        
+        double[] y3 = {8.0,8.1};
+        input.put("y3", TsData.ofInternal(TsPeriod.yearly(2021), y3));        
+        
+        ContemporaneousConstraint c1 = ContemporaneousConstraint.parse("a=s1+s2+s3");
+        
+        TemporalConstraint c2 = TemporalConstraint.parse("y1=sum(s1)");
+        TemporalConstraint c3 = TemporalConstraint.parse("y2=sum(s2)");
+        TemporalConstraint c4 = TemporalConstraint.parse("y3=sum(s3)");
+        
+        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
+                .lambda(.5)
+                .rho(1)
+                .contemporaneousConstraint(c1)
+                .temporalConstraint(c2)
+                .temporalConstraint(c3)
+                .temporalConstraint(c4)
+                .build();
+        
+        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
+    }
+    
+    
     @Test
     public void testTable() {
         
