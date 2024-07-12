@@ -27,6 +27,8 @@ import ec.benchmarking.simplets.TsMultiBenchmarking;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import jdplus.toolkit.base.api.data.AggregationType;
+import jdplus.toolkit.base.api.timeseries.TsUnit;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -67,7 +69,7 @@ public class MultivariateCholetteTest {
         
         TemporalConstraint c4 = TemporalConstraint.parse("S22=sum(s22)");
         MultivariateCholetteSpec.Builder builder = MultivariateCholetteSpec.builder()
-                .lambda(1)
+                .lambda(0.9)
                 .rho(1)
                 .contemporaneousConstraint(c1)
                 .contemporaneousConstraint(c2)
@@ -106,8 +108,8 @@ public class MultivariateCholetteTest {
         assertTrue(distance(s2_, TsData.add(rslt2.get("s21"), rslt2.get("s22"))) < 1e-9);
     }
     
-    @Test
-    @Disabled
+//    @Test
+//    @Disabled
     public void testOldTable() {
         TsMultiBenchmarking bench = new TsMultiBenchmarking();
         ec.tstoolkit.timeseries.simplets.TsData s11 = oldRandomM(120, 0);
@@ -126,7 +128,7 @@ public class MultivariateCholetteTest {
         ec.tstoolkit.timeseries.simplets.TsData s2_ = oldRandomM(120, 6);
         bench.addInput("s2_", s2_);
         
-        bench.setLambda(0.5);
+        bench.setLambda(0.9);
         bench.setRho(1);
         ec.benchmarking.simplets.TsMultiBenchmarking.ContemporaneousConstraintDescriptor c1 = ec.benchmarking.simplets.TsMultiBenchmarking.ContemporaneousConstraintDescriptor.parse("s_1=s11+s21");
         bench.addContemporaneousConstraint(c1);
@@ -182,5 +184,108 @@ public class MultivariateCholetteTest {
         }
         return new ec.tstoolkit.timeseries.simplets.TsData(ec.tstoolkit.timeseries.simplets.TsFrequency.Yearly, 1980, 0, data, false);
     }
+    
+// The following test works...
+    @Test
+    public void testTableFictiveData() {
+
+        Map<String, TsData> input = new HashMap<>();
+
+        double[] s1 = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4};
+        input.put("s1", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1));
+
+        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
+        input.put("s2", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2));
+
+        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
+        input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
+
+        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
+        input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
+
+        double[] y1 = {30.0,30.5};
+        input.put("y1", TsData.ofInternal(TsPeriod.yearly(2021), y1));
+
+        double[] y2 = {80.0,81.2};
+        input.put("y2", TsData.ofInternal(TsPeriod.yearly(2021), y2));
+
+        double[] y3 = {8.0,8.1};
+        input.put("y3", TsData.ofInternal(TsPeriod.yearly(2021), y3));        
+
+        ContemporaneousConstraint c1 = ContemporaneousConstraint.parse("a=s1+s2+s3");
+
+        TemporalConstraint c2 = TemporalConstraint.parse("y1=sum(s1)");
+        TemporalConstraint c3 = TemporalConstraint.parse("y2=sum(s2)");
+        TemporalConstraint c4 = TemporalConstraint.parse("y3=sum(s3)");
+
+        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
+                .lambda(.5)
+                .rho(1)
+                .contemporaneousConstraint(c1)
+                .temporalConstraint(c2)
+                .temporalConstraint(c3)
+                .temporalConstraint(c4)
+                .build();
+
+        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
+    }
+
+    // The following test does not work... (the only difference is that I added 2 more decimals to the second figure of s1)
+    // Note that if I change the decimal, it works again...
+    @Test
+    public void testTableFictiveData2() {
+
+        Map<String, TsData> input = new HashMap<>();
+
+        double[] s1 = {7,7.228,8.1,7.5,8.5,7.8,8.1,8.4};
+        TsData S1=TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1);
+        input.put("s1", S1);
+
+        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
+        TsData S2=TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2);
+        input.put("s2", S2);
+
+        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
+        TsData S3=TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3);
+        input.put("s3", S3);
+
+        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
+        TsData A=TsData.ofInternal(TsPeriod.quarterly(2021, 1), a);
+        input.put("a", A);
+
+        double[] y1 = {30.0,30.5};
+        TsData Y1=TsData.ofInternal(TsPeriod.yearly(2021), y1);
+        input.put("y1", Y1);
+
+        double[] y2 = {80.0,81.2};
+        TsData Y2=TsData.ofInternal(TsPeriod.yearly(2021), y2);
+        input.put("y2", Y2);
+
+        double[] y3 = {8.0,8.1};
+        TsData Y3=TsData.ofInternal(TsPeriod.yearly(2021), y3);
+        input.put("y3", Y3);        
+
+        ContemporaneousConstraint c1 = ContemporaneousConstraint.parse("a=s1+s2+s3");
+
+        TemporalConstraint c2 = TemporalConstraint.parse("y1=sum(s1)");
+        TemporalConstraint c3 = TemporalConstraint.parse("y2=sum(s2)");
+        TemporalConstraint c4 = TemporalConstraint.parse("y3=sum(s3)");
+
+        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
+                .lambda(0.5)
+                .rho(1)
+                .contemporaneousConstraint(c1)
+                .temporalConstraint(c2)
+                .temporalConstraint(c3)
+                .temporalConstraint(c4)
+                .build();
+
+        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
+        assertTrue(distance(A, TsData.add(rslt.get("s1"), rslt.get("s2"), rslt.get("s3"))) < 1e-9);
+        assertTrue(distance(Y1, rslt.get("s1").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
+        assertTrue(distance(Y2, rslt.get("s2").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
+        assertTrue(distance(Y3, rslt.get("s3").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
+    }
+
     
 }
