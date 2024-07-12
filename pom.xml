@@ -67,6 +67,7 @@
         <module>jdplus-benchmarking-base</module>
         <module>jdplus-benchmarking-desktop</module>
         <module>jdplus-benchmarking-cli</module>
+        <module>jdplus-benchmarking-bom</module>
     </modules>
 
     <dependencies>
@@ -351,7 +352,7 @@
                                 <requireProperty>
                                     <property>project.artifactId</property>
                                     <message>Project artifactId must follow JD3 pattern</message>
-                                    <regex>^(jdplus)-(\w+)(?:-(base|cli|desktop)(?:-(\w+))?)?$</regex>
+                                    <regex>^(jdplus)-(\w+)(?:-(base|cli|desktop|bom)(?:-(\w+))?)?$</regex>
                                 </requireProperty>
                                 <requireReleaseDeps>
                                     <onlyWhenRelease>true</onlyWhenRelease>
