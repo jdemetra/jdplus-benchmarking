@@ -37,22 +37,22 @@ import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
 public class TemporalDisaggregationExtractor extends InformationMapping<TemporalDisaggregationResults> {
 
     public TemporalDisaggregationExtractor() {
-        set(TemporalDisaggregationDictionaries.DISAGG, TsData.class, 
+        set(TemporalDisaggregationDictionaries.DISAGG, TsData.class,
                 source -> source.getDisaggregatedSeries());
-        set(TemporalDisaggregationDictionaries.EDISAGG, TsData.class, 
+        set(TemporalDisaggregationDictionaries.EDISAGG, TsData.class,
                 source -> source.getStdevDisaggregatedSeries());
-        set(TemporalDisaggregationDictionaries.LDISAGG, TsData.class, 
+        set(TemporalDisaggregationDictionaries.LDISAGG, TsData.class,
                 source -> source.getDisaggregatedSeries()
                         .fn(source.getStdevDisaggregatedSeries(), (a, b) -> a - 2 * b));
-        set(TemporalDisaggregationDictionaries.UDISAGG, TsData.class, 
+        set(TemporalDisaggregationDictionaries.UDISAGG, TsData.class,
                 source -> source.getDisaggregatedSeries().fn(source.getStdevDisaggregatedSeries(), (a, b) -> a + 2 * b));
-        set(TemporalDisaggregationDictionaries.REGEFFECT, TsData.class, 
+        set(TemporalDisaggregationDictionaries.REGEFFECT, TsData.class,
                 source -> source.getRegressionEffects());
-        set(TemporalDisaggregationDictionaries.SMOOTHINGEFFECT, TsData.class, 
+        set(TemporalDisaggregationDictionaries.SMOOTHINGEFFECT, TsData.class,
                 source -> TsData.subtract(source.getDisaggregatedSeries(), source.getRegressionEffects()));
-        set(TemporalDisaggregationDictionaries.COEFF, double[].class, 
+        set(TemporalDisaggregationDictionaries.COEFF, double[].class,
                 source -> source.getCoefficients().toArray());
-        set(TemporalDisaggregationDictionaries.COVAR, Matrix.class, 
+        set(TemporalDisaggregationDictionaries.COVAR, Matrix.class,
                 source -> source.getCoefficientsCovariance());
         set(TemporalDisaggregationDictionaries.REGNAMES, String[].class, source -> {
             Variable[] vars = source.getIndicators();
@@ -78,7 +78,8 @@ public class TemporalDisaggregationExtractor extends InformationMapping<Temporal
                 return Double.NaN;
             }
             Matrix H = source.getMaximum().getHessian();
-            return (H == null || H.isEmpty()) ? Double.NaN : Math.sqrt(1 / source.getMaximum().getHessian().get(0, 0));
+            int n = source.getLikelihood().degreesOfFreedom() - 1;
+            return (H == null || H.isEmpty()) ? Double.NaN : Math.sqrt(-1 / (n * H.get(0, 0)));
         });
         set(TemporalDisaggregationDictionaries.SPART, Double.class, source -> {
             TsData re = source.getRegressionEffects();

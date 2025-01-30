@@ -13,6 +13,7 @@ import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
 
 /**
@@ -73,6 +74,7 @@ public class TemporalDisaggregationProcessorTest {
         System.out.println(rslt2.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt2.getStdevDisaggregatedSeries().getValues());
         System.out.println(rslt2.getCoefficients());
+        System.out.println(rslt1.getMaximum().getHessian());
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
 //        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
     }
