@@ -10,7 +10,6 @@ import jdplus.benchmarking.base.api.benchmarking.univariate.GrpSpec;
 import jdplus.toolkit.base.api.data.AggregationType;
 import tck.demetra.data.Data;
 import jdplus.toolkit.base.api.data.DoubleSeq;
-import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.math.matrices.SymmetricMatrix;
@@ -34,7 +33,7 @@ public class GRPTest {
         double[] rslt = grp.process(x, y);
         FastMatrix K4 = FastMatrix.make(4, 3);
         GRP.K(K4, true);
-        double[] mg = GRP.mg(rslt, x.getStorage(), K4, GrpSpec.Objective.Forward);
+        double[] mg = GRP.mg(rslt, x.getStorage(), K4);
         //       System.out.println(DoubleSeq.of(rslt));
 //        assertTrue(DoubleSeq.of(mg).allMatch(w -> Math.abs(w) < 1e-6));
     }
@@ -91,49 +90,7 @@ public class GRPTest {
         rslt = grp.process(x, y);
 //        System.out.println(DoubleSeq.of(rslt));
     }
-    
-    // Test backward GRP 
-    @Test
-    public void testGRPb() {
-        DataBlock y = DataBlock.of(new double[] {15,25});
-        DataBlock x = DataBlock.of(new double[] {1,2,3,4,5,6,7,8});
-        
-        GrpSpec spec = GrpSpec.builder()
-                .objective(GrpSpec.Objective.Backward)
-                .build();
-        GRP grp = new GRP(spec, 4, 0);
-        double[] rslt = grp.process(x, y);
-        System.out.println(DoubleSeq.of(rslt));
-    }
-    
-    // Test Symmetric GRP 
-    @Test
-    public void testGRPs() {
-        DataBlock y = DataBlock.of(new double[] {15,25});
-        DataBlock x = DataBlock.of(new double[] {1,2,3,4,5,6,7,8});
-        
-        GrpSpec spec = GrpSpec.builder()
-                .objective(GrpSpec.Objective.Symmetric)
-                .build();
-        GRP grp = new GRP(spec, 4, 0);
-        double[] rslt = grp.process(x, y);
-        System.out.println(DoubleSeq.of(rslt));
-    }
-    
-    // Test Log GRP 
-    @Test
-    public void testGRPl() {
-        DataBlock y = DataBlock.of(new double[] {15,25});
-        DataBlock x = DataBlock.of(new double[] {1,2,3,4,5,6,7,8});
-        
-        GrpSpec spec = GrpSpec.builder()
-                .objective(GrpSpec.Objective.Log)
-                .build();
-        GRP grp = new GRP(spec, 4, 0);
-        double[] rslt = grp.process(x, y);
-        System.out.println(DoubleSeq.of(rslt));
-    }
-    
+
     @Test
     public void testK() {
         FastMatrix K4 = FastMatrix.make(4, 3);
@@ -165,11 +122,11 @@ public class GRPTest {
 
         double[] g = new double[x.length()];
         for (int i = 0; i < g.length; ++i) {
-            g[i] = GRP.g(i, start, x.getStorage(), GrpSpec.Objective.Forward);
+            g[i] = GRP.g(i, start, x.getStorage());
         }
         FastMatrix K4 = FastMatrix.make(4, 3);
         GRP.K(K4, true);
-        double[] mg = GRP.mg(start, x.getStorage(), K4, GrpSpec.Objective.Forward);
+        double[] mg = GRP.mg(start, x.getStorage(), K4);
         double[] zx = GRP.Ztx(x.getStorage(), K4, true);
 
     }
