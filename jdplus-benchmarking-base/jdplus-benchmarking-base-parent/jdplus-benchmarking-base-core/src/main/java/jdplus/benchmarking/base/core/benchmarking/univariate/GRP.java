@@ -81,7 +81,7 @@ public class GRP {
                 .build();
         FastMatrix K = FastMatrix.make(conversion, conversion - 1);
         K(K, flow);
-        GRPFunction fn = new GRPFunction(highSeries.range(offset, offset + n).toArray(), lowSeries.toArray(), K, flow);
+        GRPFunction fn = new GRPFunction(highSeries.range(offset, offset + n).toArray(), lowSeries.toArray(), K, flow, spec.getObjective());
         IFunctionPoint ps = fn.evaluate(DoubleSeq.of(Ztx(start, K, flow)));
         if (!Double.isFinite(ps.getValue())) {
             init(start, lowSeries.toArray(), conversion);
@@ -115,20 +115,71 @@ public class GRP {
      * @param i index in the gradient (we compute df(x)/dx(i))
      * @param x current value of the objective function
      * @param p reference series (unbenchmarked)
+     * @param objective objective function
      * @return
      */
-    static double g(int i, double[] x, double[] p) {
-        if (i == 0) {
-            return -2 * x[1] / (x[0] * x[0]) * (x[1] / x[0] - p[1] / p[0]);
-        }
-        int n = p.length - 1;
-        if (i == n) {
-            int nprev = n - 1;
-            return 2 / x[nprev] * (x[n] / x[nprev] - p[n] / p[nprev]);
-        } else {
-            int iprev = i - 1, inext = i + 1;
-            return 2 / x[iprev] * (x[i] / x[iprev] - p[i] / p[iprev])
-                    - 2 * x[inext] / (x[i] * x[i]) * (x[inext] / x[i] - p[inext] / p[i]);
+    static double g(int i, double[] x, double[] p, GrpSpec.Objective objective) {
+        
+        if(objective == GrpSpec.Objective.Forward){
+            if (i == 0) {
+                return -2 * x[1] / (x[0] * x[0]) * (x[1] / x[0] - p[1] / p[0]);
+            }
+            int n = p.length - 1;
+            if (i == n) {
+                int nprev = n - 1;
+                return 2 / x[nprev] * (x[n] / x[nprev] - p[n] / p[nprev]);
+            } else {
+                int iprev = i - 1, inext = i + 1;
+                return 2 / x[iprev] * (x[i] / x[iprev] - p[i] / p[iprev])
+                        - 2 * x[inext] / (x[i] * x[i]) * (x[inext] / x[i] - p[inext] / p[i]);
+            }
+            
+        }else if (objective == GrpSpec.Objective.Backward){
+            if (i == 0) {
+                return 2 / x[1] * (x[0] / x[1] - p[0] / p[1]);
+            }
+            int n = p.length - 1;
+            if (i == n) {
+                int nprev = n - 1;
+                return -2 * x[nprev] / (x[n] * x[n]) * (x[nprev] / x[n] - p[nprev] / p[n]);
+            } else {
+                int iprev = i - 1, inext = i + 1;
+                return - 2 * x[iprev] / (x[i] * x[i]) * (x[iprev] / x[i] - p[iprev] / p[i]) +
+                        2 / x[inext] * (x[i] / x[inext] - p[i] / p[inext]);
+            }
+            
+        }else if (objective == GrpSpec.Objective.Symmetric){
+            if (i == 0) {
+                return - x[1] / (x[0] * x[0]) * (x[1] / x[0] - p[1] / p[0]) + 1 / x[1] * (x[0] / x[1] - p[0] / p[1]);
+            }
+            int n = p.length - 1;
+            if (i == n) {
+                int nprev = n - 1;
+                return 1 / x[nprev] * (x[n] / x[nprev] - p[n] / p[nprev]) - x[nprev] / (x[n] * x[n]) * (x[nprev] / x[n] - p[nprev] / p[n]);
+            } else {
+                int iprev = i - 1, inext = i + 1;
+                return 1 / x[iprev] * (x[i] / x[iprev] - p[i] / p[iprev])
+                       - x[inext] / (x[i] * x[i]) * (x[inext] / x[i] - p[inext] / p[i])  
+                       - x[iprev] / (x[i] * x[i]) * (x[iprev] / x[i] - p[iprev] / p[i])
+                       + 1 / x[inext] * (x[i] / x[inext] - p[i] / p[inext]);
+            }
+            
+        }else if (objective == GrpSpec.Objective.Log){
+            if (i == 0) {
+                return -2 / x[0] * (Math.log(x[1] / x[0]) - Math.log(p[1] / p[0]));
+            }
+            int n = p.length - 1;
+            if (i == n) {
+                int nprev = n - 1;
+                return 2 / x[n] * (Math.log(x[n] / x[nprev]) - Math.log(p[n] / p[nprev]));
+            } else {
+                int iprev = i - 1, inext = i + 1;
+                return 2 / x[i] * (Math.log(x[i] / x[iprev]) - Math.log(p[i] / p[iprev])
+                        - Math.log(x[inext] / x[i]) + Math.log(p[inext] / p[i]));
+            }
+            
+        }else{
+            return 0;
         }
     }
 
@@ -139,42 +190,144 @@ public class GRP {
      * @param j index in the hessian
      * @param x current value of the objective function
      * @param p reference series (unbenchmarked)
+     * @param objective objective function
      * @return
      */
-    static double h(int i, int j, double[] x, double[] p) {
-        if (i == j) {
-            if (i == 0) {
-                return 2 * x[1] / (x[0] * x[0] * x[0]) * (3 * x[1] / x[0] - 2 * p[1] / p[0]);
-            }
-            int n = p.length - 1;
-            if (i == n) {
-                int nprev = n - 1;
-                return 2 / (x[nprev] * x[nprev]);
+    static double h(int i, int j, double[] x, double[] p, GrpSpec.Objective objective) {
+        
+        if(objective == GrpSpec.Objective.Forward){
+            if (i == j) {
+                if (i == 0) {
+                    return 2 * x[1] / (x[0] * x[0] * x[0]) * (3 * x[1] / x[0] - 2 * p[1] / p[0]);
+                }
+                int n = p.length - 1;
+                if (i == n) {
+                    int nprev = n - 1;
+                    return 2 / (x[nprev] * x[nprev]);
+                } else {
+                    int iprev = i - 1, inext = i + 1;
+                    return 2 / (x[iprev] * x[iprev])
+                            + 2 * x[inext] / (x[i] * x[i] * x[i]) * (3 * x[inext] / x[i] - 2 * p[inext] / p[i]);
+                }
+            } else if (Math.abs(i - j) == 1) {
+                int k = Math.min(i, j), knext = k + 1;
+                return -2 / (x[k] * x[k]) * (2 * x[knext] / x[k] - p[knext] / p[k]);
             } else {
-                int iprev = i - 1, inext = i + 1;
-                return 2 / (x[iprev] * x[iprev])
-                        + 2 * x[inext] / (x[i] * x[i] * x[i]) * (3 * x[inext] / x[i] - 2 * p[inext] / p[i]);
+                return 0;
             }
-        } else if (Math.abs(i - j) == 1) {
-            int k = Math.min(i, j), knext = k + 1;
-            return -2 / (x[k] * x[k]) * (2 * x[knext] / x[k] - p[knext] / p[k]);
-        } else {
+            
+        }else if (objective == GrpSpec.Objective.Backward){
+            if (i == j) {
+                if (i == 0) {
+                    return 2 / (x[1] * x[1]);
+                }
+                int n = p.length - 1;
+                if (i == n) {
+                    int nprev = n - 1;
+                    return 2 * x[nprev] / (x[i] * x[i] * x[i]) * (3 * x[nprev] / x[i] - 2 * p[nprev] / p[i]);
+                } else {
+                    int iprev = i - 1, inext = i + 1;
+                    return 2 * x[iprev] / (x[i] * x[i] * x[i]) * (3 * x[iprev] / x[i] - 2 * p[iprev] / p[i]) + 
+                            2 / (x[inext] * x[inext]);
+                }
+            } else if (Math.abs(i - j) == 1) {
+                int k = Math.min(i, j), knext = k + 1;
+                return -2 / (x[knext] * x[knext]) * (2 * x[k] / x[knext] - p[k] / p[knext]);
+            } else {
+                return 0;
+            }
+            
+        }else if (objective == GrpSpec.Objective.Symmetric){
+            if (i == j) {   
+                if (i == 0) {
+                    return x[1] / (x[0] * x[0] * x[0]) * (3 * x[1] / x[0] - 2 * p[1] / p[0]) + 1 / (x[1] * x[1]);
+                }
+                int n = p.length - 1;
+                if (i == n) {
+                    int nprev = n - 1;
+                    return 1 / (x[nprev] * x[nprev])
+                           + x[nprev] / (x[i] * x[i] * x[i]) * (3 * x[nprev] / x[i] - 2 * p[nprev] / p[i]);
+                } else {
+                    int iprev = i - 1, inext = i + 1;
+                    return 1 / (x[iprev] * x[iprev])
+                            + x[inext] / (x[i] * x[i] * x[i]) * (3 * x[inext] / x[i] - 2 * p[inext] / p[i])
+                            + x[iprev] / (x[i] * x[i] * x[i]) * (3 * x[iprev] / x[i] - 2 * p[iprev] / p[i]) 
+                            + 1 / (x[inext] * x[inext]);
+                }
+            } else if (Math.abs(i - j) == 1) {
+                int k = Math.min(i, j), knext = k + 1;
+                return -1 / (x[k] * x[k]) * (2 * x[knext] / x[k] - p[knext] / p[k])
+                       - 1 / (x[knext] * x[knext]) * (2 * x[k] / x[knext] - p[k] / p[knext]);
+            } else {
+                return 0;
+            }
+            
+        } else if (objective == GrpSpec.Objective.Log){
+            if (i == j) {
+                if (i == 0) {
+                    return 2 * (Math.log(x[1] / x[0]) - Math.log(p[1] / p[0]) + 1) / (x[0] * x[0]);
+                }
+                int n = p.length - 1;
+                if (i == n) {
+                    int nprev = n - 1;
+                    return 2 * (-Math.log(x[i] / x[nprev]) + Math.log(p[i] / p[nprev]) + 1) / (x[i] * x[i]);
+                } else {
+                    int iprev = i - 1, inext = i + 1;
+                    return 2 * (-Math.log(x[i] / x[iprev]) + Math.log(p[i] / p[iprev]) 
+                                + Math.log(x[inext] / x[i]) - Math.log(p[inext] / p[i]) + 2) / (x[i] * x[i]);
+                }
+            } else if (Math.abs(i - j) == 1) {
+                int k = Math.min(i, j), knext = k + 1;
+                return -2 / (x[k] * x[knext]);
+            } else {
+                return 0;
+            }
+            
+        }else{
             return 0;
-        }
+        }   
     }
 
-    static double f(double[] x, double[] p) {
+    static double f(double[] x, double[] p, GrpSpec.Objective objective) {
         double s = 0;
-        for (int i = 1; i < p.length; ++i) {
-            if (x[i] <= 0) {
-                return Double.NaN;
+
+        if(objective == GrpSpec.Objective.Forward){
+            for (int i = 1; i < p.length; ++i) {
+                if (x[i] <= 0) {
+                    return Double.NaN;
+                }
+                double del = x[i] / x[i - 1] - p[i] / p[i - 1];
+                s += del * del;
             }
-            double del = x[i] / x[i - 1] - p[i] / p[i - 1];
-            s += del * del;
+        }else if (objective == GrpSpec.Objective.Backward){
+            for (int i = 1; i < p.length; ++i) {
+                if (x[i] <= 0) {
+                    return Double.NaN;
+                }
+                double del = x[i - 1] / x[i] - p[i - 1] / p[i];
+                s += del * del;
+            }  
+        }else if (objective == GrpSpec.Objective.Symmetric){
+            for (int i = 1; i < p.length; ++i) {
+                if (x[i] <= 0) {
+                    return Double.NaN;
+                }
+                double delF = x[i] / x[i - 1] - p[i] / p[i - 1];
+                double delB = x[i - 1] / x[i] - p[i - 1] / p[i];
+                s += (delF * delF)/2 + (delB * delB)/2;
+            }              
+        }else if (objective == GrpSpec.Objective.Log){
+            for (int i = 1; i < p.length; ++i) {
+                if (x[i] <= 0) {
+                    return Double.NaN;
+                }
+                double del = Math.log(x[i] / x[i - 1]) - Math.log(p[i] / p[i - 1]);
+                s += del * del;
+            }      
         }
         return s;
     }
-
+    
     static void K(FastMatrix k, boolean flow) {
         if (flow) {
             int s = k.getRowsCount();
@@ -201,7 +354,7 @@ public class GRP {
      * @param K
      * @return
      */
-    static double[] mg(double[] x, double[] p, FastMatrix K) {
+    static double[] mg(double[] x, double[] p, FastMatrix K, GrpSpec.Objective objective) {
         int s = K.getRowsCount();
         int m = x.length / s; // x.length should be a multiple of s
         int n = m * (s - 1);
@@ -209,7 +362,7 @@ public class GRP {
         double[] gcur = new double[s];
         for (int i = 0, j = 0, k = 0; i < m; ++i) {
             for (int l = 0; l < s; ++l) {
-                gcur[l] = g(j++, x, p);
+                gcur[l] = g(j++, x, p, objective);
             }
             for (int l = 0; l < s - 1; ++l) {
                 DataBlock col = K.column(l);
@@ -260,10 +413,10 @@ public class GRP {
         x[x.length - 1] = b[b.length - 1];
     }
 
-    static double mf(double[] z, double[] p, double[] b, FastMatrix K, final boolean flow) {
+    static double mf(double[] z, double[] p, double[] b, FastMatrix K, final boolean flow, GrpSpec.Objective objective) {
         double[] x = Zz(z, K, flow);
         addXbar(x, b, K.getRowsCount(), flow);
-        return f(x, p);
+        return f(x, p, objective);
     }
 
     static double[] Ztx(double[] x, FastMatrix K, boolean flow) {
@@ -346,12 +499,14 @@ class GRPFunction implements IFunction {
     private final double[] p, b;
     private final FastMatrix K;
     private final boolean flow;
-
-    GRPFunction(double[] p, double[] b, FastMatrix K, boolean flow) {
+    private final GrpSpec.Objective objective;
+    
+    GRPFunction(double[] p, double[] b, FastMatrix K, boolean flow, GrpSpec.Objective objective) {
         this.p = p;
         this.b = b;
         this.K = K;
         this.flow = flow;
+        this.objective = objective;
     }
 
     @Override
@@ -392,7 +547,7 @@ class GRPFunction implements IFunction {
 
         @Override
         public double getValue() {
-            double f = GRP.f(x, p);
+            double f = GRP.f(x, p, objective);
             if (!Double.isFinite(f)) {
                 return Double.MAX_VALUE;
             } else {
@@ -418,7 +573,7 @@ class GRPFunction implements IFunction {
 
         @Override
         public DoubleSeq gradient() {
-            double[] mg = GRP.mg(x, p, K);
+            double[] mg = GRP.mg(x, p, K, objective);
             return DoubleSeq.of(mg);
         }
 
@@ -427,11 +582,11 @@ class GRPFunction implements IFunction {
             FastMatrix h = FastMatrix.square(x.length);
             DataBlock hd = h.diagonal();
             for (int i = 0; i < x.length; ++i) {
-                hd.set(i, GRP.h(i, i, x, p));
+                hd.set(i, GRP.h(i, i, x, p, objective));
             }
             hd = h.subDiagonal(-1);
             for (int i = 0; i < x.length - 1; ++i) {
-                hd.set(i, GRP.h(i, i + 1, x, p));
+                hd.set(i, GRP.h(i, i + 1, x, p, objective));
             }
             h.subDiagonal(1).copy(hd);
             // H = Zt*h*Z
