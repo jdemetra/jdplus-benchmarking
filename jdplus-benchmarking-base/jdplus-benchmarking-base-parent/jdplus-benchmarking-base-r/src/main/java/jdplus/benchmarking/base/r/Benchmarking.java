@@ -75,10 +75,11 @@ public class Benchmarking {
                 .build();
         return Cholette.benchmark(source.cleanExtremities(), bench.cleanExtremities(), spec);
     }
-
-    public TsData grp(TsData source, TsData bench, String conversion, int pos, double eps, int iter, boolean denton) {
+    
+    public TsData grp(TsData source, TsData bench, String objective, String conversion, int pos, double eps, int iter, boolean denton) {
         AggregationType type = AggregationType.valueOf(conversion);
         GrpSpec spec=GrpSpec.builder()
+                .objective(GrpSpec.Objective.valueOf(objective))
                 .aggregationType(type)
                 .observationPosition(pos-1)
                 .maxIter(iter)
