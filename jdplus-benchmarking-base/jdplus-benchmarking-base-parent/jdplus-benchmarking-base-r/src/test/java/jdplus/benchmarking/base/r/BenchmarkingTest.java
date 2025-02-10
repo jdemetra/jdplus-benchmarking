@@ -152,7 +152,7 @@ public class BenchmarkingTest {
         TsPeriod q = TsPeriod.monthly(1979, 1);
         for (int i = 0; i < 8; ++i) {
             TsData s = TsData.of(q, Doubles.of(x));
-            TsData qs = Benchmarking.grp(s, t, "First", 1, 1e-15, 100, true);
+            TsData qs = Benchmarking.grp(s, t, "Forward", "First", 1, 1e-15, 100, true);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 0);
             assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
             q = q.plus(1);
@@ -160,7 +160,7 @@ public class BenchmarkingTest {
         q = TsPeriod.monthly(1979, 1);
         for (int i = 0; i < 8; ++i) {
             TsData s = TsData.of(q, Doubles.of(x));
-            TsData qs = Benchmarking.grp(s, t, "Last", 1, 1e-15, 100, true);
+            TsData qs = Benchmarking.grp(s, t, "Forward", "Last", 1, 1e-15, 100, true);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 11);
             assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
             q = q.plus(1);
@@ -168,7 +168,7 @@ public class BenchmarkingTest {
         q = TsPeriod.monthly(1979, 1);
         for (int i = 0; i < 8; ++i) {
             TsData s = TsData.of(q, Doubles.of(x));
-            TsData qs = Benchmarking.grp(s, t, "UserDefined", 3, 1e-15, 100, true);
+            TsData qs = Benchmarking.grp(s, t, "Forward", "UserDefined", 3, 1e-15, 100, true);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 2);
             assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
             q = q.plus(1);
@@ -176,7 +176,7 @@ public class BenchmarkingTest {
         q = TsPeriod.monthly(1979, 1);
         for (int i = 0; i < 8; ++i) {
             TsData s = TsData.of(q, Doubles.of(x));
-            TsData qs = Benchmarking.grp(s, t, "Sum", 0, 1e-15, 100, true);
+            TsData qs = Benchmarking.grp(s, t, "Forward", "Sum", 0, 1e-15, 100, true);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
             assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
             q = q.plus(1);
@@ -184,7 +184,7 @@ public class BenchmarkingTest {
         q = TsPeriod.monthly(1979, 1);
         for (int i = 0; i < 8; ++i) {
             TsData s = TsData.of(q, Doubles.of(x));
-            TsData qs = Benchmarking.grp(s, t, "Average", 0, 1e-15, 100, true);
+            TsData qs = Benchmarking.grp(s, t, "Forward", "Average", 0, 1e-15, 100, true);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Average, true);
             assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
             q = q.plus(1);
