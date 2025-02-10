@@ -15,6 +15,7 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import jdplus.benchmarking.base.api.univariate.IndexRange;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 
@@ -24,13 +25,14 @@ import jdplus.toolkit.base.core.math.matrices.FastMatrix;
  */
 @lombok.Value
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
-public class RawDisaggregationModel {
+class RawDisaggregationModel {
 
     public RawDisaggregationModel(RawDisaggregationModelBuilder builder) {
-        this.hy = builder.getHy();
+        this.y = builder.getY();
         this.ho = builder.getHo();
+        this.hy = builder.getHy();
         this.ratio = builder.getRatio();
-        this.Xo = builder.getXo();
+        this.yposition = builder.getYposition();
         this.X = builder.getX();
         this.Xc = builder.getXc();
         this.start = builder.getStart();
@@ -42,36 +44,49 @@ public class RawDisaggregationModel {
 
     }
 
-    public int size() {
+    int size() {
         return hy.length();
     }
 
-    public int definedSize() {
+    int definedSize() {
         return end - start;
     }
 
-    public int estimationSize() {
+    int estimationSize() {
         return estimationEnd - estimationStart;
     }
 
-    public int nx() {
+    IndexRange definitionRange() {
+        return IndexRange.of(start, end);
+    }
+
+    IndexRange estimationRange() {
+        return IndexRange.of(estimationStart, estimationEnd);
+    }
+
+    int nx() {
         return X.isEmpty() ? 0 : X.getColumnsCount();
     }
 
-    // series transformed to the highest-frequency
-    DoubleSeq hy, ho;
-    // regressors and cumulated regressors
-    FastMatrix Xo, X, Xc;
-    // range used to estimate the regression.
-    // periods containing missing values (low or high-frequency) are excluded
-    // hy, X and Xc start at the beginning of an aggregation period (low-frequency)
-    // and finish at the end of such a period. The length of hy and the 
-    // number of rows= of X (if any) are identical. They have been completed with
-    // missing values to achieve that goal      
+    DoubleSeq y;
+    // original series transformed to the highest-frequency 
+    DoubleSeq ho;
+
+    // (rescaled) series transformed to the highest-frequency  (same as ho without rescaling)
+    DoubleSeq hy;
+    // original regressors, rescaled and/or cumulated regressors 
+    // hy, X and Xc must start at the beginning of an aggregation period (low-frequency)
+    FastMatrix X, Xc;
+
+    // range (hifreq) where the regression variables are defined (otherwise, full range)
+    // that range is used to estimate the disaggregated/interpolated series
     int start, end;
 
+    // range used to estimate the regression.
+    // periods containing missing values at the beginning/end of the regression variables and of the endogenous variable are excluded
     int estimationStart, estimationEnd;
 
+    int yposition;
     // length of hy should be a multiple of ratio 
     int ratio;
     /**
@@ -83,47 +98,48 @@ public class RawDisaggregationModel {
      */
     double[] xfactors;
 
-    public FastMatrix definedXc() {
+    FastMatrix definedXc() {
         if (Xc.isEmpty()) {
             return Xc;
         }
         return Xc.extract(start, end - start, 0, Xc.getColumnsCount());
     }
 
-    public FastMatrix definedX() {
+    FastMatrix definedX() {
         if (X.isEmpty()) {
             return X;
         }
         return X.extract(start, end - start, 0, X.getColumnsCount());
     }
 
-    public FastMatrix estimationXc() {
+    FastMatrix estimationXc() {
         if (Xc.isEmpty()) {
             return Xc;
         }
         return Xc.extract(estimationStart, estimationEnd - estimationStart, 0, Xc.getColumnsCount());
     }
 
-    public FastMatrix estimationX() {
+    FastMatrix estimationX() {
         if (X.isEmpty()) {
             return X;
         }
         return X.extract(estimationStart, estimationEnd - estimationStart, 0, X.getColumnsCount());
     }
 
-    public DoubleSeq definedY() {
+    DoubleSeq definedY() {
         return hy.range(start, end);
     }
 
-    public DoubleSeq estimationY() {
+    DoubleSeq estimationY() {
         return hy.range(estimationStart, estimationEnd);
     }
 
-    public DoubleSeq estimationYo() {
-        return ho.range(estimationStart, estimationEnd);
+    DoubleSeq definedYo() {
+        return hy.range(start, end);
     }
 
-    public DoubleSeq definedYo() {
-        return ho.range(start, end);
+    DoubleSeq estimationYo() {
+        return hy.range(estimationStart, estimationEnd);
     }
+
 }

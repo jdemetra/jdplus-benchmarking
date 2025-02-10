@@ -38,23 +38,28 @@ import lombok.NonNull;
 @lombok.Getter
 public class RawDisaggregationModelBuilder {
 
-    private DoubleSeq y;
-    // series transformed to the highest-frequency (original and rescaled)
-    private DoubleSeq ho, hy;
-    // regressors and cumulated regressors
-    private FastMatrix Xo, X, Xc;
-    // range used to estimate the regression.
-    // periods containing missing values (low or high-frequency) are excluded
-    // hy, X and Xc start at the beginning of an aggregation period (low-frequency)
-    // and finish at the end of such a period. The length of hy and the 
-    // number of rows= of X (if any) are identical. They have been completed with
-    // missing values to achieve that goal      
+    private final DoubleSeq y;
+    // original series transformed to the highest-frequency 
+    private DoubleSeq ho;
+    // (rescaled) series transformed to the highest-frequency  (same as ho without rescaling)
+    private DataBlock hy;
+
+    // (rescaled) regressors and cumulated regressors 
+    private final FastMatrix X;
+    private FastMatrix Xc;
+    // X, Xc and y (+ ho, hy) start at the same low-frequency period (aggregation
+    // period).
+    // They should have been completed with missing values to achieve that goal
+    // The spans of y and of X (if any) could differ. 
     private int start, end;
 
+    // range used to estimate the regression.
+    // In the case of disaggregation, only complete periods are considered,
+    // which is not the case in interpolation (we use all information).
+    // Periods containing missing values (low or high-frequency) at the beginning or at the are excluded.
+    // Missing values inside the series themselves are not allowed. That restriction will be removed in the fututre (TODO)
     private int estimationStart, estimationEnd;
 
-    // length of hy should be a multiple of ratio 
-    private int ratio;
     /**
      * Scaling factor for y
      */
@@ -64,23 +69,16 @@ public class RawDisaggregationModelBuilder {
      */
     private double[] xfactors;
 
+    // Ratio between high-frequency and low-frequency
+    private final int ratio;
     private final AggregationType aType;
     private final int yposition; // only used in custom interpolation
 
     public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNull RawTemporalDisaggregationSpec spec) {
         this.y = y;
-        if (regressors.isEmpty()) {
-            ratio = spec.getDisaggregationRatio();
-            if (ratio == 0) {
-                throw new IllegalArgumentException("Disaggregation ratio should be specified");
-            }
-        } else {
-            int nr = regressors.getRowsCount();
-            int ny = y.length();
-            if (nr % ny != 0) {
-                throw new IllegalArgumentException("Full periods should be used in raw temporal disaggregation");
-            }
-            ratio = nr / ny;
+        ratio = spec.getDisaggregationRatio();
+        if (ratio == 0) {
+            throw new IllegalArgumentException("Disaggregation ratio should be specified");
         }
         int pos;
         aType = spec.getAggregationType();
@@ -94,8 +92,7 @@ public class RawDisaggregationModelBuilder {
         }
         yposition = pos;
         buildHY();
-
-        buildX(regressors, hy.length(), spec.isConstant(), spec.isTrend());
+        X = buildX(regressors, hy.length(), spec.isConstant(), spec.isTrend());
         buildXc();
         start = findStart();
         end = findEnd();
@@ -105,7 +102,7 @@ public class RawDisaggregationModelBuilder {
         scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
     }
 
-    public RawDisaggregationModel build() {
+    RawDisaggregationModel build() {
         return new RawDisaggregationModel(this);
     }
 
@@ -120,13 +117,12 @@ public class RawDisaggregationModelBuilder {
         for (int j = yposition, i = 0; i < ny; ++i, j += ratio) {
             dy[j] = reader.getAndNext();
         }
-        hy = DoubleSeq.of(dy);
+        hy = DataBlock.of(dy);
     }
 
-    private void buildX(FastMatrix regressors, int length, boolean constant, boolean trend) {
+    private static FastMatrix buildX(FastMatrix regressors, int length, boolean constant, boolean trend) {
         if (!constant && !trend) {
-            X = regressors;
-            return;
+            return regressors.deepClone();
         }
         int nx = regressors.isEmpty() ? 0 : regressors.getColumnsCount();
         int n = nx;
@@ -136,8 +132,10 @@ public class RawDisaggregationModelBuilder {
         if (trend) {
             ++n;
         }
-        X = FastMatrix.make(length, n);
-        DataBlockIterator xcols = X.columnsIterator();
+        int m = regressors.isEmpty() ? length : regressors.getRowsCount();
+
+        FastMatrix all = FastMatrix.make(m, n);
+        DataBlockIterator xcols = all.columnsIterator();
         if (constant) {
             xcols.next().set(1);
         }
@@ -150,6 +148,7 @@ public class RawDisaggregationModelBuilder {
                 xcols.next().copy(rcols.next());
             }
         }
+        return all;
     }
 
     private void buildXc() {
@@ -166,49 +165,34 @@ public class RawDisaggregationModelBuilder {
             while (cXc.hasNext()) {
                 cumul.transform(cXc.next());
             }
-            if (aType == AggregationType.Average) {
-                Xc.mul(1.0 / ratio);
-            }
         }
     }
 
     private void scale(DataNormalizer normalizer) {
         if (normalizer != null) {
-            DataBlock hc = DataBlock.of(hy);
-            ho = hc;
-            yfactor = normalizer.normalize(hc);
+            ho = DoubleSeq.of(hy.toArray());
+            yfactor = normalizer.normalize(hy);
         } else {
             ho = hy;
             yfactor = 1;
         }
-        if (X.isEmpty()) {
-            Xo = FastMatrix.EMPTY;
+        if (Xc.isEmpty()) {
             return;
         }
 
-        int nx = X.getColumnsCount();
+        int nx = Xc.getColumnsCount();
         xfactors = new double[nx];
 
         if (normalizer != null) {
-            Xo = X.deepClone();
             DataBlockIterator cols = X.columnsIterator();
+            DataBlockIterator ccols = Xc.columnsIterator();
             int i = 0;
             while (cols.hasNext()) {
                 double z = normalizer.normalize(cols.next());
+                ccols.next().mul(z);
                 xfactors[i++] = z;
             }
-            if (aType == AggregationType.Average
-                    || aType == AggregationType.Sum) {
-                // in the other cases, hEX is a sub-matrix of hX; so it is already
-                // scaled;
-                DataBlockIterator ecols = Xc.columnsIterator();
-                i = 0;
-                while (ecols.hasNext()) {
-                    ecols.next().mul(xfactors[i++]);
-                }
-            }
         } else {
-            Xo=X;
             for (int i = 0; i < xfactors.length; ++i) {
                 xfactors[i] = 1;
             }
@@ -264,7 +248,7 @@ public class RawDisaggregationModelBuilder {
                 xstart += ratio - tmp;
             }
         }
-        return Math.min(ystart, xstart);
+        return Math.max(ystart, xstart);
     }
 
     private int findEstimationEnd() {

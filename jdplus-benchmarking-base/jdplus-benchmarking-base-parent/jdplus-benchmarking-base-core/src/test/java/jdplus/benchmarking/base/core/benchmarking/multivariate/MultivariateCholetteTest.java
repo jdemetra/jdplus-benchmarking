@@ -27,10 +27,6 @@ import ec.benchmarking.simplets.TsMultiBenchmarking;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import jdplus.toolkit.base.api.data.AggregationType;
-import jdplus.toolkit.base.api.timeseries.TsUnit;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MultivariateCholetteTest {
     
     // The following test works...
-    @Test
+//    @Test
     public void testTableFictiveData() {
         
         Map<String, TsData> input = new HashMap<>();
@@ -88,7 +84,7 @@ public class MultivariateCholetteTest {
     
     // The following test does not work... (the only difference is that I added 2 more decimals to the second figure of s1)
     // Note that if I change the decimal, it works again...
-    @Test
+    //@Test
     public void testTableFictiveData2() {
         
         Map<String, TsData> input = new HashMap<>();

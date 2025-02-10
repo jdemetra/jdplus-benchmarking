@@ -15,6 +15,7 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import jdplus.benchmarking.base.api.univariate.IndexRange;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.information.GenericExplorable;
 import nbbrd.design.Development;
@@ -38,13 +39,9 @@ public class RawTemporalDisaggregationResults implements GenericExplorable{
     
     FastMatrix regressors;
     
-    /**
-     * The disaggregation ratio should be equal to the length of the disaggregated series
-     * divided by the length of the series
-     * It means that the original series and regressors have been extended by 
-     * missing values if need be.
-     */
     int disaggregationRatio;
+    
+    IndexRange estimationRange;
     
     int hyperParametersCount;
     

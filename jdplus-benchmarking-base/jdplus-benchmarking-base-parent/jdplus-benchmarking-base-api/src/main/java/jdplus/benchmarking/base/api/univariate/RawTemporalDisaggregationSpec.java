@@ -50,6 +50,7 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
             .aggregationType(AggregationType.Sum)
             .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
             .constant(true)
+            .estimationRange(IndexRange.EMPTY)
             .truncatedParameter(0.0)
             .fast(DEF_FAST)
             .estimationPrecision(DEF_EPS)
@@ -62,6 +63,7 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
             .aggregationType(AggregationType.Sum)
             .residualsModel(RawTemporalDisaggregationSpec.Model.Rw)
             .constant(false)
+            .estimationRange(IndexRange.EMPTY)
             .fast(DEF_FAST)
             .estimationPrecision(DEF_EPS)
             .rescale(DEF_RESCALE)
@@ -116,8 +118,8 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
     private Model residualsModel;
     private boolean constant, trend;
     private Parameter parameter;
-//    @lombok.NonNull
-//    private RangeSelector estimationSpan; // TODO
+    @lombok.NonNull
+    private IndexRange estimationRange;
     private boolean log, diffuseRegressors;
     private Double truncatedParameter;
     private boolean zeroInitialization, fast;
@@ -139,6 +141,7 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
                 .aggregationType(DEF_AGGREGATION)
                 .residualsModel(Model.Ar1)
                 .constant(true)
+                .estimationRange(IndexRange.EMPTY)
                 .fast(DEF_FAST)
                 .algorithm(DEF_ALGORITHM)
                 .rescale(DEF_RESCALE)

@@ -10,7 +10,6 @@ import jdplus.benchmarking.base.api.benchmarking.univariate.GrpSpec;
 import jdplus.toolkit.base.api.data.AggregationType;
 import tck.demetra.data.Data;
 import jdplus.toolkit.base.api.data.DoubleSeq;
-import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.math.matrices.SymmetricMatrix;
