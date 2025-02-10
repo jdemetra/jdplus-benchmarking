@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MultivariateCholetteTest {
     
     // The following test works...
-//    @Test
+    @Test
     public void testTableFictiveData() {
         
         Map<String, TsData> input = new HashMap<>();
@@ -52,7 +52,7 @@ public class MultivariateCholetteTest {
         double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
         input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
         
-        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
+        double[] a = {27.1,29.8,29.9,31.2,29.4,27.9,30.9,31.7};
         input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
         
         double[] y1 = {30.0,30.6};
@@ -82,9 +82,7 @@ public class MultivariateCholetteTest {
         Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
     }
     
-    // The following test does not work... (the only difference is that I added 2 more decimals to the second figure of s1)
-    // Note that if I change the decimal, it works again...
-    //@Test
+    @Test
     public void testTableFictiveData2() {
         
         Map<String, TsData> input = new HashMap<>();
@@ -98,7 +96,7 @@ public class MultivariateCholetteTest {
         double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
         input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
         
-        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
+        double[] a = {27.1,29.8,29.9,31.2,29.4,27.9,30.9,31.7};
         input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
         
         double[] y1 = {30.0,30.6};

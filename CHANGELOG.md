@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- ![STAT] Add missing options in the growth rate preservation method
+- ![STAT] Add disaggregation and interpolation of series with any periodicities (provided that the high frequency is a multiple of the low frequency)
+
 ### Changed
 
 - Modernize use of NIO API
