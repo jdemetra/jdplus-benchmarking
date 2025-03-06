@@ -15,6 +15,7 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import java.util.ArrayList;
 import jdplus.benchmarking.base.api.univariate.RawTemporalDisaggregationSpec;
 import jdplus.toolkit.base.api.data.AggregationType;
 import static jdplus.toolkit.base.api.data.AggregationType.Average;
@@ -73,6 +74,9 @@ public class RawDisaggregationModelBuilder {
     private final int ratio;
     private final AggregationType aType;
     private final int yposition; // only used in custom interpolation
+    
+    // variables name
+    private ArrayList<String> varNames = new ArrayList<>();
 
     public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNull RawTemporalDisaggregationSpec spec) {
         this.y = y;
@@ -100,6 +104,51 @@ public class RawDisaggregationModelBuilder {
         estimationEnd = findEstimationEnd();
 
         scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
+               
+        if (spec.isConstant()) {
+            varNames.add("C");
+        }
+        if (spec.isTrend()) {
+            varNames.add("Trend");
+        }
+        for (int i = 0; i < regressors.getColumnsCount(); ++i) {
+            varNames.add("var" + (i + 1));
+        }
+    }
+    
+    public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull RawTemporalDisaggregationSpec spec) {
+        this.y = y;
+        ratio = spec.getDisaggregationRatio();
+        if (ratio == 0) {
+            throw new IllegalArgumentException("Disaggregation ratio should be specified");
+        }
+        int pos;
+        aType = spec.getAggregationType();
+        switch (aType) {
+            case Sum, Average, Last ->
+                pos = ratio - 1;
+            case First ->
+                pos = 0;
+            default ->
+                pos = spec.getObservationPosition();
+        }
+        yposition = pos;
+        buildHY();
+        X = buildX(FastMatrix.EMPTY, hy.length(), spec.isConstant(), spec.isTrend());
+        buildXc();
+        start = findStart();
+        end = findEnd();
+        estimationStart = findEstimationStart();
+        estimationEnd = findEstimationEnd();
+
+        scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
+        
+        if (spec.isConstant()) {
+            varNames.add("C");
+        }
+        if (spec.isTrend()) {
+            varNames.add("Trend");
+        }
     }
 
     RawDisaggregationModel build() {
@@ -151,7 +200,7 @@ public class RawDisaggregationModelBuilder {
         return all;
     }
 
-    private void buildXc() {
+    private void buildXc() {        
         if (X.isEmpty()) {
             Xc = FastMatrix.EMPTY;
             return;
@@ -309,5 +358,5 @@ public class RawDisaggregationModelBuilder {
             return end * ratio + ypos + 1;
         }
     }
-
+    
 }

@@ -7,6 +7,7 @@ module jdplus.benchmarking.base.r {
 
     requires transitive jdplus.benchmarking.base.api;
     requires jdplus.toolkit.base.api;
+    requires jdplus.toolkit.base.core;
     requires jdplus.benchmarking.base.core;
     requires jdplus.toolkit.base.r;
 

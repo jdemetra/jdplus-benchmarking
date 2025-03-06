@@ -39,6 +39,8 @@ public class RawTemporalDisaggregationResults implements GenericExplorable{
     
     FastMatrix regressors;
     
+    String[] regressorsName;
+    
     int disaggregationRatio;
     
     IndexRange estimationRange;

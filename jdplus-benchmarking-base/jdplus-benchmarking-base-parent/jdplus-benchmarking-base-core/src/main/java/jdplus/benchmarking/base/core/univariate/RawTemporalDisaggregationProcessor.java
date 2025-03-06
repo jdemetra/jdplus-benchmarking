@@ -79,7 +79,13 @@ public class RawTemporalDisaggregationProcessor {
         RawDisaggregationModel yx = builder.build();
         return compute(yx, spec);
     }
-
+    
+    public RawTemporalDisaggregationResults process(@NonNull DoubleSeq y, @NonNull RawTemporalDisaggregationSpec spec) {
+        RawDisaggregationModelBuilder builder = new RawDisaggregationModelBuilder(y, spec);
+        RawDisaggregationModel yx = builder.build();
+        return compute(yx, spec);
+    }
+    
     private RawTemporalDisaggregationResults compute(RawDisaggregationModel model, RawTemporalDisaggregationSpec spec) {
         return switch (spec.getAggregationType()) {
             case Sum, Average ->
@@ -191,7 +197,7 @@ public class RawTemporalDisaggregationProcessor {
             Ssf cssf = Ssf.of(SsfCumulator.of(ncmp, nloading, model.getRatio(), 0),
                     SsfCumulator.defaultLoading(nloading, model.getRatio(), 0));
             SsfData ssfdata = new SsfData(model.estimationY());
-            SsfRegressionModel ssfmodel = new SsfRegressionModel(cssf, ssfdata, model.estimationXc(), diffuse);
+            SsfRegressionModel ssfmodel = new SsfRegressionModel(cssf, ssfdata, model.estimationXc().isEmpty() ? null : model.estimationXc(), diffuse);
             return new RawTemporalDisaggregationEstimation(
                     null,
                     DkToolkit.concentratedLikelihoodComputer(true, false, true).compute(ssfmodel),
@@ -237,7 +243,7 @@ public class RawTemporalDisaggregationProcessor {
         if (!spec.isParameterEstimation()) {
             Ssf ssf = Ssf.of(ncmp, nloading);
             SsfData ssfdata = new SsfData(model.estimationY());
-            SsfRegressionModel ssfmodel = new SsfRegressionModel(ssf, ssfdata, model.estimationXc(), diffuse);
+            SsfRegressionModel ssfmodel = new SsfRegressionModel(ssf, ssfdata, model.estimationXc().isEmpty() ? null : model.estimationXc(), diffuse);
             return new RawTemporalDisaggregationEstimation(
                     null,
                     DkToolkit.concentratedLikelihoodComputer(true, false, true).compute(ssfmodel),
@@ -579,7 +585,7 @@ public class RawTemporalDisaggregationProcessor {
         boolean disagg = spec.getAggregationType() == AggregationType.Average || spec.getAggregationType() == AggregationType.Sum;
         return SsfFunction.builder(data, mapping,
                 p -> ssf(p.getValue(), disagg, cl, spec.isZeroInitialization(), model.getRatio()))
-                .regression(model.estimationXc(), diffuseRegressors(model.nx(), spec))
+                .regression(model.estimationXc().isEmpty() ? null : model.estimationXc(), diffuseRegressors(model.nx(), spec))
                 .useMaximumLikelihood(true)
                 .build();
     }
@@ -624,7 +630,7 @@ public class RawTemporalDisaggregationProcessor {
         DoubleSeq hy = model.estimationY();
         double[] y = hy.toArray();
         FastMatrix hx = model.estimationXc();
-        if (hx != null) {
+        if (!hx.isEmpty()) {
             for (int i = 0; i < y.length; ++i) {
                 if (Double.isFinite(y[i])) {
                     y[i] = hy.get(i) - hx.row(i).dot(coeff);

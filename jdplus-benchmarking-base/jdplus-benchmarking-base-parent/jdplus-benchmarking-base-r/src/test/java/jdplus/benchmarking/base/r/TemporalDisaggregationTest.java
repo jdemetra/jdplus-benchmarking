@@ -16,6 +16,7 @@
  */
 package jdplus.benchmarking.base.r;
 
+import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import tck.demetra.data.Data;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
 import jdplus.toolkit.base.api.timeseries.TsData;
@@ -65,5 +66,17 @@ public class TemporalDisaggregationTest {
         TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
         TemporalDisaggregationResults rslt = TemporalDisaggregation.process(y, false, false, null, "RwAr1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
     }
+    
+    @Test
+    public void testChowLinRaw() {
+        TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
+        TsData q = TsData.of(TsPeriod.quarterly(1977, 1), Doubles.of(Data.IND_PCR));
+        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, new TsData[]{q}, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
+    }
 
+    @Test
+    public void testChowLinRawWithoutIndicator() {
+        TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
+        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, null, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
+    }
 }
