@@ -184,13 +184,23 @@ public class RawDisaggregationModelBuilder {
         xfactors = new double[nx];
 
         if (normalizer != null) {
-            DataBlockIterator cols = X.columnsIterator();
-            DataBlockIterator ccols = Xc.columnsIterator();
-            int i = 0;
-            while (cols.hasNext()) {
-                double z = normalizer.normalize(cols.next());
-                ccols.next().mul(z);
-                xfactors[i++] = z;
+            if (aType != AggregationType.Average && aType != AggregationType.Sum) {
+                // Xc is X !! 
+                DataBlockIterator cols = X.columnsIterator();
+                int i = 0;
+                while (cols.hasNext()) {
+                    double z = normalizer.normalize(cols.next());
+                    xfactors[i++] = z;
+                }
+            } else {
+                DataBlockIterator cols = X.columnsIterator();
+                DataBlockIterator ccols = Xc.columnsIterator();
+                int i = 0;
+                while (cols.hasNext()) {
+                    double z = normalizer.normalize(cols.next());
+                    ccols.next().mul(z);
+                    xfactors[i++] = z;
+                }
             }
         } else {
             for (int i = 0; i < xfactors.length; ++i) {
