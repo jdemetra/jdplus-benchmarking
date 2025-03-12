@@ -98,4 +98,69 @@ public class RawTemporalDisaggregationProcessorTest {
 //        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
     }
     
+   @Test
+    public void testAR1() {
+        DoubleSeq y=DoubleSeq.of(Data.PCRA);
+        DoubleSeq q = DoubleSeq.of(Data.IND_PCR);
+        RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
+                .disaggregationRatio(4)
+                .aggregationType(AggregationType.Last)
+                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+                //                .diffuseRegressors(true)
+                .constant(true)
+                .fast(false)
+                .estimationPrecision(1e-9)
+                .rescale(false)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+        FastMatrix X=FastMatrix.make(q.length(), 1);
+        X.column(0).copy(q);
+        RawTemporalDisaggregationResults rslt1 = RawTemporalDisaggregationProcessor.process(y, X, spec1);
+//        System.out.println(rslt1.getDisaggregatedSeries());
+//        System.out.println(rslt1.getStdevDisaggregatedSeries());
+        
+        RawTemporalDisaggregationSpec spec2 = RawTemporalDisaggregationSpec.builder()
+                .disaggregationRatio(4)
+                .aggregationType(AggregationType.Last)
+                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+                //                .diffuseRegressors(true)
+                .constant(true)
+                .fast(false)
+                .parameter(Parameter.fixed(0.9))
+                .estimationPrecision(1e-9)
+                .rescale(false)
+                .algorithm(SsfInitialization.SqrtDiffuse)
+                .build();
+        RawTemporalDisaggregationResults rslt2 = RawTemporalDisaggregationProcessor.process(y, X, spec2);
+//        System.out.println(rslt2.getDisaggregatedSeries());
+//        System.out.println(rslt2.getStdevDisaggregatedSeries());
+//        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
+//        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
+        RawTemporalDisaggregationSpec spec3 = RawTemporalDisaggregationSpec.builder()
+                .disaggregationRatio(4)
+                .aggregationType(AggregationType.Last)
+                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+                //                .diffuseRegressors(true)
+                .constant(true)
+                .fast(true)
+                .estimationPrecision(1e-9)
+                .rescale(true)
+                .algorithm(SsfInitialization.Diffuse)
+                .build();
+        RawTemporalDisaggregationResults rslt3 = RawTemporalDisaggregationProcessor.process(y, X, spec3);
+        double d=rslt1.getCoefficients().distance(rslt3.getCoefficients())/rslt1.getCoefficients().fastNorm2();
+        assertTrue(d < 1e-3);
+        d=rslt1.getCoefficientsCovariance().diagonal()
+                .distance(rslt3.getCoefficientsCovariance().diagonal())/rslt1.getCoefficientsCovariance().diagonal().fastNorm2();
+        assertTrue(d < 1e-3);
+        assertTrue(rslt1.getDisaggregatedSeries().distance(rslt3.getDisaggregatedSeries())/rslt1.getDisaggregatedSeries().fastNorm2() < 1e-3);
+        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt3.getStdevDisaggregatedSeries())/rslt1.getDisaggregatedSeries().fastNorm2() < 1e-3);
+//        System.out.println("CL");
+//        System.out.println(rslt3.getDisaggregatedSeries());
+//        System.out.println(rslt3.getStdevDisaggregatedSeries());
+//        System.out.println(rslt2.getCoefficients());
+//        System.out.println(rslt1.getMaximum().getHessian());
+//        System.out.println(rslt2.getConcentratedLikelihood().e());
+//        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
+    }
 }
