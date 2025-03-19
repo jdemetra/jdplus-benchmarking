@@ -40,7 +40,7 @@ public class RawTemporalDisaggregationProcessorTest {
         DoubleSeq q = DoubleSeq.of(Data.IND_PCR);
         RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
                 .disaggregationRatio(4)
-                .aggregationType(AggregationType.Average)
+                .aggregationType(AggregationType.Sum)
                 .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
@@ -48,13 +48,13 @@ public class RawTemporalDisaggregationProcessorTest {
                 .estimationPrecision(1e-9)
                 .rescale(false)
                 .algorithm(SsfInitialization.Augmented)
-                .build();
+                .build();     
         FastMatrix X=FastMatrix.make(q.length(), 1);
         X.column(0).copy(q);
         RawTemporalDisaggregationResults rslt1 = RawTemporalDisaggregationProcessor.process(y, X, spec1);
 //        System.out.println(rslt1.getDisaggregatedSeries());
 //        System.out.println(rslt1.getStdevDisaggregatedSeries());
-        
+
         RawTemporalDisaggregationSpec spec2 = RawTemporalDisaggregationSpec.builder()
                 .disaggregationRatio(4)
                 .aggregationType(AggregationType.Average)
@@ -162,5 +162,25 @@ public class RawTemporalDisaggregationProcessorTest {
 //        System.out.println(rslt1.getMaximum().getHessian());
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
 //        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
+
+    @Test
+    public void testFernandezWithoutIndicator() {
+        DoubleSeq y=DoubleSeq.of(Data.PCRA).extend(1,0);
+        RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
+                .disaggregationRatio(4)
+                .aggregationType(AggregationType.Sum)
+                .residualsModel(RawTemporalDisaggregationSpec.Model.Rw)
+                //                .diffuseRegressors(true)
+                .constant(false)
+                .fast(true)
+                .estimationPrecision(1e-9)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+
+        RawTemporalDisaggregationResults rslt = RawTemporalDisaggregationProcessor.process(y, spec1);
+        //System.out.println(rslt.getDisaggregatedSeries());
     }
 }
+
+    

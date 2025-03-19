@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
+import jdplus.toolkit.base.api.timeseries.TsDomain;
+import jdplus.toolkit.base.api.timeseries.TsUnit;
 
 /**
  *
@@ -168,7 +170,26 @@ public class TemporalDisaggregationProcessorTest {
 //        System.out.println(rslt2.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt1.getStdevDisaggregatedSeries().getValues());
     }
-
+    
+    @Test
+    public void testFernandezWithoutIndicator() {
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978),  Data.PCRA);
+        TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.builder()
+                .aggregationType(AggregationType.Sum)
+                .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
+                .constant(true)
+                .fast(false)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+        TsUnit unit = TsUnit.ofAnnualFrequency(4);
+        TsPeriod start = TsPeriod.of(unit, y.getStart().start());
+        TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
+        TsDomain all = TsDomain.of(start, start.until(end) + 2 * 4);
+        TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor.process(y, all, spec1);
+        System.out.println(rslt.getDisaggregatedSeries().getValues());
+    }
+    
     @Test
     public void testLitterman() {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1977),  Data.PCRA);
