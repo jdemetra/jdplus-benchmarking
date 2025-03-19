@@ -135,11 +135,11 @@ class RawDisaggregationModel {
     }
 
     DoubleSeq definedYo() {
-        return hy.range(start, end);
+        return ho.range(start, end);
     }
 
-    DoubleSeq estimationYo() {
-        return hy.range(estimationStart, estimationEnd);
-    }
+//    DoubleSeq estimationYo() {
+//        return hy.range(estimationStart, estimationEnd);
+//    }
 
 }

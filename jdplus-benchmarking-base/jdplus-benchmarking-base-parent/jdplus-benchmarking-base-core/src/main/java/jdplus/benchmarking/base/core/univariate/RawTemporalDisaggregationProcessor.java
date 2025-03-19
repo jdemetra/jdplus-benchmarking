@@ -136,8 +136,8 @@ public class RawTemporalDisaggregationProcessor {
         Ssf nmodel = Ssf.of(edm.getNoise(), edm.getLoading());
         DiffuseConcentratedLikelihood dll = edm.getDll();
 
-        ISsf rssf = RegSsf.ssf(nmodel, model.estimationX());
-        SsfData ssfdata = new SsfData(model.estimationY());
+        ISsf rssf = RegSsf.ssf(nmodel, model.definedX());
+        SsfData ssfdata = new SsfData(model.definedY());
         DefaultSmoothingResults srslts;
         srslts = switch (spec.getAlgorithm()) {
             case Augmented ->
@@ -277,9 +277,9 @@ public class RawTemporalDisaggregationProcessor {
     }
 
     private void interpolateEstimation(RawDisaggregationModel model, RawTemporalDisaggregationEstimation estimation, final double[] z, final double[] e) {
-        double[] hy = model.estimationY().toArray();
-        FastMatrix hX = model.estimationX();
-        double[] O = model.estimationYo().toArray();
+        double[] hy = model.definedY().toArray();
+        FastMatrix hX = model.definedX();
+        double[] O = model.definedYo().toArray();
         double f = 1 / model.getYfactor();
 
         StateComponent ncmp = estimation.getNoise();
