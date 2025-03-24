@@ -125,7 +125,7 @@ public class TemporalDisaggregation {
         }
     }
     
-    public RawTemporalDisaggregationResults processRaw(TsData y, boolean constant, boolean trend, TsData[] indicators,
+    public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend, Matrix indicators,
             String model, int disaggregationRatio, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
             String algorithm, boolean diffuseregs) {
@@ -147,14 +147,14 @@ public class TemporalDisaggregation {
         }
         
         if (indicators == null) {
-            return RawTemporalDisaggregationProcessor.process(y.getValues(), builder.build());
+            return RawTemporalDisaggregationProcessor.process(DoubleSeq.of(y), builder.build());
         } else {
-            FastMatrix ind = FastMatrix.make(indicators[0].length(), indicators.length);
-            for (int j = 0; j < indicators.length; ++j) {
-                ind.column(j).add(indicators[j].cleanExtremities().getValues());  
+            FastMatrix indicatorsClean = FastMatrix.make(indicators.getRowsCount(), indicators.getColumnsCount());
+            for (int j = 0; j < indicators.getColumnsCount(); ++j) {
+                indicatorsClean.column(j).add(indicators.column(j).cleanExtremities());
             } 
             
-            return RawTemporalDisaggregationProcessor.process(y.getValues(), ind, builder.build());
+            return RawTemporalDisaggregationProcessor.process(DoubleSeq.of(y), indicatorsClean, builder.build());
         }
     }
     

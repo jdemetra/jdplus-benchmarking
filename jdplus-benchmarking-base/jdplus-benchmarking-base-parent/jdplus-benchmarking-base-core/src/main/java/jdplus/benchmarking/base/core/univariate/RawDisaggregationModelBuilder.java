@@ -74,9 +74,6 @@ public class RawDisaggregationModelBuilder {
     private final int ratio;
     private final AggregationType aType;
     private final int yposition; // only used in custom interpolation
-    
-    // variables name
-    private ArrayList<String> varNames = new ArrayList<>();
 
     public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNull RawTemporalDisaggregationSpec spec) {
         this.y = y;
@@ -104,16 +101,6 @@ public class RawDisaggregationModelBuilder {
         estimationEnd = findEstimationEnd();
 
         scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
-               
-        if (spec.isConstant()) {
-            varNames.add("C");
-        }
-        if (spec.isTrend()) {
-            varNames.add("Trend");
-        }
-        for (int i = 0; i < regressors.getColumnsCount(); ++i) {
-            varNames.add("var" + (i + 1));
-        }
     }
     
     public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull RawTemporalDisaggregationSpec spec) {
@@ -142,13 +129,6 @@ public class RawDisaggregationModelBuilder {
         estimationEnd = findEstimationEnd();
 
         scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
-        
-        if (spec.isConstant()) {
-            varNames.add("C");
-        }
-        if (spec.isTrend()) {
-            varNames.add("Trend");
-        }
     }
 
     RawDisaggregationModel build() {

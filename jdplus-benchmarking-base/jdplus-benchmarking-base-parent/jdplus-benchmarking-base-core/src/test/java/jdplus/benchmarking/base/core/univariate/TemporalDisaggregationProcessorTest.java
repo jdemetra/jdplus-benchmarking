@@ -17,6 +17,7 @@ import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
+import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 
 /**
  *
@@ -452,4 +453,28 @@ public class TemporalDisaggregationProcessorTest {
         assertTrue(rslt3 != null);
     }
     
+    @Test
+    public void testFernandezExtrapolation() {
+        
+        double[] yArr = {400,410,425,420};
+        double[] xArr = {97,98,98.5,99.5,
+                         99,100,100.5,101,
+                         103,104.5,103.5,104.5,
+                         104,107,103,108,
+                         110};
+        FastMatrix X=FastMatrix.make(xArr.length, 1);
+        X.column(0).copy(DoubleSeq.of(xArr));
+        
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1977),  yArr);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  xArr);
+        TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.builder()
+                .aggregationType(AggregationType.Sum)
+                .residualsModel(TemporalDisaggregationSpec.Model.Rw)
+                .constant(false)
+                .fast(true)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+        TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec1);
+    }
 }

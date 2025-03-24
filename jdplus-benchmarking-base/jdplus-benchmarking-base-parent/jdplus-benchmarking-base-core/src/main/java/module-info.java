@@ -41,7 +41,8 @@ module jdplus.benchmarking.base.core {
             jdplus.benchmarking.base.core.benchmarking.extractors.ModelBasedDentonExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.BenchmarkingResultsExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.CalendarizationExtractor,
-            jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor;
+            jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.RawResidualsDiagnosticsExtractor;
 
     provides Calendarization.Processor with
             CalendarizationProcessor;

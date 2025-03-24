@@ -27,37 +27,38 @@ import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
 public class RawTemporalDisaggregationExtractor extends InformationMapping<RawTemporalDisaggregationResults>{
     
     public RawTemporalDisaggregationExtractor() {
-        set(TemporalDisaggregationDictionaries.DISAGG, DoubleSeq.class,
-                source -> source.getDisaggregatedSeries());
-        set(TemporalDisaggregationDictionaries.EDISAGG, DoubleSeq.class,
-                source -> source.getStdevDisaggregatedSeries());
-        set(TemporalDisaggregationDictionaries.LDISAGG, DoubleSeq.class,
+        
+        set(TemporalDisaggregationDictionaries.DISAGG, double[].class,
+                source -> source.getDisaggregatedSeries().toArray());
+        set(TemporalDisaggregationDictionaries.EDISAGG, double[].class,
+                source -> source.getStdevDisaggregatedSeries().toArray());
+        set(TemporalDisaggregationDictionaries.LDISAGG, double[].class,
                 source -> source.getDisaggregatedSeries()
-                        .fn(source.getStdevDisaggregatedSeries(), (a, b) -> a - 2 * b));
-        set(TemporalDisaggregationDictionaries.UDISAGG, DoubleSeq.class,
-                source -> source.getDisaggregatedSeries().fn(source.getStdevDisaggregatedSeries(), (a, b) -> a + 2 * b));
-        set(TemporalDisaggregationDictionaries.REGEFFECT, DoubleSeq.class,
-                source -> source.getRegressionEffects());  
-        set(TemporalDisaggregationDictionaries.SMOOTHINGEFFECT, DoubleSeq.class, source -> {
-            return DoublesMath.subtract(source.getDisaggregatedSeries(), source.getRegressionEffects());
+                        .fn(source.getStdevDisaggregatedSeries(), (a, b) -> a - 2 * b).toArray());
+        set(TemporalDisaggregationDictionaries.UDISAGG, double[].class,
+                source -> source.getDisaggregatedSeries().fn(source.getStdevDisaggregatedSeries(), (a, b) -> a + 2 * b).toArray());
+        set(TemporalDisaggregationDictionaries.REGEFFECT, double[].class,
+                source -> source.getRegressionEffects().toArray());  
+        set(TemporalDisaggregationDictionaries.SMOOTHINGEFFECT, double[].class, source -> {
+            return DoublesMath.subtract(source.getDisaggregatedSeries(), source.getRegressionEffects()).toArray();
         }
         );
         set(TemporalDisaggregationDictionaries.COEFF, double[].class,
                 source -> source.getCoefficients().toArray());
         set(TemporalDisaggregationDictionaries.COVAR, Matrix.class,
                 source -> source.getCoefficientsCovariance());
-        set(TemporalDisaggregationDictionaries.REGNAMES, String[].class, source -> {
-            FastMatrix vars = source.getRegressors();
-            int n = vars == null ? 0 : vars.getColumnsCount();
-            if (n == 0) {
-                return null;
-            }
-            String[] names = new String[n];
+//        set(TemporalDisaggregationDictionaries.REGNAMES, String[].class, source -> {
+//            FastMatrix vars = source.getRegressors();
+//            int n = vars == null ? 0 : vars.getColumnsCount();
+//            if (n == 0) {
+//                return null;
+//            }
+//            String[] names = new String[n];
 //            for (int i = 0; i < names.length; ++i) {
 //                names[i] = vars[i].getName();
 //            }
-            return names;
-        });
+//            return names;
+//        });
         set(TemporalDisaggregationDictionaries.PARAMETER, Double.class, source -> {
             if (source.getMaximum() == null) {
                 return Double.NaN;
