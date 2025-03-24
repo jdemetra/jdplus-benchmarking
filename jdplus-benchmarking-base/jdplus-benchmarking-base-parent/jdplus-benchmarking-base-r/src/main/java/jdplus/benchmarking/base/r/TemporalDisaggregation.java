@@ -126,7 +126,7 @@ public class TemporalDisaggregation {
     }
     
     public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend, Matrix indicators,
-            String model, int disaggregationRatio, String aggregation, int obspos,
+            String model, int disaggregationRatio, String aggregation, int nExt, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
             String algorithm, boolean diffuseregs) {
         
@@ -147,7 +147,7 @@ public class TemporalDisaggregation {
         }
         
         if (indicators == null) {
-            return RawTemporalDisaggregationProcessor.process(DoubleSeq.of(y), builder.build());
+            return RawTemporalDisaggregationProcessor.process(DoubleSeq.of(y), builder.build(), nExt);
         } else {
             FastMatrix indicatorsClean = FastMatrix.make(indicators.getRowsCount(), indicators.getColumnsCount());
             for (int j = 0; j < indicators.getColumnsCount(); ++j) {

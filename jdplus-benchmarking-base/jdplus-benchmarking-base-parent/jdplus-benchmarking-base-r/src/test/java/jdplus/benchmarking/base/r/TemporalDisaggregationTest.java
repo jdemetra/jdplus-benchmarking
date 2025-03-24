@@ -72,15 +72,20 @@ public class TemporalDisaggregationTest {
     @Test
     public void testChowLinRaw() {
         double[] y = Data.PCRA;
-        FastMatrix x = FastMatrix.make(Data.IND_PCR.length + 1, 1); 
+        FastMatrix x = FastMatrix.make(Data.IND_PCR.length, 1); 
         x.column(0).add(DoubleSeq.of(Data.IND_PCR));
-        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, x, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
+        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, x, "Ar1", 4, "Sum", 0, 0, 0, false, 0, false, "Augmented", false);
         //System.out.println(rslt.getDisaggregatedSeries());   
     }
 
     @Test
     public void testChowLinRawWithoutIndicator() {
         double[] y = Data.PCRA;
-        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, null, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
+        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, null, "Ar1", 4, "Sum", 2, 0, 0, false, 0, false, "Augmented", false);
+        //System.out.println(rslt.getDisaggregatedSeries());
+        
+        double[] y2Arr = {500,510,525,520};
+        RawTemporalDisaggregationResults rslt2 = TemporalDisaggregation.processRaw(y2Arr, false, false, null, "Rw", 5, "Sum", 0, 0, 0, false, 0, false, "SqrtDiffuse", false);
+        System.out.println(rslt.getRegressionEffects().toArray().length);
     }
 }

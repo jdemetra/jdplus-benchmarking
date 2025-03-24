@@ -80,8 +80,8 @@ public class RawTemporalDisaggregationProcessor {
         return compute(yx, spec);
     }
     
-    public RawTemporalDisaggregationResults process(@NonNull DoubleSeq y, @NonNull RawTemporalDisaggregationSpec spec) {
-        RawDisaggregationModelBuilder builder = new RawDisaggregationModelBuilder(y, spec);
+    public RawTemporalDisaggregationResults process(@NonNull DoubleSeq y, @NonNull RawTemporalDisaggregationSpec spec, int nExt) {
+        RawDisaggregationModelBuilder builder = new RawDisaggregationModelBuilder(y, spec, nExt);
         RawDisaggregationModel yx = builder.build();
         return compute(yx, spec);
     }
@@ -433,7 +433,7 @@ public class RawTemporalDisaggregationProcessor {
     private RawTemporalDisaggregationResults disaggregate2(RawDisaggregationModel model, RawTemporalDisaggregationSpec spec) {
         RawTemporalDisaggregationEstimation edm = estimateDisaggregationModel(model, spec);
 
-        double[] yh = new double[model.estimationSize()];
+        double[] yh = new double[model.getHy().length()];
         double[] eyh = new double[yh.length];
 
         disaggregateEstimation(model, edm, yh, eyh);
