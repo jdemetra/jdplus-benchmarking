@@ -36,7 +36,7 @@ public class RawTemporalDisaggregationProcessorTest {
 
     @Test
     public void testChowLin() {
-        DoubleSeq y=DoubleSeq.of(Data.PCRA).extend(1,0);
+        DoubleSeq y=DoubleSeq.of(Data.PCRA);
         DoubleSeq q = DoubleSeq.of(Data.IND_PCR);
         RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
                 .disaggregationRatio(4)
