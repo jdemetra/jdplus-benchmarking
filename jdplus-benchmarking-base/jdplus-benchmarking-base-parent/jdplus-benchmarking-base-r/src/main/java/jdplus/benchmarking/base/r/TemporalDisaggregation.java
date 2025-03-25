@@ -94,7 +94,7 @@ public class TemporalDisaggregation {
     }
 
     public TemporalDisaggregationResults process(TsData y, boolean constant, boolean trend, TsData[] indicators,
-            String model, int freq, String aggregation, int obspos,
+            String model, int freq, int nExt, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
             String algorithm, boolean diffuseregs) {
         TemporalDisaggregationSpec.Builder builder = TemporalDisaggregationSpec.builder()
@@ -115,7 +115,7 @@ public class TemporalDisaggregation {
             TsUnit unit = TsUnit.ofAnnualFrequency(freq);
             TsPeriod start = TsPeriod.of(unit, y.getStart().start());
             TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
-            TsDomain all = TsDomain.of(start, start.until(end) + 2 * freq);
+            TsDomain all = TsDomain.of(start, start.until(end) + nExt);
             return TemporalDisaggregationProcessor.process(y, all, builder.build());
         } else {
             for (int i = 0; i < indicators.length; ++i) {
@@ -126,7 +126,7 @@ public class TemporalDisaggregation {
     }
     
     public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend, Matrix indicators,
-            String model, int disaggregationRatio, String aggregation, int nExt, int obspos,
+            String model, int disaggregationRatio, int nExt, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
             String algorithm, boolean diffuseregs) {
         
