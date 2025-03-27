@@ -34,13 +34,15 @@ module jdplus.benchmarking.base.core {
 
     provides InformationExtractor with
             jdplus.benchmarking.base.core.benchmarking.extractors.TemporalDisaggregationExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.RawTemporalDisaggregationExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.TemporalDisaggregationIExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.ADLExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.ModelBasedDentonExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.BenchmarkingResultsExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.CalendarizationExtractor,
-            jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor;
+            jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.RawResidualsDiagnosticsExtractor;
 
     provides Calendarization.Processor with
             CalendarizationProcessor;

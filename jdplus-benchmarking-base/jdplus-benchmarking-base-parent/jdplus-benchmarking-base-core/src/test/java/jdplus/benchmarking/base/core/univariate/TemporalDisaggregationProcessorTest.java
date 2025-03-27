@@ -15,6 +15,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
+import jdplus.toolkit.base.api.timeseries.TsDomain;
+import jdplus.toolkit.base.api.timeseries.TsUnit;
+import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 
 /**
  *
@@ -168,7 +171,26 @@ public class TemporalDisaggregationProcessorTest {
 //        System.out.println(rslt2.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt1.getStdevDisaggregatedSeries().getValues());
     }
-
+    
+    @Test
+    public void testFernandezWithoutIndicator() {
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978),  Data.PCRA);
+        TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.builder()
+                .aggregationType(AggregationType.Sum)
+                .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
+                .constant(true)
+                .fast(false)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+        TsUnit unit = TsUnit.ofAnnualFrequency(4);
+        TsPeriod start = TsPeriod.of(unit, y.getStart().start());
+        TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
+        TsDomain all = TsDomain.of(start, start.until(end) + 2 * 4);
+        TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor.process(y, all, spec1);
+        System.out.println(rslt.getDisaggregatedSeries().getValues());
+    }
+    
     @Test
     public void testLitterman() {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1977),  Data.PCRA);
@@ -431,4 +453,69 @@ public class TemporalDisaggregationProcessorTest {
         assertTrue(rslt3 != null);
     }
     
+    @Test
+    public void testUser2() {
+        TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.builder()
+                .observationPosition(2)
+                .residualsModel(TemporalDisaggregationSpec.Model.Rw)
+                .constant(false)
+                .rescale(true)
+                .algorithm(SsfInitialization.SqrtDiffuse)
+                .build();
+        TsData y1 = TsData.ofInternal(TsPeriod.yearly(1976),  Data.PCRA);
+        TsData q1 = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  Data.IND_PCR);
+        TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y1, new TsData[]{q1}, spec);
+        System.out.println(rslt1.getDisaggregatedSeries());
+        TsData y2 = TsData.ofInternal(TsPeriod.yearly(1976),  Data.PCRA);
+        TsData q2 = TsData.ofInternal(TsPeriod.quarterly(1977, 3),  Data.IND_PCR);
+        TemporalDisaggregationResults rslt2 = TemporalDisaggregationProcessor.process(y2, new TsData[]{q2}, spec);
+        System.out.println(rslt2.getDisaggregatedSeries());
+        
+        TemporalDisaggregationSpec spec2 = TemporalDisaggregationSpec.builder()
+                .residualsModel(TemporalDisaggregationSpec.Model.Rw)
+                .constant(false)
+                .rescale(true)
+                .algorithm(SsfInitialization.SqrtDiffuse)
+                .build();
+        TemporalDisaggregationResults rslt3 = TemporalDisaggregationProcessor.process(y2, new TsData[]{q2}, spec2);
+        System.out.println(rslt3.getDisaggregatedSeries());
+    }
+    
+    @Test
+    public void testFernandezExtrapolation() {
+        
+        double[] yArr = {400,410,425,420};
+        double[] xArr = {97,98,98.5,99.5,
+                         99,100,100.5,101,
+                         103,104.5,103.5,104.5,
+                         104,107,103,108,
+                         110,112,114};
+        FastMatrix X=FastMatrix.make(xArr.length, 1);
+        X.column(0).copy(DoubleSeq.of(xArr));
+        
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1977),  yArr);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  xArr);
+        TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.builder()
+                .aggregationType(AggregationType.Sum)
+                .residualsModel(TemporalDisaggregationSpec.Model.Rw)
+                .constant(false)
+                .fast(true)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+        TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec1);
+        System.out.println(rslt1.getDisaggregatedSeries());
+        
+        TemporalDisaggregationSpec spec2 = TemporalDisaggregationSpec.builder()
+                .observationPosition(2)
+                .aggregationType(AggregationType.Sum)
+                .residualsModel(TemporalDisaggregationSpec.Model.Rw)
+                .constant(false)
+                .fast(true)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+        TemporalDisaggregationResults rslt2 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec2);
+        System.out.println(rslt2.getDisaggregatedSeries());
+    }
 }

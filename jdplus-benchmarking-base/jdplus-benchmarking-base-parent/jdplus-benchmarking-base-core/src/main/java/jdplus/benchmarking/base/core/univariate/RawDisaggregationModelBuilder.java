@@ -91,9 +91,37 @@ public class RawDisaggregationModelBuilder {
                 pos = spec.getObservationPosition();
         }
         yposition = pos;
-        buildHY();
-        X = buildX(regressors, hy.length(), spec.isConstant(), spec.isTrend());
+        X = buildX(regressors, y.length() * ratio, spec.isConstant(), spec.isTrend());
         buildXc();
+        buildHY();
+        start = findStart();
+        end = findEnd();
+        estimationStart = findEstimationStart();
+        estimationEnd = findEstimationEnd();
+
+        scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
+    }
+    
+    public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull RawTemporalDisaggregationSpec spec, int nExt) {
+        this.y = y;
+        ratio = spec.getDisaggregationRatio();
+        if (ratio == 0) {
+            throw new IllegalArgumentException("Disaggregation ratio should be specified");
+        }
+        int pos;
+        aType = spec.getAggregationType();
+        switch (aType) {
+            case Sum, Average, Last ->
+                pos = ratio - 1;
+            case First ->
+                pos = 0;
+            default ->
+                pos = spec.getObservationPosition();
+        }
+        yposition = pos;
+        X = buildX(FastMatrix.EMPTY, y.length() * ratio + nExt, spec.isConstant(), spec.isTrend());
+        buildXc();
+        buildHY(nExt);
         start = findStart();
         end = findEnd();
         estimationStart = findEstimationStart();
@@ -108,7 +136,7 @@ public class RawDisaggregationModelBuilder {
 
     private void buildHY() {
         int ny = y.length();
-        double[] dy = new double[ny * ratio];
+        double[] dy = new double[X.getRowsCount()];
         for (int i = 0; i < dy.length; ++i) {
             dy[i] = Double.NaN;
         }
@@ -119,7 +147,21 @@ public class RawDisaggregationModelBuilder {
         }
         hy = DataBlock.of(dy);
     }
+    
+    private void buildHY(int nExt) {
+        int ny = y.length();
+        double[] dy = new double[ny * ratio + nExt];
+        for (int i = 0; i < dy.length; ++i) {
+            dy[i] = Double.NaN;
+        }
 
+        DoubleSeqCursor reader = y.cursor();
+        for (int j = yposition, i = 0; i < ny; ++i, j += ratio) {
+            dy[j] = reader.getAndNext();
+        }
+        hy = DataBlock.of(dy);
+    }
+    
     private static FastMatrix buildX(FastMatrix regressors, int length, boolean constant, boolean trend) {
         if (!constant && !trend) {
             return regressors.deepClone();
@@ -151,7 +193,7 @@ public class RawDisaggregationModelBuilder {
         return all;
     }
 
-    private void buildXc() {
+    private void buildXc() {        
         if (X.isEmpty()) {
             Xc = FastMatrix.EMPTY;
             return;
@@ -319,5 +361,5 @@ public class RawDisaggregationModelBuilder {
             return end * ratio + ypos + 1;
         }
     }
-
+    
 }
