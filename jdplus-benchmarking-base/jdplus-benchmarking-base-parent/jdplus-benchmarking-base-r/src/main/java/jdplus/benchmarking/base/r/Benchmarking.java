@@ -33,6 +33,9 @@ import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
 import jdplus.toolkit.base.r.util.Dictionary;
 import java.util.Map;
+import jdplus.benchmarking.base.api.benchmarking.univariate.RawDenton;
+import jdplus.benchmarking.base.api.benchmarking.univariate.RawDentonSpec;
+import jdplus.toolkit.base.api.data.DoubleSeq;
 
 /**
  *
@@ -64,7 +67,35 @@ public class Benchmarking {
                 .build();
         return Denton.benchmark(TsUnit.ofAnnualFrequency(nfreq), bench.cleanExtremities(), spec);
     }
-
+    
+    public double[] dentonRaw(double[] source, double[] bench, int frequencyRatio, int differencing, boolean multiplicative, boolean modified, String conversion, int pos, int startOffset) {
+        RawDentonSpec spec = RawDentonSpec
+                .builder()
+                .differencing(differencing)
+                .multiplicative(multiplicative)
+                .modified(modified)
+                .aggregationType(AggregationType.valueOf(conversion))
+                .observationPosition(pos-1)
+                .frequencyRatio(frequencyRatio)
+                .startOffset(startOffset)
+                .build();
+        return RawDenton.benchmark(DoubleSeq.of(source), DoubleSeq.of(bench), spec);
+    }
+    
+    public double[] dentonRaw(double[] bench, int frequencyRatio, int differencing, boolean multiplicative, boolean modified, String conversion, int pos, int startOffset) {
+        RawDentonSpec spec = RawDentonSpec
+                .builder()
+                .differencing(differencing)
+                .multiplicative(multiplicative)
+                .modified(modified)
+                .aggregationType(AggregationType.valueOf(conversion))
+                .observationPosition(pos-1)
+                .frequencyRatio(frequencyRatio)
+                .startOffset(startOffset)
+                .build();
+        return RawDenton.benchmark(DoubleSeq.of(bench), spec);
+    }
+    
     public TsData cholette(TsData source, TsData bench, double rho, double lambda, String bias, String conversion, int pos) {
         CholetteSpec spec = CholetteSpec.builder()
                 .rho(rho)

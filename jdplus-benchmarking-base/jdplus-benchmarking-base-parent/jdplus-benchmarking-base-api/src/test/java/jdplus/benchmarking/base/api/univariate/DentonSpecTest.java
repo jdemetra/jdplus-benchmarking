@@ -7,6 +7,7 @@ package jdplus.benchmarking.base.api.univariate;
 
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.benchmarking.base.api.benchmarking.univariate.DentonSpec;
+import jdplus.benchmarking.base.api.benchmarking.univariate.RawDentonSpec;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -24,6 +25,17 @@ public class DentonSpecTest {
                 .aggregationType(AggregationType.Sum)
                 .differencing(2)
                 .multiplicative(true)
+                .build();
+             
+    }
+    
+    @Test
+    public void testSomeMethodRaw() {
+        RawDentonSpec spec = RawDentonSpec.builder()
+                .aggregationType(AggregationType.Sum)
+                .differencing(2)
+                .multiplicative(true)
+                .frequencyRatio(5)
                 .build();
              
     }

@@ -26,7 +26,7 @@ public class MatrixDentonTest {
         MatrixDenton denton = new MatrixDenton(spec, 4, 0);
 
         double[] rslt = denton.process(x, y);
-//        System.out.println(Matrix.columnOf(DataBlock.ofInternal(rslt)));
+        //System.out.println(Matrix.columnOf(DataBlock.ofInternal(rslt)));
     }
-
+    
 }
