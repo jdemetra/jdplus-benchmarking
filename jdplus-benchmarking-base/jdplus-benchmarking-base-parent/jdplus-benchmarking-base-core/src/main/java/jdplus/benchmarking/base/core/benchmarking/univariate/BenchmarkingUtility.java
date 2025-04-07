@@ -6,6 +6,7 @@
 package jdplus.benchmarking.base.core.benchmarking.univariate;
 
 import jdplus.toolkit.base.api.data.AggregationType;
+import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.DoubleSeqCursor;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
@@ -22,10 +23,38 @@ public class BenchmarkingUtility {
         return TsData.fitToDomain(aggregationConstraint, adom);
     }
 
+    public DoubleSeq constraintsByPosition(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int ratio, int offset, int pos){       
+        DoubleSeq naggregationConstraint;       
+        int nt = aggregationConstraint.length();
+        int ns = highFreqSeries.length();
+        int nMin = offset + (nt-1) * ratio + (pos+1);    
+        if(ns < nMin){
+            int nOut = (nMin - ns) / ratio + 1;
+            naggregationConstraint = aggregationConstraint.range(0, nt-nOut);
+        }else{
+            naggregationConstraint = aggregationConstraint;
+        }    
+        return(naggregationConstraint);
+    }
+    
     public TsData constraints(TsData highFreqSeries, TsData aggregationConstraint){
         TsDomain adom = highFreqSeries.getDomain().aggregate(aggregationConstraint.getTsUnit(), true);
         adom=adom.intersection(aggregationConstraint.getDomain());
         return TsData.fitToDomain(aggregationConstraint, adom);
+    }
+    
+    public DoubleSeq constraints(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int ratio, int offset){       
+        DoubleSeq naggregationConstraint;       
+        int nt = aggregationConstraint.length();
+        int ns = highFreqSeries.length();
+        int nMin = offset + nt * ratio;    
+        if(ns < nMin){
+            int nOut = (nMin - ns) / ratio + 1;
+            naggregationConstraint = aggregationConstraint.range(0, nt-nOut);
+        }else{
+            naggregationConstraint = aggregationConstraint;
+        }    
+        return(naggregationConstraint);
     }
     
     public TsData highFreqConstraints(TsData highFreqSeries, TsData aggregationConstraint){

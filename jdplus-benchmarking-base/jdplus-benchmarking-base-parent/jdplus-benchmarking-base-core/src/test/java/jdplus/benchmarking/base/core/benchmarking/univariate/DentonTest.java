@@ -75,4 +75,25 @@ public class DentonTest {
         TsData bc = b.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
         assertTrue(TsDataToolkit.subtract(t, bc).getValues().allMatch(x -> Math.abs(x) < 1e-9));
     }
+    
+    @Test
+    public void test3() {
+        
+        DataBlock y = DataBlock.make(20);
+        y.set(i -> (1 + i));
+        DataBlock x = DataBlock.make(230);
+        x.set(i -> (1 + i) * (1 + i));
+        
+        DentonSpec spec = DentonSpec.builder()
+                .modified(true)
+                .multiplicative(true)
+                .build();
+        TsPeriod m = TsPeriod.monthly(1980, 1);
+        TsPeriod a = TsPeriod.yearly(1980);
+        TsData t = TsData.of(a, y);
+        TsData s = TsData.of(m, x);
+        TsData b = Denton.benchmark(s, t, spec);
+        TsData bc = b.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
+        assertTrue(TsDataToolkit.subtract(t, bc).getValues().allMatch(w -> Math.abs(w) < 1e-9));
+    }
 }

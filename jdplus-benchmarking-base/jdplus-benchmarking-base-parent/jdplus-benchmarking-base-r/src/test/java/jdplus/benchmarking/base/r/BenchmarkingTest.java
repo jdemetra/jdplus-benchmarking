@@ -17,6 +17,7 @@
 package jdplus.benchmarking.base.r;
 
 import jdplus.toolkit.base.api.data.AggregationType;
+import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.api.data.Doubles;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
@@ -138,7 +139,75 @@ public class BenchmarkingTest {
             q = q.plus(1);
         }
     }
+    
+    @Test
+    public void testDentonRaw() {
+        DataBlock y = DataBlock.make(20);
+        y.set(i -> (1 + i));
+        DataBlock x = DataBlock.make(230);
+        x.set(i -> (1 + i) * (1 + i));
+        
+        DoubleSeq t = DoubleSeq.of(y.toArray());
+        DoubleSeq s = DoubleSeq.of(x.toArray());
+        
+        DoubleSeq qs1 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "First", 0, 0));
+        for (int i = 0; i < y.length(); ++i) {
+            assertEquals(qs1.get(i*12), t.get(i), 1e-6);
+        }
+        
+        DoubleSeq qs2 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "Last", 0, 0));
+        for (int i = 0; i < y.length()-1; ++i) {
+            assertEquals(qs2.get(11+i*12), t.get(i), 1e-6);
+        }
+        
+        int pos = 3 + 1;
+        DoubleSeq qs3 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "UserDefined", pos, 0));
+        for (int i = 0; i < y.length()-1; ++i) {
+            assertEquals(qs3.get(pos-1+i*12), t.get(i), 1e-6);
+        }
 
+        DoubleSeq qs4 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "Sum", 0, 0));
+        for (int i = 0; i < y.length()-1; ++i) {
+            assertEquals(qs4.extract(i*12, 12).sum(), t.get(i), 1e-6);
+        }
+        
+        DoubleSeq qs5 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "Average", 0, 0));
+        for (int i = 0; i < y.length()-1; ++i) {
+            assertEquals(qs5.extract(i*12, 12).average(), t.get(i), 1e-6);
+        }
+        
+        int offset = 5; 
+        DoubleSeq qs6 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "Last", 0, offset));
+        for (int i = 0; i < y.length()-2; ++i) {
+            assertEquals(qs6.get(offset+11+i*12), t.get(i), 1e-6);
+        }
+        
+        DoubleSeq qs7 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "UserDefined", pos, offset));
+        for (int i = 0; i < y.length()-2; ++i) {
+            assertEquals(qs7.get(offset+pos-1+i*12), t.get(i), 1e-6);
+        }
+        
+        DoubleSeq qs8 = DoubleSeq.of(Benchmarking.dentonRaw(s.toArray(), t.toArray(), 12, 1, true, true, "Average", 0, offset));
+        for (int i = 0; i < y.length()-2; ++i) {
+            assertEquals(qs8.extract(offset+i*12, 12).average(), t.get(i), 1e-6);
+        }
+    }
+    
+    @Test
+    public void testDentonRaw2() {
+        double[] yArr = {500,510,525,520};
+        double[] xArr = {97,98,98.5,99.5,104,
+                         99,100,100.5,101,105.5,
+                         103,104.5,103.5,104.5,109,
+                         104,107,103,108,113,
+                         110,112,116};
+        DoubleSeq y = DoubleSeq.of(yArr);
+        DoubleSeq x = DoubleSeq.of(xArr);
+        
+        DoubleSeq qs1 = DoubleSeq.of(Benchmarking.dentonRaw(x.toArray(), y.toArray(), 5, 1, true, true, "Sum", 0, 0));
+        DoubleSeq qs2 = DoubleSeq.of(Benchmarking.dentonRaw(y.toArray(), 5, 1, true, true, "Sum", 0, 0));    
+    }
+    
     @Test
     public void testGRP() {
         DataBlock y = DataBlock.make(20);
