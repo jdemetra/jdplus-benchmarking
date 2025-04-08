@@ -32,9 +32,8 @@ public class RawDentonProcessor implements RawDenton.Processor {
     public static final RawDentonProcessor PROCESSOR=new RawDentonProcessor();
 
     @Override
-    public double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, RawDentonSpec spec) {
+    public double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int offset, RawDentonSpec spec) {
         int ratio = spec.getFrequencyRatio();
-        int offset = spec.getStartOffset();
         
         DoubleSeq naggregationConstraint;
         switch (spec.getAggregationType()){

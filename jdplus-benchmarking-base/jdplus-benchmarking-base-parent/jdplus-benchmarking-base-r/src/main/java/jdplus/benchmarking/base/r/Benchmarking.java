@@ -77,11 +77,22 @@ public class Benchmarking {
                 .aggregationType(AggregationType.valueOf(conversion))
                 .observationPosition(pos-1)
                 .frequencyRatio(frequencyRatio)
-                .startOffset(startOffset)
-                .build();
-        return RawDenton.benchmark(DoubleSeq.of(source), DoubleSeq.of(bench), spec);
+                 .build();
+        return RawDenton.benchmark(DoubleSeq.of(source), DoubleSeq.of(bench), startOffset, spec);
     }
     
+    /**
+     * TODO: replace startOffset by nbackcasts/nforecasts
+     * @param bench
+     * @param frequencyRatio
+     * @param differencing
+     * @param multiplicative
+     * @param modified
+     * @param conversion
+     * @param pos
+     * @param startOffset
+     * @return 
+     */
     public double[] dentonRaw(double[] bench, int frequencyRatio, int differencing, boolean multiplicative, boolean modified, String conversion, int pos, int startOffset) {
         RawDentonSpec spec = RawDentonSpec
                 .builder()
@@ -91,8 +102,7 @@ public class Benchmarking {
                 .aggregationType(AggregationType.valueOf(conversion))
                 .observationPosition(pos-1)
                 .frequencyRatio(frequencyRatio)
-                .startOffset(startOffset)
-                .build();
+                 .build();
         return RawDenton.benchmark(DoubleSeq.of(bench), spec);
     }
     

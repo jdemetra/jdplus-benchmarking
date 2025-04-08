@@ -41,8 +41,8 @@ public class RawDenton {
         return PROCESSOR.get();
     }
 
-    public double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, RawDentonSpec spec) {
-        return PROCESSOR.get().benchmark(highFreqSeries, aggregationConstraint, spec);
+    public double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int startOffset, RawDentonSpec spec) {
+        return PROCESSOR.get().benchmark(highFreqSeries, aggregationConstraint, startOffset, spec);
     }
 
     public double[] benchmark(DoubleSeq aggregationConstraint, RawDentonSpec spec) {
@@ -53,7 +53,7 @@ public class RawDenton {
     @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
     public interface Processor {
 
-        double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, RawDentonSpec spec);
+        double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int startOffset, RawDentonSpec spec);
 
         double[] benchmark(DoubleSeq aggregationConstraint, RawDentonSpec spec);
     }

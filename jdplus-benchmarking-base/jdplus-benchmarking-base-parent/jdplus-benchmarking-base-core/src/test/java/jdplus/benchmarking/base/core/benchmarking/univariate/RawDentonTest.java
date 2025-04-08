@@ -46,14 +46,13 @@ public class RawDentonTest {
                 .aggregationType(AggregationType.Sum)
                 .observationPosition(0)
                 .frequencyRatio(5)
-                .startOffset(0)
                 .build();
         
-        double[] rslt = RawDenton.benchmark(x, y, spec);
-        System.out.println(Arrays.toString(rslt));
+        double[] rslt = RawDenton.benchmark(x, y, 0, spec);
+        System.out.println(DoubleSeq.of(rslt));
         
         double[] rslt2 = RawDenton.benchmark(y, spec);
-        System.out.println(Arrays.toString(rslt2));
+        System.out.println(DoubleSeq.of(rslt2));
     }
     
     @Test
@@ -74,10 +73,9 @@ public class RawDentonTest {
                 .aggregationType(AggregationType.UserDefined)
                 .observationPosition(3)
                 .frequencyRatio(12)
-                .startOffset(0)
                 .build();
         
-        double[] rslt = RawDenton.benchmark(x, y, spec);
+        double[] rslt = RawDenton.benchmark(x, y, 0, spec);
         System.out.println(Arrays.toString(rslt));
     }
     
@@ -93,7 +91,6 @@ public class RawDentonTest {
                 .aggregationType(AggregationType.Sum)
                 .observationPosition(0)
                 .frequencyRatio(5)
-                .startOffset(1)
                 .build();
         
         double[] rslt = RawDenton.benchmark(y, spec);

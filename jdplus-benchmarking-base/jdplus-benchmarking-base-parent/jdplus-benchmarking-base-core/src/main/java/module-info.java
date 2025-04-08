@@ -41,6 +41,7 @@ module jdplus.benchmarking.base.core {
             jdplus.benchmarking.base.core.benchmarking.extractors.ADLExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.ModelBasedDentonExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.RawModelBasedDentonExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.BenchmarkingResultsExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.CalendarizationExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor,
@@ -63,4 +64,5 @@ module jdplus.benchmarking.base.core {
     
     provides GrowthRatePreservation.Processor with
             GRPProcessor;
+
 }

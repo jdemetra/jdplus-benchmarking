@@ -1,6 +1,5 @@
 /*
- * Copyright 2025 National Bank of Belgium.
- *
+ * Copyright 2025 JDemetra+.
  * Licensed under the EUPL, Version 1.2 or – as soon they will be approved
  * by the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
@@ -9,55 +8,55 @@
  *      https://joinup.ec.europa.eu/software/page/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
-package jdplus.benchmarking.base.api.benchmarking.univariate;
+package jdplus.benchmarking.base.api.univariate;
 
-import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
+import jdplus.toolkit.base.api.data.AggregationType;
+import nbbrd.design.Development;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
 import jdplus.toolkit.base.api.util.Validatable;
-import nbbrd.design.Development;
+import java.time.LocalDate;
+import java.util.Map;
 
 /**
  *
- * @author LEMASSO
+ * @author Jean Palate
  */
 @Development(status = Development.Status.Beta)
 @lombok.Value
 @lombok.Builder(toBuilder=true, buildMethodName="buildWithoutValidation")
-public class RawDentonSpec implements ProcSpecification, Validatable<RawDentonSpec> {
+public class RawModelBasedDentonSpec implements ProcSpecification, Validatable<RawModelBasedDentonSpec> {
 
-    public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor("benchmarking", "denton", null);
+    public static final AlgorithmDescriptor ALGORITHM = new AlgorithmDescriptor("temporaldisaggregation", "rawmdenton", null);
 
-    private boolean multiplicative, modified;
-    private int differencing;
+    @lombok.Singular
+    private Map<Integer, Double> shockVariances; 
+    @lombok.Singular
+    private Map<Integer, Double> fixedBiRatios; 
     @lombok.NonNull
     private AggregationType aggregationType;
     private int observationPosition;
-    
+
     private int frequencyRatio;
-            
+
     public static Builder builder() {
         return new Builder()
-                .multiplicative(true)
-                .modified(true)
-                .differencing(1)
                 .aggregationType(AggregationType.Sum)
-                .observationPosition(0)
-                .frequencyRatio(0);
+                .observationPosition(0);
     }
 
     @Override
     public AlgorithmDescriptor getAlgorithmDescriptor() {
-        return DESCRIPTOR;
+        return ALGORITHM;
     }
 
     @Override
-    public RawDentonSpec validate() throws IllegalArgumentException {
+    public RawModelBasedDentonSpec validate() throws IllegalArgumentException {
         if (aggregationType == AggregationType.None || aggregationType == AggregationType.Max
                 || aggregationType == AggregationType.Min) {
             throw new IllegalArgumentException();
@@ -67,8 +66,14 @@ public class RawDentonSpec implements ProcSpecification, Validatable<RawDentonSp
         return this;
     }
 
-    public static class Builder implements Validatable.Builder<RawDentonSpec>{
+    public static class Builder implements Validatable.Builder<RawModelBasedDentonSpec>{
         
     }
-    public static final RawDentonSpec DEFAULT = builder().build();
+    public static final RawModelBasedDentonSpec DEFAULT = builder().build();
+    
+    @Override
+    public String display(){
+        return "Raw Model-based Denton";
+    }
+
 }
