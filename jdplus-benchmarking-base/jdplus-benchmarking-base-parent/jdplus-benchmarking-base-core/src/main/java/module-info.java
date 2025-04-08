@@ -3,12 +3,14 @@ import jdplus.benchmarking.base.api.benchmarking.univariate.Cholette;
 import jdplus.benchmarking.base.api.benchmarking.univariate.CubicSpline;
 import jdplus.benchmarking.base.api.benchmarking.univariate.Denton;
 import jdplus.benchmarking.base.api.benchmarking.univariate.GrowthRatePreservation;
+import jdplus.benchmarking.base.api.benchmarking.univariate.RawDenton;
 import jdplus.benchmarking.base.api.calendarization.Calendarization;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.MultivariateCholetteProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.CholetteProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.CubicSplineProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.DentonProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.GRPProcessor;
+import jdplus.benchmarking.base.core.benchmarking.univariate.RawDentonProcessor;
 import jdplus.benchmarking.base.core.calendarization.CalendarizationProcessor;
 import jdplus.toolkit.base.api.information.InformationExtractor;
 
@@ -39,6 +41,7 @@ module jdplus.benchmarking.base.core {
             jdplus.benchmarking.base.core.benchmarking.extractors.ADLExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.ModelBasedDentonExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.RawModelBasedDentonExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.BenchmarkingResultsExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.CalendarizationExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor,
@@ -56,6 +59,10 @@ module jdplus.benchmarking.base.core {
     provides Denton.Processor with
             DentonProcessor;
 
+    provides RawDenton.Processor with
+            RawDentonProcessor;
+    
     provides GrowthRatePreservation.Processor with
             GRPProcessor;
+
 }

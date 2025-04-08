@@ -8,16 +8,11 @@ import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.DoublesMath;
 import jdplus.toolkit.base.api.information.InformationExtractor;
 import jdplus.toolkit.base.api.information.InformationMapping;
-import jdplus.benchmarking.base.core.univariate.ResidualsDiagnostics;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
-import jdplus.toolkit.base.api.timeseries.TsData;
-import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import nbbrd.service.ServiceProvider;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationDictionaries;
 import jdplus.benchmarking.base.core.univariate.RawResidualsDiagnostics;
-import jdplus.toolkit.base.core.data.DataBlock;
-import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
 /**
  *
