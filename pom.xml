@@ -49,18 +49,18 @@
         <x.github.repo>${project.artifactId}</x.github.repo>
 
         <!-- annotations & processors -->
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
         <java-service.version>1.9.0</java-service.version>
         <java-design.version>1.5.1</java-design.version>
         <checker-qual.version>3.49.2</checker-qual.version>
 
         <!-- test frameworks -->
-        <junit.version>5.12.1</junit.version>
+        <junit.version>5.12.2</junit.version>
         <assertj-core.version>3.27.3</assertj-core.version>
 
         <!-- dependencies -->
         <jd2.version>2.2.6</jd2.version>
-        <jdplus-main.version>3.4.1-SNAPSHOT</jdplus-main.version>
+        <jdplus-main.version>3.5.0</jdplus-main.version>
         <protobuf.version>4.30.2</protobuf.version>
     </properties>
 
