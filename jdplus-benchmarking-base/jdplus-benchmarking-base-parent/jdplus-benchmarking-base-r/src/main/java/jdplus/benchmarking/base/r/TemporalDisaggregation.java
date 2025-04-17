@@ -36,13 +36,14 @@ import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_ALGORITHM;
 import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_EPS;
 import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_RESCALE;
 import static jdplus.benchmarking.base.api.univariate.ADLSpec.builder;
-import jdplus.benchmarking.base.api.univariate.RawTemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.benchmarking.base.core.univariate.ADLProcessor;
 import jdplus.benchmarking.base.core.univariate.ADLResults;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonProcessor;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonResults;
 import jdplus.benchmarking.base.core.univariate.ProcessorI;
-import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationProcessor;
+import jdplus.benchmarking.base.core.univariate.RawDisaggregationProcessor;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationProcessor;
 import jdplus.toolkit.base.api.data.DoubleSeq;
@@ -124,17 +125,17 @@ public class TemporalDisaggregation {
             return TemporalDisaggregationProcessor.process(y, indicators, builder.build());
         }
     }
-    
-    public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend, Matrix indicators,
-            String model, int disaggregationRatio, int nExt, String aggregation, int obspos,
+
+    public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend,
+            String model, int frequencyRatio, int nbcasts, int nfcasts, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
             String algorithm, boolean diffuseregs) {
-        
-        RawTemporalDisaggregationSpec.Builder builder = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(disaggregationRatio)
+
+        RawDisaggregationSpec.Builder builder = RawDisaggregationSpec.builder()
+                .frequencyRatio(frequencyRatio)
                 .constant(constant)
                 .trend(trend)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.valueOf(model))
+                .residualsModel(ResidualsModel.valueOf(model))
                 .aggregationType(AggregationType.valueOf(aggregation))
                 .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
                 .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
@@ -145,19 +146,40 @@ public class TemporalDisaggregation {
         if (aggregation.equals("UserDefined")) {
             builder.observationPosition(obspos);
         }
-        
-        if (indicators == null) {
-            return RawTemporalDisaggregationProcessor.process(DoubleSeq.of(y), builder.build(), nExt);
-        } else {
-            FastMatrix indicatorsClean = FastMatrix.make(indicators.getRowsCount(), indicators.getColumnsCount());
-            for (int j = 0; j < indicators.getColumnsCount(); ++j) {
-                indicatorsClean.column(j).add(indicators.column(j).cleanExtremities());
-            } 
-            
-            return RawTemporalDisaggregationProcessor.process(DoubleSeq.of(y), indicatorsClean, builder.build());
-        }
+        return RawDisaggregationProcessor.process(DoubleSeq.of(y), nbcasts, nfcasts, builder.build());
     }
-    
+
+    public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend, Matrix indicators, int startOffset,
+            String model, int frequencyRatio, String aggregation, int obspos,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs) {
+
+        if (startOffset < 0) {
+            throw new IllegalArgumentException("Start offset should be non-negative");
+        }
+        FastMatrix X = FastMatrix.of(indicators);
+        if (DoubleSeq.of(X.getStorage()).anyMatch(z -> !Double.isFinite(z))) {
+            throw new IllegalArgumentException("indicators can't contain missing values");
+        }
+        RawDisaggregationSpec.Builder builder = RawDisaggregationSpec.builder()
+                .frequencyRatio(frequencyRatio)
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(RawDisaggregationSpec.Model.valueOf(model))
+                .aggregationType(AggregationType.valueOf(aggregation))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .zeroInitialization(zeroinit)
+                .diffuseRegressors(diffuseregs)
+                .rescale(true);
+        if (aggregation.equals("UserDefined")) {
+            builder.observationPosition(obspos);
+        }
+
+        return RawDisaggregationProcessor.process(DoubleSeq.of(y), X, startOffset, builder.build());
+    }
+
     public ADLResults processADL(TsData y, boolean constant, boolean trend, TsData[] indicators,
             String aggregation, double phi, boolean fixedphi, double truncatedPhi, String xar) {
         if (indicators == null) {
@@ -173,7 +195,7 @@ public class TemporalDisaggregation {
                 .truncation(truncatedPhi <= -1 ? null : truncatedPhi)
                 .estimationPrecision(DEF_EPS)
                 .rescale(DEF_RESCALE)
-//                .algorithm(SsfInitialization.valueOf(algorithm))
+                //                .algorithm(SsfInitialization.valueOf(algorithm))
                 .build();
         for (int i = 0; i < indicators.length; ++i) {
             indicators[i] = indicators[i].cleanExtremities();

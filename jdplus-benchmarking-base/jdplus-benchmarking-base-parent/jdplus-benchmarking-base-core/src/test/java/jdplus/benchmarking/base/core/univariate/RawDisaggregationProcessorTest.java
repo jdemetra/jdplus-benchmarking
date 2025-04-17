@@ -15,7 +15,9 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
-import jdplus.benchmarking.base.api.univariate.RawTemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
+import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
@@ -29,36 +31,36 @@ import tck.demetra.data.Data;
  *
  * @author Jean Palate
  */
-public class RawTemporalDisaggregationProcessorTest {
+public class RawDisaggregationProcessorTest {
     
-    public RawTemporalDisaggregationProcessorTest() {
+    public RawDisaggregationProcessorTest() {
     }
 
     @Test
     public void testChowLin() {
         DoubleSeq y=DoubleSeq.of(Data.PCRA);
         DoubleSeq q = DoubleSeq.of(Data.IND_PCR);
-        RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(4)
+        RawDisaggregationSpec spec1 = RawDisaggregationSpec.builder()
+                .frequencyRatio(4)
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+                .residualsModel(ResidualsModel.RwAr1)
                 //                .diffuseRegressors(true)
-                .constant(true)
+                .constant(false)
                 .fast(false)
                 .estimationPrecision(1e-9)
                 .rescale(false)
-                .algorithm(SsfInitialization.Augmented)
+                .algorithm(SsfInitialization.Augmented_Robust)
                 .build();     
         FastMatrix X=FastMatrix.make(q.length(), 1);
         X.column(0).copy(q);
-        RawTemporalDisaggregationResults rslt1 = RawTemporalDisaggregationProcessor.process(y, X, spec1);
-//        System.out.println(rslt1.getDisaggregatedSeries());
-//        System.out.println(rslt1.getStdevDisaggregatedSeries());
+        RawDisaggregationResults rslt1 = RawDisaggregationProcessor.process(y, X, 4, spec1);
+        System.out.println(rslt1.getDisaggregatedSeries());
+        System.out.println(rslt1.getStdevDisaggregatedSeries());
 
-        RawTemporalDisaggregationSpec spec2 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(4)
-                .aggregationType(AggregationType.Average)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+        RawDisaggregationSpec spec2 = RawDisaggregationSpec.builder()
+                .frequencyRatio(4)
+                .aggregationType(AggregationType.Sum)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
                 .fast(false)
@@ -67,15 +69,15 @@ public class RawTemporalDisaggregationProcessorTest {
                 .rescale(false)
                 .algorithm(SsfInitialization.SqrtDiffuse)
                 .build();
-        RawTemporalDisaggregationResults rslt2 = RawTemporalDisaggregationProcessor.process(y, X, spec2);
-//        System.out.println(rslt2.getDisaggregatedSeries());
-//        System.out.println(rslt2.getStdevDisaggregatedSeries());
+        RawDisaggregationResults rslt2 = RawDisaggregationProcessor.process(y, X, 0, spec2);
+        System.out.println(rslt2.getDisaggregatedSeries());
+        System.out.println(rslt2.getStdevDisaggregatedSeries());
 //        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
 //        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
-        RawTemporalDisaggregationSpec spec3 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(4)
+        RawDisaggregationSpec spec3 = RawDisaggregationSpec.builder()
+                .frequencyRatio(4)
                 .aggregationType(AggregationType.Average)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
                 .fast(true)
@@ -83,7 +85,7 @@ public class RawTemporalDisaggregationProcessorTest {
                 .rescale(false)
                 .algorithm(SsfInitialization.Diffuse)
                 .build();
-        RawTemporalDisaggregationResults rslt3 = RawTemporalDisaggregationProcessor.process(y, X, spec3);
+        RawDisaggregationResults rslt3 = RawDisaggregationProcessor.process(y, X, 0, spec3);
 //        double d=rslt1.getCoefficients().distance(rslt3.getCoefficients());
 //        assertTrue(d < 1e-6);
 //        d=rslt1.getCoefficientsCovariance().diagonal()
@@ -91,7 +93,7 @@ public class RawTemporalDisaggregationProcessorTest {
 //        assertTrue(d < 1e-6);
 //        System.out.println("CL");
 //        System.out.println(rslt2.getDisaggregatedSeries());
-//        System.out.println(rslt2.getStdevDisaggregatedSeries().getValues());
+//        System.out.println(rslt2.getStdevDisaggregatedSeries());
 //        System.out.println(rslt2.getCoefficients());
 //        System.out.println(rslt1.getMaximum().getHessian());
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
@@ -102,44 +104,44 @@ public class RawTemporalDisaggregationProcessorTest {
     public void testAR1() {
         DoubleSeq y=DoubleSeq.of(Data.PCRA);
         DoubleSeq q = DoubleSeq.of(Data.IND_PCR);
-        RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(4)
-                .aggregationType(AggregationType.Last)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+        RawInterpolationSpec spec1 = RawInterpolationSpec.builder()
+                .frequencyRatio(4)
+                .interpolationType(AggregationType.First)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
-                .fast(false)
-                .estimationPrecision(1e-9)
-                .rescale(false)
+                .fast(true)
+                .estimationPrecision(1e-15)
+                .rescale(true)
                 .algorithm(SsfInitialization.Augmented)
                 .build();
         FastMatrix X=FastMatrix.make(q.length(), 1);
         X.column(0).copy(q);
-        RawTemporalDisaggregationResults rslt1 = RawTemporalDisaggregationProcessor.process(y, X, spec1);
-//        System.out.println(rslt1.getDisaggregatedSeries());
-//        System.out.println(rslt1.getStdevDisaggregatedSeries());
+        RawInterpolationResults rslt1 = RawInterpolationProcessor.process(y, X, 4, spec1);
+        System.out.println(rslt1.getDisaggregatedSeries());
+        System.out.println(rslt1.getStdevDisaggregatedSeries());
 
-        RawTemporalDisaggregationSpec spec2 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(4)
-                .aggregationType(AggregationType.Last)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+        RawInterpolationSpec spec2 = RawInterpolationSpec.builder()
+                .frequencyRatio(4)
+                .interpolationType(AggregationType.First)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
-                .fast(false)
+                .fast(true)
                 .parameter(Parameter.fixed(0.9))
                 .estimationPrecision(1e-9)
-                .rescale(false)
-                .algorithm(SsfInitialization.SqrtDiffuse)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented_Robust)
                 .build();
-        RawTemporalDisaggregationResults rslt2 = RawTemporalDisaggregationProcessor.process(y, X, spec2);
+        RawInterpolationResults rslt2 = RawInterpolationProcessor.process(y, X, 3, spec2);
 //        System.out.println(rslt2.getDisaggregatedSeries());
 //        System.out.println(rslt2.getStdevDisaggregatedSeries());
 //        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
 //        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
-        RawTemporalDisaggregationSpec spec3 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(4)
-                .aggregationType(AggregationType.Last)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+        RawInterpolationSpec spec3 = RawInterpolationSpec.builder()
+                .frequencyRatio(4)
+                .interpolationType(AggregationType.First)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
                 .fast(true)
@@ -147,7 +149,7 @@ public class RawTemporalDisaggregationProcessorTest {
                 .rescale(true)
                 .algorithm(SsfInitialization.Diffuse)
                 .build();
-        RawTemporalDisaggregationResults rslt3 = RawTemporalDisaggregationProcessor.process(y, X, spec3);
+        RawInterpolationResults rslt3 = RawInterpolationProcessor.process(y, X, 4, spec3);
         double d=rslt1.getCoefficients().distance(rslt3.getCoefficients())/rslt1.getCoefficients().fastNorm2();
         assertTrue(d < 1e-3);
         d=rslt1.getCoefficientsCovariance().diagonal()
@@ -161,16 +163,16 @@ public class RawTemporalDisaggregationProcessorTest {
 //        System.out.println(rslt2.getCoefficients());
 //        System.out.println(rslt1.getMaximum().getHessian());
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
-//        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
+        System.out.println(rslt1.getLikelihood().logLikelihood());
     }
 
     @Test
     public void testFernandezWithoutIndicator() {
         DoubleSeq y=DoubleSeq.of(Data.PCRA).extend(1,0);
-        RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(4)
+        RawDisaggregationSpec spec1 = RawDisaggregationSpec.builder()
+                .frequencyRatio(4)
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Rw)
+                .residualsModel(ResidualsModel.Rw)
                 //                .diffuseRegressors(true)
                 .constant(false)
                 .fast(true)
@@ -179,7 +181,7 @@ public class RawTemporalDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.Augmented)
                 .build();
 
-        RawTemporalDisaggregationResults rslt = RawTemporalDisaggregationProcessor.process(y, spec1, 0);
+        RawDisaggregationResults rslt = RawDisaggregationProcessor.process(y, 0, 0, spec1);
         //System.out.println(rslt.getDisaggregatedSeries());
     }
     
@@ -194,10 +196,10 @@ public class RawTemporalDisaggregationProcessorTest {
         FastMatrix X=FastMatrix.make(xArr.length, 1);
         X.column(0).copy(DoubleSeq.of(xArr));
         
-        RawTemporalDisaggregationSpec spec1 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(5)
+        RawDisaggregationSpec spec1 = RawDisaggregationSpec.builder()
+                .frequencyRatio(5)
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Rw)
+                .residualsModel(ResidualsModel.Rw)
                 //                .diffuseRegressors(true)
                 .constant(false)
                 .fast(true)
@@ -209,13 +211,13 @@ public class RawTemporalDisaggregationProcessorTest {
         //RawTemporalDisaggregationResults rslt = RawTemporalDisaggregationProcessor.process(DoubleSeq.of(yArr), X, spec1);
         //System.out.println(rslt.getDisaggregatedSeries());
         
-        RawTemporalDisaggregationResults rslt2 = RawTemporalDisaggregationProcessor.process(DoubleSeq.of(yArr), spec1, 5);
+        RawDisaggregationResults rslt2 = RawDisaggregationProcessor.process(DoubleSeq.of(yArr), 5, 0, spec1);
         //System.out.println(rslt2.getDisaggregatedSeries());
         
-         RawTemporalDisaggregationSpec spec3 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(5)
+         RawDisaggregationSpec spec3 = RawDisaggregationSpec.builder()
+                .frequencyRatio(5)
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
                 .fast(false)
@@ -224,16 +226,16 @@ public class RawTemporalDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.Augmented)
                 .build();
 
-        RawTemporalDisaggregationResults rslt3 = RawTemporalDisaggregationProcessor.process(DoubleSeq.of(yArr), X, spec3);
+        RawDisaggregationResults rslt3 = RawDisaggregationProcessor.process(DoubleSeq.of(yArr), X, 0,spec3);
         //System.out.println(rslt3.getDisaggregatedSeries());
         
-        RawTemporalDisaggregationResults rslt4 = RawTemporalDisaggregationProcessor.process(DoubleSeq.of(yArr), spec3, 1);
+        RawDisaggregationResults rslt4 = RawDisaggregationProcessor.process(DoubleSeq.of(yArr), 0, 0, spec3);
         //System.out.println(rslt4.getDisaggregatedSeries());
         
-        RawTemporalDisaggregationSpec spec5 = RawTemporalDisaggregationSpec.builder()
-                .disaggregationRatio(5)
-                .aggregationType(AggregationType.Last)
-                .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+        RawInterpolationSpec spec5 = RawInterpolationSpec.builder()
+                .frequencyRatio(5)
+                .interpolationType(AggregationType.Last)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
                 .fast(false)
@@ -242,10 +244,10 @@ public class RawTemporalDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.Augmented)
                 .build();
 
-        RawTemporalDisaggregationResults rslt5 = RawTemporalDisaggregationProcessor.process(DoubleSeq.of(yArr), X, spec5);
+        RawInterpolationResults rslt5 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), X, 0, spec5);
         //System.out.println(rslt5.getDisaggregatedSeries());
         
-        RawTemporalDisaggregationResults rslt6 = RawTemporalDisaggregationProcessor.process(DoubleSeq.of(yArr), spec5, 3);
+        RawInterpolationResults rslt6 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), 3, 0, spec5);
         //System.out.println(rslt6.getDisaggregatedSeries());
     }
 }

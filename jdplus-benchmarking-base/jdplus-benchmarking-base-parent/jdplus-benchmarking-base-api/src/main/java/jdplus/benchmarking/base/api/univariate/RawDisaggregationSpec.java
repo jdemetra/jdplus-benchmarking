@@ -31,7 +31,7 @@ import jdplus.toolkit.base.api.util.Validatable;
 @Development(status = Development.Status.Beta)
 @lombok.Getter
 @lombok.Builder(toBuilder = true, buildMethodName = "buildWithoutValidation")
-public final class RawTemporalDisaggregationSpec implements ProcSpecification, Validatable<RawTemporalDisaggregationSpec> {
+public final class RawDisaggregationSpec implements ProcSpecification, Validatable<RawDisaggregationSpec> {
 
     public static final String VERSION = "3.0.0";
 
@@ -46,9 +46,9 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
 
     public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
 
-    public static final RawTemporalDisaggregationSpec CHOWLIN = builder()
+    public static final RawDisaggregationSpec CHOWLIN = builder()
             .aggregationType(AggregationType.Sum)
-            .residualsModel(RawTemporalDisaggregationSpec.Model.Ar1)
+            .residualsModel(ResidualsModel.Ar1)
             .constant(true)
             .estimationRange(IndexRange.EMPTY)
             .truncatedParameter(0.0)
@@ -56,19 +56,19 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
             .estimationPrecision(DEF_EPS)
             .rescale(DEF_RESCALE)
             .algorithm(DEF_ALGORITHM)
-            .disaggregationRatio(0)
+            .frequencyRatio(0)
             .build();
 
-    public static final RawTemporalDisaggregationSpec FERNANDEZ = builder()
+    public static final RawDisaggregationSpec FERNANDEZ = builder()
             .aggregationType(AggregationType.Sum)
-            .residualsModel(RawTemporalDisaggregationSpec.Model.Rw)
+            .residualsModel(ResidualsModel.Rw)
             .constant(false)
             .estimationRange(IndexRange.EMPTY)
             .fast(DEF_FAST)
             .estimationPrecision(DEF_EPS)
             .rescale(DEF_RESCALE)
             .algorithm(DEF_ALGORITHM)
-            .disaggregationRatio(0)
+            .frequencyRatio(0)
             .build();
 
     @Override
@@ -76,46 +76,12 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
         return DESCRIPTOR;
     }
 
-    public static enum Model {
-        Wn,
-        Ar1,
-        Rw,
-        RwAr1,
-        I2, I3;
-
-        public boolean hasParameter() {
-            return this == Ar1 || this == RwAr1;
-        }
-
-        public boolean isStationary() {
-            return this == Ar1 || this == Wn;
-        }
-
-        public int getParametersCount() {
-            return (this == Ar1 || this == RwAr1) ? 1 : 0;
-        }
-
-        public int getDifferencingOrder() {
-            return switch (this) {
-                case Rw, RwAr1 ->
-                    1;
-                case I2 ->
-                    2;
-                case I3 ->
-                    3;
-                default ->
-                    0;
-            };
-        }
-    }
-
     @lombok.NonNull
     private AggregationType aggregationType;
-    private int observationPosition;
-    private int disaggregationRatio;
+    private int frequencyRatio;
 
     @lombok.NonNull
-    private Model residualsModel;
+    private ResidualsModel residualsModel;
     private boolean constant, trend;
     private Parameter parameter;
     @lombok.NonNull
@@ -129,17 +95,17 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
     private boolean rescale;
 
     public boolean isParameterEstimation() {
-        return (residualsModel == Model.Ar1 || residualsModel == Model.RwAr1)
+        return (residualsModel == ResidualsModel.Ar1 || residualsModel == ResidualsModel.RwAr1)
                 && parameter.getType() != ParameterType.Fixed;
     }
 
-    public static class Builder implements Validatable.Builder<RawTemporalDisaggregationSpec> {
+    public static class Builder implements Validatable.Builder<RawDisaggregationSpec> {
     }
 
     public static Builder builder() {
         return new Builder()
                 .aggregationType(DEF_AGGREGATION)
-                .residualsModel(Model.Ar1)
+                .residualsModel(ResidualsModel.Ar1)
                 .constant(true)
                 .estimationRange(IndexRange.EMPTY)
                 .fast(DEF_FAST)
@@ -147,11 +113,14 @@ public final class RawTemporalDisaggregationSpec implements ProcSpecification, V
                 .rescale(DEF_RESCALE)
                 .parameter(Parameter.undefined())
                 .estimationPrecision(DEF_EPS)
-                .disaggregationRatio(0);
+                .frequencyRatio(0);
     }
 
     @Override
-    public RawTemporalDisaggregationSpec validate() throws IllegalArgumentException {
+    public RawDisaggregationSpec validate() throws IllegalArgumentException {
+        if (aggregationType != AggregationType.Sum && aggregationType != AggregationType.Average) {
+            throw new IllegalArgumentException(aggregationType.name() + " not allowed in disaggregation (consider interpolation)");
+        }
         switch (residualsModel) {
             case Rw, RwAr1 -> {
                 if (constant && !zeroInitialization) {

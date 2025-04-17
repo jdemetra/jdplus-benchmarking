@@ -25,21 +25,19 @@ import jdplus.toolkit.base.core.math.matrices.FastMatrix;
  */
 @lombok.Value
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
-class RawDisaggregationModel {
+class RawInterpolationModel {
 
-    public RawDisaggregationModel(RawDisaggregationModelBuilder builder) {
+    public RawInterpolationModel(RawInterpolationModelBuilder builder) {
         this.y = builder.getY();
         this.ho = builder.getHo();
         this.hy = builder.getHy();
         this.ratio = builder.getRatio();
         this.startOffset = builder.getStartOffset();
         this.X = builder.getX();
-        this.Xc = builder.getXc();
         this.estimationStart = builder.getEstimationStart();
         this.estimationEnd = builder.getEstimationEnd();
         this.yfactor = builder.getYfactor();
         this.xfactors = builder.getXfactors();
-        this.average = builder.isAverage();
 
     }
 
@@ -67,16 +65,15 @@ class RawDisaggregationModel {
     DoubleSeq hy;
     // original regressors, rescaled and/or cumulated regressors 
     // hy, X and Xc must start at the beginning of an aggregation period (low-frequency)
-    FastMatrix X, Xc;
+    FastMatrix X;
 
     // range used to estimate the regression.
     // periods containing missing values at the beginning/end of the regression variables and of the endogenous variable are excluded
     int estimationStart, estimationEnd;
 
     int startOffset;
+    // length of hy should be a multiple of ratio 
     int ratio;
-
-    boolean average;
     /**
      * Scaling factor for y
      */
@@ -85,13 +82,6 @@ class RawDisaggregationModel {
      * Scaling factors for X
      */
     double[] xfactors;
-
-    FastMatrix estimationXc() {
-        if (Xc.isEmpty()) {
-            return Xc;
-        }
-        return Xc.extract(estimationStart, estimationEnd - estimationStart, 0, Xc.getColumnsCount());
-    }
 
     FastMatrix estimationX() {
         if (X.isEmpty()) {
@@ -103,4 +93,9 @@ class RawDisaggregationModel {
     DoubleSeq estimationY() {
         return hy.range(estimationStart, estimationEnd);
     }
+
+    DoubleSeq estimationYo() {
+        return hy.range(estimationStart, estimationEnd);
+    }
+
 }
