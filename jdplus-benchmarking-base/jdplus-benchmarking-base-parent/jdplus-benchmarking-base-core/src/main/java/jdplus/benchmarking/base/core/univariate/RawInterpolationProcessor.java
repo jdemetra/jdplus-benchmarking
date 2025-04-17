@@ -73,23 +73,23 @@ public class RawInterpolationProcessor {
         ISsfLoading loading;
     }
 
-    public RawInterpolationResults process(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNegative int startOffset, @NonNull RawInterpolationSpec spec) {
+    public RawDisaggregationResults process(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNegative int startOffset, @NonNull RawInterpolationSpec spec) {
         RawInterpolationModelBuilder builder = new RawInterpolationModelBuilder(y, regressors, startOffset, spec);
         RawInterpolationModel yx = builder.build();
         return compute(yx, spec);
     }
 
-    public RawInterpolationResults process(@NonNull DoubleSeq y, int nBackcasts, int nForecasts, @NonNull RawInterpolationSpec spec) {
+    public RawDisaggregationResults process(@NonNull DoubleSeq y, int nBackcasts, int nForecasts, @NonNull RawInterpolationSpec spec) {
         RawInterpolationModelBuilder builder = new RawInterpolationModelBuilder(y, spec, nBackcasts, nForecasts);
         RawInterpolationModel yx = builder.build();
         return compute(yx, spec);
     }
 
-    private RawInterpolationResults compute(RawInterpolationModel model, RawInterpolationSpec spec) {
+    private RawDisaggregationResults compute(RawInterpolationModel model, RawInterpolationSpec spec) {
         return spec.isFast() ? interpolate2(model, spec) : interpolate(model, spec);
     }
 
-    private RawInterpolationResults interpolate2(RawInterpolationModel model, RawInterpolationSpec spec) {
+    private RawDisaggregationResults interpolate2(RawInterpolationModel model, RawInterpolationSpec spec) {
         RawInterpolationEstimation eim = estimateInterpolationModel(model, spec);
         double[] yh = new double[model.getHy().length()];
         double[] eyh = new double[yh.length];
@@ -107,7 +107,7 @@ public class RawInterpolationProcessor {
         dll = dll.rescale(yfac, xfac);
         DoubleSeq regeffect = regeffect(model, dll.coefficients());
         int nparams = spec.isParameterEstimation() ? 1 : 0;
-        return RawInterpolationResults.builder()
+        return RawDisaggregationResults.builder()
                 .series(model.getY())
                 .regressors(model.getX())
                 .maximum(eim.getMl())
@@ -121,7 +121,7 @@ public class RawInterpolationProcessor {
                 .build();
     }
 
-    private RawInterpolationResults interpolate(RawInterpolationModel model, RawInterpolationSpec spec) {
+    private RawDisaggregationResults interpolate(RawInterpolationModel model, RawInterpolationSpec spec) {
         RawInterpolationEstimation edm = estimateInterpolationModel(model, spec);
         Ssf nmodel = Ssf.of(edm.getNoise(), edm.getLoading());
         DiffuseConcentratedLikelihood dll = edm.getDll();
@@ -163,7 +163,7 @@ public class RawInterpolationProcessor {
         dll = dll.rescale(model.getYfactor(), model.getXfactors());
         DoubleSeq regeffect = regeffect(model, dll.coefficients());
         int nparams = spec.isParameterEstimation() ? 1 : 0;
-        return RawInterpolationResults.builder()
+        return RawDisaggregationResults.builder()
                 .series(model.getY())
                 .regressors(model.getX())
                 .maximum(edm.getMl())

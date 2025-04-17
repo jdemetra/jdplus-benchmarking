@@ -74,10 +74,10 @@ public class TemporalDisaggregationProcessorTest {
                 .distance(rslt3.getCoefficientsCovariance().diagonal());
         assertTrue(d < 1e-6);
 //        System.out.println("CL");
-        System.out.println(rslt2.getDisaggregatedSeries().getValues());
+//        System.out.println(rslt2.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt2.getStdevDisaggregatedSeries().getValues());
-        System.out.println(rslt2.getCoefficients());
-        System.out.println(rslt1.getMaximum().getHessian());
+//        System.out.println(rslt2.getCoefficients());
+//        System.out.println(rslt1.getMaximum().getHessian());
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
 //        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
     }
@@ -188,7 +188,7 @@ public class TemporalDisaggregationProcessorTest {
         TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
         TsDomain all = TsDomain.of(start, start.until(end) + 2 * 4);
         TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor.process(y, all, spec1);
-        System.out.println(rslt.getDisaggregatedSeries().getValues());
+//        System.out.println(rslt.getDisaggregatedSeries().getValues());
     }
     
     @Test
@@ -465,11 +465,11 @@ public class TemporalDisaggregationProcessorTest {
         TsData y1 = TsData.ofInternal(TsPeriod.yearly(1976),  Data.PCRA);
         TsData q1 = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  Data.IND_PCR);
         TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y1, new TsData[]{q1}, spec);
-        System.out.println(rslt1.getDisaggregatedSeries());
+//        System.out.println(rslt1.getDisaggregatedSeries());
         TsData y2 = TsData.ofInternal(TsPeriod.yearly(1976),  Data.PCRA);
         TsData q2 = TsData.ofInternal(TsPeriod.quarterly(1977, 3),  Data.IND_PCR);
         TemporalDisaggregationResults rslt2 = TemporalDisaggregationProcessor.process(y2, new TsData[]{q2}, spec);
-        System.out.println(rslt2.getDisaggregatedSeries());
+//        System.out.println(rslt2.getDisaggregatedSeries());
         
         TemporalDisaggregationSpec spec2 = TemporalDisaggregationSpec.builder()
                 .residualsModel(TemporalDisaggregationSpec.Model.Rw)
@@ -478,7 +478,7 @@ public class TemporalDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.SqrtDiffuse)
                 .build();
         TemporalDisaggregationResults rslt3 = TemporalDisaggregationProcessor.process(y2, new TsData[]{q2}, spec2);
-        System.out.println(rslt3.getDisaggregatedSeries());
+//        System.out.println(rslt3.getDisaggregatedSeries());
     }
     
     @Test
@@ -504,7 +504,7 @@ public class TemporalDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.Augmented)
                 .build();
         TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec1);
-        System.out.println(rslt1.getDisaggregatedSeries());
+//        System.out.println(rslt1.getDisaggregatedSeries());
         
         TemporalDisaggregationSpec spec2 = TemporalDisaggregationSpec.builder()
                 .observationPosition(2)
@@ -516,6 +516,6 @@ public class TemporalDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.Augmented)
                 .build();
         TemporalDisaggregationResults rslt2 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec2);
-        System.out.println(rslt2.getDisaggregatedSeries());
+//        System.out.println(rslt2.getDisaggregatedSeries());
     }
 }

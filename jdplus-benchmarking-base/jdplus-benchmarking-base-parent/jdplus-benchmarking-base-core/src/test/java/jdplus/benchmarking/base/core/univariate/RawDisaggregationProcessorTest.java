@@ -43,9 +43,9 @@ public class RawDisaggregationProcessorTest {
         RawDisaggregationSpec spec1 = RawDisaggregationSpec.builder()
                 .frequencyRatio(4)
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(ResidualsModel.RwAr1)
+                .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
-                .constant(false)
+                .constant(true)
                 .fast(false)
                 .estimationPrecision(1e-9)
                 .rescale(false)
@@ -54,8 +54,8 @@ public class RawDisaggregationProcessorTest {
         FastMatrix X=FastMatrix.make(q.length(), 1);
         X.column(0).copy(q);
         RawDisaggregationResults rslt1 = RawDisaggregationProcessor.process(y, X, 4, spec1);
-        System.out.println(rslt1.getDisaggregatedSeries());
-        System.out.println(rslt1.getStdevDisaggregatedSeries());
+//        System.out.println(rslt1.getDisaggregatedSeries());
+//        System.out.println(rslt1.getStdevDisaggregatedSeries());
 
         RawDisaggregationSpec spec2 = RawDisaggregationSpec.builder()
                 .frequencyRatio(4)
@@ -70,13 +70,13 @@ public class RawDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.SqrtDiffuse)
                 .build();
         RawDisaggregationResults rslt2 = RawDisaggregationProcessor.process(y, X, 0, spec2);
-        System.out.println(rslt2.getDisaggregatedSeries());
-        System.out.println(rslt2.getStdevDisaggregatedSeries());
+//        System.out.println(rslt2.getDisaggregatedSeries());
+//        System.out.println(rslt2.getStdevDisaggregatedSeries());
 //        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
 //        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
         RawDisaggregationSpec spec3 = RawDisaggregationSpec.builder()
                 .frequencyRatio(4)
-                .aggregationType(AggregationType.Average)
+                .aggregationType(AggregationType.Sum)
                 .residualsModel(ResidualsModel.Ar1)
                 //                .diffuseRegressors(true)
                 .constant(true)
@@ -85,12 +85,12 @@ public class RawDisaggregationProcessorTest {
                 .rescale(false)
                 .algorithm(SsfInitialization.Diffuse)
                 .build();
-        RawDisaggregationResults rslt3 = RawDisaggregationProcessor.process(y, X, 0, spec3);
-//        double d=rslt1.getCoefficients().distance(rslt3.getCoefficients());
-//        assertTrue(d < 1e-6);
-//        d=rslt1.getCoefficientsCovariance().diagonal()
-//                .distance(rslt3.getCoefficientsCovariance().diagonal());
-//        assertTrue(d < 1e-6);
+        RawDisaggregationResults rslt3 = RawDisaggregationProcessor.process(y, X, 4, spec3);
+        double d=rslt1.getCoefficients().distance(rslt3.getCoefficients());
+        assertTrue(d < 1e-6);
+        d=rslt1.getCoefficientsCovariance().diagonal()
+                .distance(rslt3.getCoefficientsCovariance().diagonal());
+        assertTrue(d < 1e-6);
 //        System.out.println("CL");
 //        System.out.println(rslt2.getDisaggregatedSeries());
 //        System.out.println(rslt2.getStdevDisaggregatedSeries());
@@ -117,9 +117,9 @@ public class RawDisaggregationProcessorTest {
                 .build();
         FastMatrix X=FastMatrix.make(q.length(), 1);
         X.column(0).copy(q);
-        RawInterpolationResults rslt1 = RawInterpolationProcessor.process(y, X, 4, spec1);
-        System.out.println(rslt1.getDisaggregatedSeries());
-        System.out.println(rslt1.getStdevDisaggregatedSeries());
+        RawDisaggregationResults rslt1 = RawInterpolationProcessor.process(y, X, 4, spec1);
+//        System.out.println(rslt1.getDisaggregatedSeries());
+//        System.out.println(rslt1.getStdevDisaggregatedSeries());
 
         RawInterpolationSpec spec2 = RawInterpolationSpec.builder()
                 .frequencyRatio(4)
@@ -133,7 +133,7 @@ public class RawDisaggregationProcessorTest {
                 .rescale(true)
                 .algorithm(SsfInitialization.Augmented_Robust)
                 .build();
-        RawInterpolationResults rslt2 = RawInterpolationProcessor.process(y, X, 3, spec2);
+        RawDisaggregationResults rslt2 = RawInterpolationProcessor.process(y, X, 3, spec2);
 //        System.out.println(rslt2.getDisaggregatedSeries());
 //        System.out.println(rslt2.getStdevDisaggregatedSeries());
 //        assertTrue(rslt1.getStdevDisaggregatedSeries().distance(rslt2.getStdevDisaggregatedSeries()) < 1e-5);
@@ -149,7 +149,7 @@ public class RawDisaggregationProcessorTest {
                 .rescale(true)
                 .algorithm(SsfInitialization.Diffuse)
                 .build();
-        RawInterpolationResults rslt3 = RawInterpolationProcessor.process(y, X, 4, spec3);
+        RawDisaggregationResults rslt3 = RawInterpolationProcessor.process(y, X, 4, spec3);
         double d=rslt1.getCoefficients().distance(rslt3.getCoefficients())/rslt1.getCoefficients().fastNorm2();
         assertTrue(d < 1e-3);
         d=rslt1.getCoefficientsCovariance().diagonal()
@@ -163,7 +163,7 @@ public class RawDisaggregationProcessorTest {
 //        System.out.println(rslt2.getCoefficients());
 //        System.out.println(rslt1.getMaximum().getHessian());
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
-        System.out.println(rslt1.getLikelihood().logLikelihood());
+//        System.out.println(rslt1.getLikelihood().logLikelihood());
     }
 
     @Test
@@ -244,10 +244,10 @@ public class RawDisaggregationProcessorTest {
                 .algorithm(SsfInitialization.Augmented)
                 .build();
 
-        RawInterpolationResults rslt5 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), X, 0, spec5);
+        RawDisaggregationResults rslt5 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), X, 0, spec5);
         //System.out.println(rslt5.getDisaggregatedSeries());
         
-        RawInterpolationResults rslt6 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), 3, 0, spec5);
+        RawDisaggregationResults rslt6 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), 3, 0, spec5);
         //System.out.println(rslt6.getDisaggregatedSeries());
     }
 }
