@@ -64,7 +64,7 @@ public class RawInterpolationModelBuilder {
         if (regressors.isEmpty() && startOffset != 0) {
             throw new IllegalArgumentException();
         }
-        if (regressors.isEmpty() && !spec.isConstant() && !spec.isTrend()) {
+        if (regressors.isEmpty() && !spec.getModelSpec().isConstant() && !spec.getModelSpec().isTrend()) {
             return new RawInterpolationModelBuilder(y, spec, 0, 0);
         } else {
             return new RawInterpolationModelBuilder(y, regressors, startOffset, spec);
@@ -83,20 +83,20 @@ public class RawInterpolationModelBuilder {
         }
 
         hy = buildHY(regressors.getRowsCount());
-        X = buildX(regressors, spec.isConstant(), spec.isTrend());
+        X = buildX(regressors, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
 
-        estimationStart = startOffset + spec.getEstimationRange().getStart() * ratio;
+        estimationStart = startOffset + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
 
         int nxy = 1 + (X.getRowsCount() - startOffset - 1) / ratio;
         int ny = Math.min(y.length(), nxy);
-        ny = spec.getEstimationRange().isEmpty() ? ny : Math.min(ny, spec.getEstimationRange().size());
+        ny = spec.getEstimationSpec().getEstimationRange().isEmpty() ? ny : Math.min(ny, spec.getEstimationSpec().getEstimationRange().size());
         estimationEnd = estimationStart + (ny - 1) * ratio + 1;
 
         if (estimationEnd <= estimationStart) {
             throw new IllegalArgumentException("Not enough data");
         }
 
-        scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
+        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
     }
 
     public RawInterpolationModelBuilder(@NonNull DoubleSeq y, @NonNull RawInterpolationSpec spec, int nBackcasts, int nForecasts) {
@@ -108,18 +108,18 @@ public class RawInterpolationModelBuilder {
         }
         int nhy = 1 + (y.length() - 1) * ratio + nBackcasts + nForecasts;
         hy = buildHY(nhy);
-        X = buildX(nhy, spec.isConstant(), spec.isTrend());
+        X = buildX(nhy, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
 
-        estimationStart = nBackcasts + spec.getEstimationRange().getStart() * ratio;
+        estimationStart = nBackcasts + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
 
-        int ny = spec.getEstimationRange().isEmpty() ? y.length() : Math.min(y.length(), spec.getEstimationRange().getEnd());
+        int ny = spec.getEstimationSpec().getEstimationRange().isEmpty() ? y.length() : Math.min(y.length(), spec.getEstimationSpec().getEstimationRange().getEnd());
         estimationEnd = nBackcasts + (ny - 1) * ratio + 1;
 
         if (estimationEnd <= estimationStart) {
             throw new IllegalArgumentException("Not enough data");
         }
 
-        scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
+        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
     }
 
     RawInterpolationModel build() {

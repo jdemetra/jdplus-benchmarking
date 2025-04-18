@@ -71,7 +71,7 @@ public class RawDisaggregationModelBuilder {
         if (regressors.isEmpty() && startOffset != 0) {
             throw new IllegalArgumentException();
         }
-        if (regressors.isEmpty() && !spec.isConstant() && !spec.isTrend()) {
+        if (regressors.isEmpty() && !spec.getModelSpec().isConstant() && !spec.getModelSpec().isTrend()) {
             return new RawDisaggregationModelBuilder(y, spec, 0, 0);
         } else {
             return new RawDisaggregationModelBuilder(y, regressors, startOffset, spec);
@@ -90,16 +90,16 @@ public class RawDisaggregationModelBuilder {
         }
         average = spec.getAggregationType() == AggregationType.Average;
         hy = buildHY(regressors.getRowsCount());
-        X = buildX(regressors, y.length() * ratio, 0, 0, spec.isConstant(), spec.isTrend());
+        X = buildX(regressors, y.length() * ratio, 0, 0, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
         buildXc();
 
-        estimationStart = startOffset + spec.getEstimationRange().getStart() * ratio;
+        estimationStart = startOffset + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
         int nxy = (X.getRowsCount() - startOffset) / ratio;
         int ny = Math.min(y.length(), nxy);
-        ny = spec.getEstimationRange().isEmpty() ? ny : Math.min(ny, spec.getEstimationRange().size());
+        ny = spec.getEstimationSpec().getEstimationRange().isEmpty() ? ny : Math.min(ny, spec.getEstimationSpec().getEstimationRange().size());
         estimationEnd = estimationStart + ny * ratio;
 
-        scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
+        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
     }
 
     public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull RawDisaggregationSpec spec, int nBackcasts, int nForecasts) {
@@ -112,19 +112,19 @@ public class RawDisaggregationModelBuilder {
         }
         int nhy = y.length() * ratio + nBackcasts + nForecasts;
         hy = buildHY(nhy);
-        X = buildX(nhy, spec.isConstant(), spec.isTrend());
+        X = buildX(nhy, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
         buildXc();
 
-        estimationStart = nBackcasts + spec.getEstimationRange().getStart() * ratio;
+        estimationStart = nBackcasts + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
 
-        int ny = spec.getEstimationRange().isEmpty() ? y.length() : Math.min(y.length(), spec.getEstimationRange().getEnd());
+        int ny = spec.getEstimationSpec().getEstimationRange().isEmpty() ? y.length() : Math.min(y.length(), spec.getEstimationSpec().getEstimationRange().getEnd());
         estimationEnd = nBackcasts + ny * ratio;
 
         if (estimationEnd <= estimationStart) {
             throw new IllegalArgumentException("Not enough data");
         }
 
-        scale(spec.isRescale() ? new AbsMeanNormalizer() : null);
+        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
     }
 
     RawDisaggregationModel build() {

@@ -39,37 +39,7 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     public static final String METHOD = "generic";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
-    public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
-    public static final boolean DEF_FAST = true, DEF_RESCALE = true, DEF_LOG = false, DEF_DIFFUSE = false;
-
-    public static final double DEF_EPS = 1e-5;
-
     public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
-
-    public static final RawDisaggregationSpec CHOWLIN = builder()
-            .aggregationType(AggregationType.Sum)
-            .residualsModel(ResidualsModel.Ar1)
-            .constant(true)
-            .estimationRange(IndexRange.EMPTY)
-            .truncatedParameter(0.0)
-            .fast(DEF_FAST)
-            .estimationPrecision(DEF_EPS)
-            .rescale(DEF_RESCALE)
-            .algorithm(DEF_ALGORITHM)
-            .frequencyRatio(0)
-            .build();
-
-    public static final RawDisaggregationSpec FERNANDEZ = builder()
-            .aggregationType(AggregationType.Sum)
-            .residualsModel(ResidualsModel.Rw)
-            .constant(false)
-            .estimationRange(IndexRange.EMPTY)
-            .fast(DEF_FAST)
-            .estimationPrecision(DEF_EPS)
-            .rescale(DEF_RESCALE)
-            .algorithm(DEF_ALGORITHM)
-            .frequencyRatio(0)
-            .build();
 
     @Override
     public AlgorithmDescriptor getAlgorithmDescriptor() {
@@ -81,39 +51,42 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     private int frequencyRatio;
 
     @lombok.NonNull
-    private ResidualsModel residualsModel;
-    private boolean constant, trend;
-    private Parameter parameter;
+    ModelSpec modelSpec;
+
     @lombok.NonNull
-    private IndexRange estimationRange;
-    private boolean log, diffuseRegressors;
-    private Double truncatedParameter;
-    private boolean zeroInitialization, fast;
+    EstimationSpec estimationSpec;
 
-    private double estimationPrecision;
-    private SsfInitialization algorithm;
-    private boolean rescale;
-
-    public boolean isParameterEstimation() {
-        return (residualsModel == ResidualsModel.Ar1 || residualsModel == ResidualsModel.RwAr1)
-                && parameter.getType() != ParameterType.Fixed;
-    }
+    @lombok.NonNull
+    AlgorithmSpec algorithmSpec;
 
     public static class Builder implements Validatable.Builder<RawDisaggregationSpec> {
     }
 
-    public static Builder builder() {
+    public static RawDisaggregationSpec chowLin(int frequencyRatio) {
+        return new Builder().aggregationType(DEF_AGGREGATION)
+                .frequencyRatio(frequencyRatio)
+                .modelSpec(ModelSpec.CHOWLIN)
+                .estimationSpec(EstimationSpec.DEFAULT)
+                .algorithmSpec(AlgorithmSpec.DEFAULT)
+                .build();
+    }
+
+    public static RawDisaggregationSpec fernandez(int frequencyRatio) {
+        return new Builder().aggregationType(DEF_AGGREGATION)
+                .frequencyRatio(frequencyRatio)
+                .modelSpec(ModelSpec.FERNANDEZ)
+                .estimationSpec(EstimationSpec.DEFAULT)
+                .algorithmSpec(AlgorithmSpec.DEFAULT)
+                .build();
+    }
+
+    public static Builder builder(int frequencyRatio) {
         return new Builder()
+                .frequencyRatio(frequencyRatio)
                 .aggregationType(DEF_AGGREGATION)
-                .residualsModel(ResidualsModel.Ar1)
-                .constant(true)
-                .estimationRange(IndexRange.EMPTY)
-                .fast(DEF_FAST)
-                .algorithm(DEF_ALGORITHM)
-                .rescale(DEF_RESCALE)
-                .parameter(Parameter.undefined())
-                .estimationPrecision(DEF_EPS)
-                .frequencyRatio(0);
+                .estimationSpec(EstimationSpec.DEFAULT)
+                .algorithmSpec(AlgorithmSpec.DEFAULT)
+                .modelSpec(ModelSpec.DEFAULT);
     }
 
     @Override
@@ -121,17 +94,17 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
         if (aggregationType != AggregationType.Sum && aggregationType != AggregationType.Average) {
             throw new IllegalArgumentException(aggregationType.name() + " not allowed in disaggregation (consider interpolation)");
         }
-        switch (residualsModel) {
+        switch (modelSpec.getResidualsModel()) {
             case Rw, RwAr1 -> {
-                if (constant && !zeroInitialization) {
+                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("constant not allowed");
                 }
             }
             case I2, I3 -> {
-                if (constant && !zeroInitialization) {
+                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("constant not allowed");
                 }
-                if (trend && !zeroInitialization) {
+                if (modelSpec.isTrend() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("trend not allowed");
                 }
             }
@@ -141,27 +114,18 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
 
     @Override
     public String display() {
-        if (aggregationType == AggregationType.Average || aggregationType == AggregationType.Sum) {
-            return switch (residualsModel) {
-                case Ar1 ->
-                    "Chow-Lin";
-                case Rw ->
-                    "Fernandez";
-                case RwAr1 ->
-                    "Litterman";
-                case Wn ->
-                    "Ols";
-                default ->
-                    "regression";
-            };
-        } else {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Interpolation [")
-                    .append(residualsModel.name())
-                    .append(']');
-            return builder.toString();
-        }
-
+        return switch (modelSpec.getResidualsModel()) {
+            case Ar1 ->
+                "Chow-Lin";
+            case Rw ->
+                "Fernandez";
+            case RwAr1 ->
+                "Litterman";
+            case Wn ->
+                "Ols";
+            default ->
+                "regression";
+        };
     }
 
 }

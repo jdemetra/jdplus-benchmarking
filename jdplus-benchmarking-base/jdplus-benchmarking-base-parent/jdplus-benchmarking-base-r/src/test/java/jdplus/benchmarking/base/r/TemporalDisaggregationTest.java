@@ -16,7 +16,7 @@
  */
 package jdplus.benchmarking.base.r;
 
-import jdplus.benchmarking.base.core.univariate.RawDisaggregationResults;
+import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import tck.demetra.data.Data;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
 import jdplus.toolkit.base.api.data.DoubleSeq;
@@ -74,7 +74,7 @@ public class TemporalDisaggregationTest {
         double[] y = Data.PCRA;
         FastMatrix x = FastMatrix.make(Data.IND_PCR.length, 1);
         x.column(0).add(DoubleSeq.of(Data.IND_PCR));
-        RawDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, x, 0, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
+        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, x, 0, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
         //System.out.println(rslt.getDisaggregatedSeries());   
     }
 

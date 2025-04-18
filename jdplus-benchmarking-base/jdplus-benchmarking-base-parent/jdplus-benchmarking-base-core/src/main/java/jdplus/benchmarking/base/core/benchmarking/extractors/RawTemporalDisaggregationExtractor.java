@@ -8,7 +8,7 @@ import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.DoublesMath;
 import jdplus.toolkit.base.api.information.InformationExtractor;
 import jdplus.toolkit.base.api.information.InformationMapping;
-import jdplus.benchmarking.base.core.univariate.RawDisaggregationResults;
+import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import nbbrd.service.ServiceProvider;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationDictionaries;
@@ -19,7 +19,7 @@ import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
  * @author LEMASSO
  */
 @ServiceProvider(InformationExtractor.class)
-public class RawTemporalDisaggregationExtractor extends InformationMapping<RawDisaggregationResults>{
+public class RawTemporalDisaggregationExtractor extends InformationMapping<RawTemporalDisaggregationResults>{
     
     public RawTemporalDisaggregationExtractor() {
         
@@ -86,6 +86,6 @@ public class RawTemporalDisaggregationExtractor extends InformationMapping<RawDi
     
     @Override
     public Class getSourceClass() {
-        return RawDisaggregationResults.class;
+        return RawTemporalDisaggregationResults.class;
     }
 }

@@ -75,20 +75,20 @@ public class RawDisaggregationProcessor {
         ISsfLoading loading;
     }
 
-    public RawDisaggregationResults process(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNegative int startOffset, @NonNull RawDisaggregationSpec spec) {
+    public RawTemporalDisaggregationResults process(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNegative int startOffset, @NonNull RawDisaggregationSpec spec) {
         RawDisaggregationModelBuilder builder = new RawDisaggregationModelBuilder(y, regressors, startOffset, spec);
         RawDisaggregationModel yx = builder.build();
         return compute(yx, spec);
     }
 
-    public RawDisaggregationResults process(@NonNull DoubleSeq y, int nBackcasts, int nForecasts, @NonNull RawDisaggregationSpec spec) {
+    public RawTemporalDisaggregationResults process(@NonNull DoubleSeq y, int nBackcasts, int nForecasts, @NonNull RawDisaggregationSpec spec) {
         RawDisaggregationModelBuilder builder = new RawDisaggregationModelBuilder(y, spec, nBackcasts, nForecasts);
         RawDisaggregationModel yx = builder.build();
         return compute(yx, spec);
     }
 
-    private RawDisaggregationResults compute(RawDisaggregationModel model, RawDisaggregationSpec spec) {
-        return spec.isFast()
+    private RawTemporalDisaggregationResults compute(RawDisaggregationModel model, RawDisaggregationSpec spec) {
+        return spec.getAlgorithmSpec().isFast()
                 ? disaggregate2(model, spec) : disaggregate(model, spec);
     }
 
@@ -97,7 +97,7 @@ public class RawDisaggregationProcessor {
         StateComponent ncmp = noiseComponent(spec);
         ISsfLoading nloading = noiseLoading(spec);
         int diffuse = diffuseRegressors(model.nx(), spec);
-        if (!spec.isParameterEstimation()) {
+        if (!spec.getModelSpec().isParameterEstimation()) {
             Ssf cssf = Ssf.of(SsfCumulator.of(ncmp, nloading, model.getRatio(), 0),
                     SsfCumulator.defaultLoading(nloading, model.getRatio(), 0));
             SsfData ssfdata = new SsfData(model.estimationY());
@@ -112,10 +112,10 @@ public class RawDisaggregationProcessor {
             SsfFunction<Parameter, Ssf> fn = ssfFunction(model, spec);
             SsqFunctionMinimizer fmin = LevenbergMarquardtMinimizer
                     .builder()
-                    .functionPrecision(spec.getEstimationPrecision())
+                    .functionPrecision(spec.getEstimationSpec().getEstimationPrecision())
                     .build();
-            double start = spec.getParameter().getType() == ParameterType.Undefined
-                    ? .9 : spec.getParameter().getValue();
+            double start = spec.getModelSpec().getParameter().getType() == ParameterType.Undefined
+                    ? .9 : spec.getModelSpec().getParameter().getValue();
             fmin.minimize(fn.ssqEvaluate(Doubles.of(start)));
             SsfFunctionPoint<Parameter, Ssf> rslt = (SsfFunctionPoint<Parameter, Ssf>) fmin.getResult();
             DoubleSeq p = rslt.getParameters();
@@ -128,10 +128,10 @@ public class RawDisaggregationProcessor {
             FastMatrix hessian = fmin.curvatureAtMinimum().times(c);
             ObjectiveFunctionPoint ml = new ObjectiveFunctionPoint(rslt.getLikelihood().logLikelihood(),
                     p.toArray(), grad, hessian);
-            if (spec.getResidualsModel() == ResidualsModel.Ar1) {
-                ncmp = AR1.of(p.get(0), 1, spec.isZeroInitialization());
+            if (spec.getModelSpec().getResidualsModel() == ResidualsModel.Ar1) {
+                ncmp = AR1.of(p.get(0), 1, spec.getModelSpec().isZeroInitialization());
             } else {
-                ncmp = Arima_1_1_0.of(p.get(0), 1, spec.isZeroInitialization());
+                ncmp = Arima_1_1_0.of(p.get(0), 1, spec.getModelSpec().isZeroInitialization());
             }
             return new RawDisaggregationEstimation(
                     ml, dll, ncmp, nloading
@@ -214,7 +214,7 @@ public class RawDisaggregationProcessor {
         }
     }
 
-    private RawDisaggregationResults disaggregate2(RawDisaggregationModel model, RawDisaggregationSpec spec) {
+    private RawTemporalDisaggregationResults disaggregate2(RawDisaggregationModel model, RawDisaggregationSpec spec) {
         RawDisaggregationEstimation edm = estimateDisaggregationModel(model, spec);
 
         double[] yh = new double[model.getHy().length()];
@@ -245,8 +245,8 @@ public class RawDisaggregationProcessor {
         dll = dll.rescale(yfac, xfac);
         DoubleSeq regeffect = regeffect(model, dll.coefficients());
 
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
-        return RawDisaggregationResults.builder()
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
+        return RawTemporalDisaggregationResults.builder()
                 .series(model.getY())
                 .regressors(model.getX())
                 .maximum(edm.getMl())
@@ -260,7 +260,7 @@ public class RawDisaggregationProcessor {
                 .build();
     }
 
-    private RawDisaggregationResults disaggregate(RawDisaggregationModel model, RawDisaggregationSpec spec) {
+    private RawTemporalDisaggregationResults disaggregate(RawDisaggregationModel model, RawDisaggregationSpec spec) {
         RawDisaggregationEstimation edm = estimateDisaggregationModel(model, spec);
         StateComponent ncmp = edm.getNoise();
         ISsfLoading nloading = edm.getLoading();
@@ -273,7 +273,7 @@ public class RawDisaggregationProcessor {
         Ssf ssf = Ssf.of(SsfCumulator.of(rcmp, rloading, model.getRatio(), 0),
                 SsfCumulator.defaultLoading(rloading, model.getRatio(), 0));
         DefaultSmoothingResults srslts;
-        srslts = switch (spec.getAlgorithm()) {
+        srslts = switch (spec.getAlgorithmSpec().getAlgorithm()) {
             case Augmented ->
                 AkfToolkit.smooth(ssf, ssfdata, true, false, false);
             case SqrtDiffuse ->
@@ -308,8 +308,8 @@ public class RawDisaggregationProcessor {
         DoubleSeq regeffect = regeffect(model, dll.coefficients());
         // full residuals are obtained by applying the filter on the series without the
         // regression effects
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
-        return RawDisaggregationResults.builder()
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
+        return RawTemporalDisaggregationResults.builder()
                 .series(model.getY())
                 .regressors(model.getX())
                 .maximum(edm.getMl())
@@ -324,18 +324,18 @@ public class RawDisaggregationProcessor {
     }
 
     private StateComponent noiseComponent(RawDisaggregationSpec spec) {
-        switch (spec.getResidualsModel()) {
+        switch (spec.getModelSpec().getResidualsModel()) {
             case Wn -> {
                 return Noise.of(1);
             }
             case Ar1 -> {
-                return AR1.of(spec.getParameter().getValue(), 1, spec.isZeroInitialization());
+                return AR1.of(spec.getModelSpec().getParameter().getValue(), 1, spec.getModelSpec().isZeroInitialization());
             }
             case RwAr1 -> {
-                return Arima_1_1_0.of(spec.getParameter().getValue(), 1, spec.isZeroInitialization());
+                return Arima_1_1_0.of(spec.getModelSpec().getParameter().getValue(), 1, spec.getModelSpec().isZeroInitialization());
             }
             case Rw -> {
-                return Rw.of(1, spec.isZeroInitialization());
+                return Rw.of(1, spec.getModelSpec().isZeroInitialization());
             }
             default ->
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -343,7 +343,7 @@ public class RawDisaggregationProcessor {
     }
 
     private ISsfLoading noiseLoading(RawDisaggregationSpec spec) {
-        switch (spec.getResidualsModel()) {
+        switch (spec.getModelSpec().getResidualsModel()) {
             case Wn -> {
                 return Noise.defaultLoading();
             }
@@ -363,11 +363,11 @@ public class RawDisaggregationProcessor {
 
     private SsfFunction<Parameter, Ssf> ssfFunction(RawDisaggregationModel model, RawDisaggregationSpec spec) {
         SsfData data = new SsfData(model.estimationY());
-        Double lbound = spec.getTruncatedParameter();
+        Double lbound = spec.getEstimationSpec().getTruncatedParameter();
         Mapping mapping = new Mapping(lbound == null ? -1 : lbound);
-        boolean cl = spec.getResidualsModel() == ResidualsModel.Ar1;
+        boolean cl = spec.getModelSpec().getResidualsModel() == ResidualsModel.Ar1;
         return SsfFunction.builder(data, mapping,
-                p -> ssf(p.getValue(), cl, spec.isZeroInitialization(), model.getRatio()))
+                p -> ssf(p.getValue(), cl, spec.getModelSpec().isZeroInitialization(), model.getRatio()))
                 .regression(model.estimationXc().isEmpty() ? null : model.estimationXc(), diffuseRegressors(model.nx(), spec))
                 .useMaximumLikelihood(true)
                 .build();
@@ -382,9 +382,9 @@ public class RawDisaggregationProcessor {
     }
 
     private int diffuseRegressors(int nx, RawDisaggregationSpec spec) {
-        if (spec.isDiffuseRegressors()) {
+        if (spec.getModelSpec().isDiffuseRegressors()) {
             return nx;
-        } else if (!spec.getResidualsModel().isStationary() && spec.isConstant()) // to be compatible with other specifications. Could be changed
+        } else if (!spec.getModelSpec().getResidualsModel().isStationary() && spec.getModelSpec().isConstant()) // to be compatible with other specifications. Could be changed
         {
             return 1;
         } else {

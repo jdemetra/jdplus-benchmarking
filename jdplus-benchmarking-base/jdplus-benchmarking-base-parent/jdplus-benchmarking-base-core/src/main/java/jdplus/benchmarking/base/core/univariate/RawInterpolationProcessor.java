@@ -73,23 +73,23 @@ public class RawInterpolationProcessor {
         ISsfLoading loading;
     }
 
-    public RawDisaggregationResults process(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNegative int startOffset, @NonNull RawInterpolationSpec spec) {
+    public RawTemporalDisaggregationResults process(@NonNull DoubleSeq y, @NonNull FastMatrix regressors, @NonNegative int startOffset, @NonNull RawInterpolationSpec spec) {
         RawInterpolationModelBuilder builder = new RawInterpolationModelBuilder(y, regressors, startOffset, spec);
         RawInterpolationModel yx = builder.build();
         return compute(yx, spec);
     }
 
-    public RawDisaggregationResults process(@NonNull DoubleSeq y, int nBackcasts, int nForecasts, @NonNull RawInterpolationSpec spec) {
+    public RawTemporalDisaggregationResults process(@NonNull DoubleSeq y, int nBackcasts, int nForecasts, @NonNull RawInterpolationSpec spec) {
         RawInterpolationModelBuilder builder = new RawInterpolationModelBuilder(y, spec, nBackcasts, nForecasts);
         RawInterpolationModel yx = builder.build();
         return compute(yx, spec);
     }
 
-    private RawDisaggregationResults compute(RawInterpolationModel model, RawInterpolationSpec spec) {
-        return spec.isFast() ? interpolate2(model, spec) : interpolate(model, spec);
+    private RawTemporalDisaggregationResults compute(RawInterpolationModel model, RawInterpolationSpec spec) {
+        return spec.getAlgorithmSpec().isFast() ? interpolate2(model, spec) : interpolate(model, spec);
     }
 
-    private RawDisaggregationResults interpolate2(RawInterpolationModel model, RawInterpolationSpec spec) {
+    private RawTemporalDisaggregationResults interpolate2(RawInterpolationModel model, RawInterpolationSpec spec) {
         RawInterpolationEstimation eim = estimateInterpolationModel(model, spec);
         double[] yh = new double[model.getHy().length()];
         double[] eyh = new double[yh.length];
@@ -106,8 +106,8 @@ public class RawInterpolationProcessor {
         // correct the ll (and the coeff) with the scaling factors
         dll = dll.rescale(yfac, xfac);
         DoubleSeq regeffect = regeffect(model, dll.coefficients());
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
-        return RawDisaggregationResults.builder()
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
+        return RawTemporalDisaggregationResults.builder()
                 .series(model.getY())
                 .regressors(model.getX())
                 .maximum(eim.getMl())
@@ -121,7 +121,7 @@ public class RawInterpolationProcessor {
                 .build();
     }
 
-    private RawDisaggregationResults interpolate(RawInterpolationModel model, RawInterpolationSpec spec) {
+    private RawTemporalDisaggregationResults interpolate(RawInterpolationModel model, RawInterpolationSpec spec) {
         RawInterpolationEstimation edm = estimateInterpolationModel(model, spec);
         Ssf nmodel = Ssf.of(edm.getNoise(), edm.getLoading());
         DiffuseConcentratedLikelihood dll = edm.getDll();
@@ -129,7 +129,7 @@ public class RawInterpolationProcessor {
         ISsf rssf = RegSsf.ssf(nmodel, model.getX());
         SsfData ssfdata = new SsfData(model.getHy());
         DefaultSmoothingResults srslts;
-        srslts = switch (spec.getAlgorithm()) {
+        srslts = switch (spec.getAlgorithmSpec().getAlgorithm()) {
             case Augmented ->
                 AkfToolkit.smooth(rssf, ssfdata, true, false, false);
             case SqrtDiffuse ->
@@ -162,8 +162,8 @@ public class RawInterpolationProcessor {
         // correct the ll (and the coeff) with the scaling factors
         dll = dll.rescale(model.getYfactor(), model.getXfactors());
         DoubleSeq regeffect = regeffect(model, dll.coefficients());
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
-        return RawDisaggregationResults.builder()
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
+        return RawTemporalDisaggregationResults.builder()
                 .series(model.getY())
                 .regressors(model.getX())
                 .maximum(edm.getMl())
@@ -182,7 +182,7 @@ public class RawInterpolationProcessor {
         StateComponent ncmp = noiseComponent(spec);
         ISsfLoading nloading = noiseLoading(spec);
         int diffuse = diffuseRegressors(model.nx(), spec);
-        if (!spec.isParameterEstimation()) {
+        if (!spec.getModelSpec().isParameterEstimation()) {
             Ssf ssf = Ssf.of(ncmp, nloading);
             SsfData ssfdata = new SsfData(model.estimationY());
             SsfRegressionModel ssfmodel = new SsfRegressionModel(ssf, ssfdata, model.estimationX().isEmpty() ? null : model.estimationX(), diffuse);
@@ -197,8 +197,8 @@ public class RawInterpolationProcessor {
             SsqFunctionMinimizer fmin = LevenbergMarquardtMinimizer
                     .builder()
                     .build();
-            double start = spec.getParameter().getType() == ParameterType.Undefined
-                    ? .9 : spec.getParameter().getValue();
+            double start = spec.getModelSpec().getParameter().getType() == ParameterType.Undefined
+                    ? .9 : spec.getModelSpec().getParameter().getValue();
             fmin.minimize(fn.ssqEvaluate(Doubles.of(start)));
             SsfFunctionPoint<Parameter, Ssf> rslt = (SsfFunctionPoint<Parameter, Ssf>) fmin.getResult();
             DoubleSeq p = rslt.getParameters();
@@ -298,18 +298,18 @@ public class RawInterpolationProcessor {
     }
 
     private StateComponent noiseComponent(RawInterpolationSpec spec) {
-        switch (spec.getResidualsModel()) {
+        switch (spec.getModelSpec().getResidualsModel()) {
             case Wn -> {
                 return Noise.of(1);
             }
             case Ar1 -> {
-                return AR1.of(spec.getParameter().getValue(), 1, spec.isZeroInitialization());
+                return AR1.of(spec.getModelSpec().getParameter().getValue(), 1, spec.getModelSpec().isZeroInitialization());
             }
             case RwAr1 -> {
-                return Arima_1_1_0.of(spec.getParameter().getValue(), 1, spec.isZeroInitialization());
+                return Arima_1_1_0.of(spec.getModelSpec().getParameter().getValue(), 1, spec.getModelSpec().isZeroInitialization());
             }
             case Rw -> {
-                return Rw.of(1, spec.isZeroInitialization());
+                return Rw.of(1, spec.getModelSpec().isZeroInitialization());
             }
             default ->
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -317,7 +317,7 @@ public class RawInterpolationProcessor {
     }
 
     private ISsfLoading noiseLoading(RawInterpolationSpec spec) {
-        switch (spec.getResidualsModel()) {
+        switch (spec.getModelSpec().getResidualsModel()) {
             case Wn -> {
                 return Noise.defaultLoading();
             }
@@ -337,11 +337,11 @@ public class RawInterpolationProcessor {
 
     private SsfFunction<Parameter, Ssf> ssfFunction(RawInterpolationModel model, RawInterpolationSpec spec) {
         SsfData data = new SsfData(model.estimationY());
-        Double lbound = spec.getTruncatedParameter();
+        Double lbound = spec.getEstimationSpec().getTruncatedParameter();
         Mapping mapping = new Mapping(lbound == null ? -1 : lbound);
-        boolean cl = spec.getResidualsModel() == ResidualsModel.Ar1;
+        boolean cl = spec.getModelSpec().getResidualsModel() == ResidualsModel.Ar1;
         return SsfFunction.builder(data, mapping,
-                p -> ssf(p.getValue(), cl, spec.isZeroInitialization(), model.getRatio()))
+                p -> ssf(p.getValue(), cl, spec.getModelSpec().isZeroInitialization(), model.getRatio()))
                 .regression(model.estimationX().isEmpty() ? null : model.estimationX(), diffuseRegressors(model.nx(), spec))
                 .useMaximumLikelihood(true)
                 .build();
@@ -355,9 +355,9 @@ public class RawInterpolationProcessor {
     }
 
     private int diffuseRegressors(int nx, RawInterpolationSpec spec) {
-        if (spec.isDiffuseRegressors()) {
+        if (spec.getModelSpec().isDiffuseRegressors()) {
             return nx;
-        } else if (!spec.getResidualsModel().isStationary() && spec.isConstant()) // to be compatible with other specifications. Could be changed
+        } else if (!spec.getModelSpec().getResidualsModel().isStationary() && spec.getModelSpec().isConstant()) // to be compatible with other specifications. Could be changed
         {
             return 1;
         } else {

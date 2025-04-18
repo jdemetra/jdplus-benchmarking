@@ -39,57 +39,37 @@ public final class RawInterpolationSpec implements ProcSpecification, Validatabl
     public static final String METHOD = "generic";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
-    public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
-    public static final boolean DEF_FAST = true, DEF_RESCALE = true, DEF_LOG = false, DEF_DIFFUSE = false;
-
-    public static final double DEF_EPS = 1e-5;
-
-    public static final AggregationType DEF_AGGREGATION = AggregationType.Last;
-
     @Override
     public AlgorithmDescriptor getAlgorithmDescriptor() {
         return DESCRIPTOR;
     }
 
-    @lombok.NonNull
+    public static final AggregationType DEF_AGGREGATION = AggregationType.Last;
+    
+     @lombok.NonNull
     private AggregationType interpolationType;
     private int observationPosition;
     private int frequencyRatio;
 
     @lombok.NonNull
-    private ResidualsModel residualsModel;
-    private boolean constant, trend;
-    private Parameter parameter;
+    ModelSpec modelSpec;
+
     @lombok.NonNull
-    private IndexRange estimationRange;
-    private boolean log, diffuseRegressors;
-    private Double truncatedParameter;
-    private boolean zeroInitialization, fast;
+    EstimationSpec estimationSpec;
 
-    private double estimationPrecision;
-    private SsfInitialization algorithm;
-    private boolean rescale;
-
-    public boolean isParameterEstimation() {
-        return (residualsModel == ResidualsModel.Ar1 || residualsModel == ResidualsModel.RwAr1)
-                && parameter.getType() != ParameterType.Fixed;
-    }
+    @lombok.NonNull
+    AlgorithmSpec algorithmSpec;
 
     public static class Builder implements Validatable.Builder<RawInterpolationSpec> {
     }
 
-    public static Builder builder() {
+    public static Builder builder(int frequencyRatio) {
         return new Builder()
                 .interpolationType(DEF_AGGREGATION)
-                .residualsModel(ResidualsModel.Ar1)
-                .constant(true)
-                .estimationRange(IndexRange.EMPTY)
-                .fast(DEF_FAST)
-                .algorithm(DEF_ALGORITHM)
-                .rescale(DEF_RESCALE)
-                .parameter(Parameter.undefined())
-                .estimationPrecision(DEF_EPS)
-                .frequencyRatio(0);
+                .frequencyRatio(frequencyRatio)
+                .estimationSpec(EstimationSpec.DEFAULT)
+                .algorithmSpec(AlgorithmSpec.DEFAULT)
+                .modelSpec(ModelSpec.DEFAULT);
     }
 
     @Override
@@ -97,17 +77,17 @@ public final class RawInterpolationSpec implements ProcSpecification, Validatabl
         if (interpolationType == AggregationType.Sum || interpolationType == AggregationType.Average) {
             throw new IllegalArgumentException(interpolationType.name() + " not allowed in interpolation (consider disaggregation)");
         }
-        switch (residualsModel) {
+        switch (modelSpec.getResidualsModel()) {
             case Rw, RwAr1 -> {
-                if (constant && !zeroInitialization) {
+                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("constant not allowed");
                 }
             }
             case I2, I3 -> {
-                if (constant && !zeroInitialization) {
+                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("constant not allowed");
                 }
-                if (trend && !zeroInitialization) {
+                if (modelSpec.isTrend() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("trend not allowed");
                 }
             }
@@ -119,7 +99,7 @@ public final class RawInterpolationSpec implements ProcSpecification, Validatabl
     public String display() {
         StringBuilder builder = new StringBuilder();
         builder.append("Interpolation [")
-                .append(residualsModel.name())
+                .append(modelSpec.getResidualsModel().name())
                 .append(']');
         return builder.toString();
     }

@@ -32,7 +32,7 @@ import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
 @lombok.Value
 @lombok.Builder
 @Development(status = Development.Status.Alpha)
-public class RawDisaggregationResults implements GenericExplorable{
+public class RawTemporalDisaggregationResults implements GenericExplorable{
 
     @lombok.NonNull
     DoubleSeq series;
