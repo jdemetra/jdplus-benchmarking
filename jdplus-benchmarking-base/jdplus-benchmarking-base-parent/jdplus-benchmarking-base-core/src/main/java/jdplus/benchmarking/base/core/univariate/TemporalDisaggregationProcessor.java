@@ -40,6 +40,7 @@ import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
 import java.util.ArrayList;
 import java.util.List;
+import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.DoubleSeqCursor;
 import jdplus.toolkit.base.api.data.Doubles;
@@ -74,7 +75,7 @@ public class TemporalDisaggregationProcessor {
     }
 
     public TemporalDisaggregationResults process(TsData aggregatedSeries, TsData[] indicators, TemporalDisaggregationSpec spec) {
-        aggregatedSeries = aggregatedSeries.select(spec.getEstimationSpan());
+        aggregatedSeries = aggregatedSeries.select(spec.getEstimationSpec().getEstimationSpan());
         if (indicators == null || indicators.length == 0) {
             int hfreq = spec.getDefaultPeriod(), lfreq = aggregatedSeries.getAnnualFrequency();
             if (lfreq >= hfreq) {
@@ -99,10 +100,10 @@ public class TemporalDisaggregationProcessor {
         }
 
         List<Variable> vars = new ArrayList<>();
-        if (spec.isConstant()) {
+        if (spec.getModelSpec().isConstant()) {
             vars.add(Variable.variable("C", Constant.C));
         }
-        if (spec.isTrend()) {
+        if (spec.getModelSpec().isTrend()) {
             vars.add(Variable.variable("Trend", new LinearTrend(hdomain.start())));
         }
         for (int i = 0; i < indicators.length; ++i) {
@@ -112,33 +113,33 @@ public class TemporalDisaggregationProcessor {
                 .disaggregationDomain(hdomain)
                 .aggregationType(spec.getAggregationType())
                 .addX(vars)
-                .rescale(spec.isRescale())
+                .rescale(spec.getAlgorithmSpec().isRescale())
                 .build();
     }
 
     private DisaggregationModel createModel(TsData aggregatedSeries, TsDomain hdomain, TemporalDisaggregationSpec spec) {
         List<Variable> vars = new ArrayList<>();
-        if (spec.isConstant()) {
+        if (spec.getModelSpec().isConstant()) {
             vars.add(Variable.variable("C", Constant.C));
         }
-        if (spec.isTrend()) {
+        if (spec.getModelSpec().isTrend()) {
             vars.add(Variable.variable("Trend", new LinearTrend(hdomain.start())));
         }
         return new DisaggregationModelBuilder(aggregatedSeries)
                 .disaggregationDomain(hdomain)
                 .aggregationType(spec.getAggregationType())
                 .addX(vars)
-                .rescale(spec.isRescale())
+                .rescale(spec.getAlgorithmSpec().isRescale())
                 .build();
     }
 
     private TemporalDisaggregationResults compute(DisaggregationModel model, TemporalDisaggregationSpec spec) {
         return switch (spec.getAggregationType()) {
             case Sum, Average ->
-                spec.isFast()
+                spec.getAlgorithmSpec().isFast()
                 ? disaggregate2(model, spec) : disaggregate(model, spec);
             case First, Last, UserDefined ->
-                spec.isFast()
+                spec.getAlgorithmSpec().isFast()
                 ? interpolate2(model, spec) : interpolate(model, spec);
             default ->
                 null;
@@ -168,7 +169,7 @@ public class TemporalDisaggregationProcessor {
         }
         res = res.aggregate(model.getLDom().getTsUnit(), AggregationType.Sum, false).cleanExtremities();
         dll = dll.rescale(yfac, xfac);
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
         return TemporalDisaggregationResults.builder()
                 .originalSeries(model.getOriginalSeries())
                 .disaggregationDomain(model.getHDom())
@@ -192,7 +193,7 @@ public class TemporalDisaggregationProcessor {
         ISsf rssf = RegSsf.ssf(nmodel, model.getHX());
         SsfData ssfdata = new SsfData(model.getHY());
         DefaultSmoothingResults srslts;
-        srslts = switch (spec.getAlgorithm()) {
+        srslts = switch (spec.getAlgorithmSpec().getAlgorithm()) {
             case Augmented ->
                 AkfToolkit.smooth(rssf, ssfdata, true, false, false);
             case SqrtDiffuse ->
@@ -210,7 +211,7 @@ public class TemporalDisaggregationProcessor {
         double[] vyh = new double[Y.length];
         ISsfLoading loading = rssf.loading();
         double f = 1 / model.getYfactor();
-        double sigma = f * Math.sqrt(dll.ssq() / dll.dim());
+        double sigma = f * Math.sqrt(dll.sigma2());
         for (int i = 0; i < yh.length; ++i) {
             if (Double.isFinite(Y[i])) {
                 yh[i] = O[i];
@@ -229,7 +230,7 @@ public class TemporalDisaggregationProcessor {
         res = res.multiply(f);
         res = res.aggregate(model.getLDom().getTsUnit(), AggregationType.Sum, false).cleanExtremities();
         dll = dll.rescale(model.getYfactor(), model.getXfactor());
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
         return TemporalDisaggregationResults.builder()
                 .originalSeries(model.getOriginalSeries())
                 .disaggregationDomain(model.getHDom())
@@ -250,7 +251,7 @@ public class TemporalDisaggregationProcessor {
         StateComponent ncmp = noiseComponent(spec);
         ISsfLoading nloading = noiseLoading(spec);
         int diffuse = diffuseRegressors(model.nx(), spec);
-        if (!spec.isParameterEstimation()) {
+        if (!spec.getModelSpec().isParameterEstimation()) {
             Ssf cssf = Ssf.of(SsfCumulator.of(ncmp, nloading, model.getFrequencyRatio(), 0),
                     SsfCumulator.defaultLoading(nloading, model.getFrequencyRatio(), 0));
             SsfData ssfdata = new SsfData(model.getHEY());
@@ -265,10 +266,10 @@ public class TemporalDisaggregationProcessor {
             SsfFunction<Parameter, Ssf> fn = ssfFunction(model, spec);
             SsqFunctionMinimizer fmin = LevenbergMarquardtMinimizer
                     .builder()
-                    .functionPrecision(spec.getEstimationPrecision())
+                    .functionPrecision(spec.getEstimationSpec().getEstimationPrecision())
                     .build();
-            double start = spec.getParameter().getType() == ParameterType.Undefined
-                    ? .9 : spec.getParameter().getValue();
+            double start = spec.getModelSpec().getParameter().getType() == ParameterType.Undefined
+                    ? .9 : spec.getModelSpec().getParameter().getValue();
             fmin.minimize(fn.ssqEvaluate(Doubles.of(start)));
             SsfFunctionPoint<Parameter, Ssf> rslt = (SsfFunctionPoint<Parameter, Ssf>) fmin.getResult();
             DoubleSeq p = rslt.getParameters();
@@ -281,10 +282,10 @@ public class TemporalDisaggregationProcessor {
             FastMatrix hessian = fmin.curvatureAtMinimum().times(c);
             ObjectiveFunctionPoint ml = new ObjectiveFunctionPoint(rslt.getLikelihood().logLikelihood(),
                     p.toArray(), grad, hessian);
-            if (spec.getResidualsModel() == Model.Ar1) {
-                ncmp = AR1.of(p.get(0), 1, spec.isZeroInitialization());
+            if (spec.getModelSpec().getResidualsModel() == ResidualsModel.Ar1) {
+                ncmp = AR1.of(p.get(0), 1, spec.getModelSpec().isZeroInitialization());
             } else {
-                ncmp = Arima_1_1_0.of(p.get(0), 1, spec.isZeroInitialization());
+                ncmp = Arima_1_1_0.of(p.get(0), 1, spec.getModelSpec().isZeroInitialization());
             }
             return new TemporalDisaggregationEstimation(
                     ml, dll, ncmp, nloading
@@ -297,7 +298,7 @@ public class TemporalDisaggregationProcessor {
         StateComponent ncmp = noiseComponent(spec);
         ISsfLoading nloading = noiseLoading(spec);
         int diffuse = diffuseRegressors(model.nx(), spec);
-        if (!spec.isParameterEstimation()) {
+        if (!spec.getModelSpec().isParameterEstimation()) {
             Ssf ssf = Ssf.of(ncmp, nloading);
             SsfData ssfdata = new SsfData(model.getHEY());
             SsfRegressionModel ssfmodel = new SsfRegressionModel(ssf, ssfdata, model.getHEX(), diffuse);
@@ -312,8 +313,8 @@ public class TemporalDisaggregationProcessor {
             SsqFunctionMinimizer fmin = LevenbergMarquardtMinimizer
                     .builder()
                     .build();
-            double start = spec.getParameter().getType() == ParameterType.Undefined
-                    ? .9 : spec.getParameter().getValue();
+            double start = spec.getModelSpec().getParameter().getType() == ParameterType.Undefined
+                    ? .9 : spec.getModelSpec().getParameter().getValue();
             fmin.minimize(fn.ssqEvaluate(Doubles.of(start)));
             SsfFunctionPoint<Parameter, Ssf> rslt = (SsfFunctionPoint<Parameter, Ssf>) fmin.getResult();
             DoubleSeq p = rslt.getParameters();
@@ -520,7 +521,7 @@ public class TemporalDisaggregationProcessor {
         res = res.divide(yfac);
         res = res.aggregate(model.getLDom().getTsUnit(), AggregationType.Sum, false).cleanExtremities();
         dll = dll.rescale(yfac, xfac);
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
         return TemporalDisaggregationResults.builder()
                 .originalSeries(model.getOriginalSeries())
                 .disaggregationDomain(model.getHDom())
@@ -548,7 +549,7 @@ public class TemporalDisaggregationProcessor {
         Ssf ssf = Ssf.of(SsfCumulator.of(rcmp, rloading, model.getFrequencyRatio(), model.getStart()),
                 SsfCumulator.defaultLoading(rloading, model.getFrequencyRatio(), model.getStart()));
         DefaultSmoothingResults srslts;
-        srslts = switch (spec.getAlgorithm()) {
+        srslts = switch (spec.getAlgorithmSpec().getAlgorithm()) {
             case Augmented ->
                 AkfToolkit.smooth(ssf, ssfdata, true, false, false);
             case SqrtDiffuse ->
@@ -587,7 +588,7 @@ public class TemporalDisaggregationProcessor {
         res = res.divide(yfac);
         res = res.aggregate(model.getLDom().getTsUnit(), AggregationType.Sum, false).cleanExtremities();
         dll = dll.rescale(yfac, xfac);
-        int nparams = spec.isParameterEstimation() ? 1 : 0;
+        int nparams = spec.getModelSpec().isParameterEstimation() ? 1 : 0;
         return TemporalDisaggregationResults.builder()
                 .originalSeries(model.getOriginalSeries())
                 .disaggregationDomain(model.getHDom())
@@ -604,18 +605,18 @@ public class TemporalDisaggregationProcessor {
     }
 
     private StateComponent noiseComponent(TemporalDisaggregationSpec spec) {
-        switch (spec.getResidualsModel()) {
+        switch (spec.getModelSpec().getResidualsModel()) {
             case Wn -> {
                 return Noise.of(1);
             }
             case Ar1 -> {
-                return AR1.of(spec.getParameter().getValue(), 1, spec.isZeroInitialization());
+                return AR1.of(spec.getModelSpec().getParameter().getValue(), 1, spec.getModelSpec().isZeroInitialization());
             }
             case RwAr1 -> {
-                return Arima_1_1_0.of(spec.getParameter().getValue(), 1, spec.isZeroInitialization());
+                return Arima_1_1_0.of(spec.getModelSpec().getParameter().getValue(), 1, spec.getModelSpec().isZeroInitialization());
             }
             case Rw -> {
-                return Rw.of(1, spec.isZeroInitialization());
+                return Rw.of(1, spec.getModelSpec().isZeroInitialization());
             }
             default ->
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -623,7 +624,7 @@ public class TemporalDisaggregationProcessor {
     }
 
     private ISsfLoading noiseLoading(TemporalDisaggregationSpec spec) {
-        switch (spec.getResidualsModel()) {
+        switch (spec.getModelSpec().getResidualsModel()) {
             case Wn -> {
                 return Noise.defaultLoading();
             }
@@ -643,12 +644,12 @@ public class TemporalDisaggregationProcessor {
 
     private SsfFunction<Parameter, Ssf> ssfFunction(DisaggregationModel model, TemporalDisaggregationSpec spec) {
         SsfData data = new SsfData(model.getHEY());
-        Double lbound = spec.getTruncatedParameter();
+        Double lbound = spec.getEstimationSpec().getTruncatedParameter();
         Mapping mapping = new Mapping(lbound == null ? -1 : lbound);
-        boolean cl = spec.getResidualsModel() == Model.Ar1;
+        boolean cl = spec.getModelSpec().getResidualsModel() == ResidualsModel.Ar1;
         boolean disagg = spec.getAggregationType() == AggregationType.Average || spec.getAggregationType() == AggregationType.Sum;
         return SsfFunction.builder(data, mapping,
-                p -> ssf(p.getValue(), disagg, cl, spec.isZeroInitialization(), model.getFrequencyRatio()))
+                p -> ssf(p.getValue(), disagg, cl, spec.getModelSpec().isZeroInitialization(), model.getFrequencyRatio()))
                 .regression(model.getHEX(), diffuseRegressors(model.nx(), spec))
                 .useMaximumLikelihood(true)
                 .build();
@@ -667,9 +668,9 @@ public class TemporalDisaggregationProcessor {
     }
 
     private int diffuseRegressors(int nx, TemporalDisaggregationSpec spec) {
-        if (spec.isDiffuseRegressors()) {
+        if (spec.getModelSpec().isDiffuseRegressors()) {
             return nx;
-        } else if (!spec.getResidualsModel().isStationary() && spec.isConstant()) // to be compatible with other specifications. Could be changed
+        } else if (!spec.getModelSpec().getResidualsModel().isStationary() && spec.getModelSpec().isConstant()) // to be compatible with other specifications. Could be changed
         {
             return 1;
         } else {

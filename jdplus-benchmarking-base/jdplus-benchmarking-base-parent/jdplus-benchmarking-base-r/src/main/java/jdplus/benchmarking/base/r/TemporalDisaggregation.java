@@ -97,38 +97,38 @@ public class TemporalDisaggregation {
         return ModelBasedDentonProcessor.process(y, indicator, builder.build());
     }
 
-    public TemporalDisaggregationResults process(TsData y, boolean constant, boolean trend, TsData[] indicators,
-            String model, int freq, int nExt, String aggregation, int obspos,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
-        TemporalDisaggregationSpec.Builder builder = TemporalDisaggregationSpec.builder()
-                .constant(constant)
-                .trend(trend)
-                .residualsModel(TemporalDisaggregationSpec.Model.valueOf(model))
-                .aggregationType(AggregationType.valueOf(aggregation))
-                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
-                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
-                .algorithm(SsfInitialization.valueOf(algorithm))
-                .zeroInitialization(zeroinit)
-                .diffuseRegressors(diffuseregs)
-                .rescale(true);
-        if (aggregation.equals("UserDefined")) {
-            builder.observationPosition(obspos);
-        }
-        if (indicators == null) {
-            TsUnit unit = TsUnit.ofAnnualFrequency(freq);
-            TsPeriod start = TsPeriod.of(unit, y.getStart().start());
-            TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
-            TsDomain all = TsDomain.of(start, start.until(end) + nExt);
-            return TemporalDisaggregationProcessor.process(y, all, builder.build());
-        } else {
-            for (int i = 0; i < indicators.length; ++i) {
-                indicators[i] = indicators[i].cleanExtremities();
-            }
-            return TemporalDisaggregationProcessor.process(y, indicators, builder.build());
-        }
-    }
-
+//    public TemporalDisaggregationResults process(TsData y, boolean constant, boolean trend, TsData[] indicators,
+//            String model, int freq, int nExt, String aggregation, int obspos,
+//            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+//            String algorithm, boolean diffuseregs) {
+//        TemporalDisaggregationSpec.Builder builder = TemporalDisaggregationSpec.builder()
+//                .constant(constant)
+//                .trend(trend)
+//                .residualsModel(TemporalDisaggregationSpec.Model.valueOf(model))
+//                .aggregationType(AggregationType.valueOf(aggregation))
+//                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+//                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+//                .algorithm(SsfInitialization.valueOf(algorithm))
+//                .zeroInitialization(zeroinit)
+//                .diffuseRegressors(diffuseregs)
+//                .rescale(true);
+//        if (aggregation.equals("UserDefined")) {
+//            builder.observationPosition(obspos);
+//        }
+//        if (indicators == null) {
+//            TsUnit unit = TsUnit.ofAnnualFrequency(freq);
+//            TsPeriod start = TsPeriod.of(unit, y.getStart().start());
+//            TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
+//            TsDomain all = TsDomain.of(start, start.until(end) + nExt);
+//            return TemporalDisaggregationProcessor.process(y, all, builder.build());
+//        } else {
+//            for (int i = 0; i < indicators.length; ++i) {
+//                indicators[i] = indicators[i].cleanExtremities();
+//            }
+//            return TemporalDisaggregationProcessor.process(y, indicators, builder.build());
+//        }
+//    }
+//
     public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend,
             String model, int frequencyRatio, int nbcasts, int nfcasts, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,

@@ -15,30 +15,31 @@
  */
 package jdplus.benchmarking.base.api.univariate;
 
+import jdplus.toolkit.base.api.timeseries.TimeSelector;
 import nbbrd.design.Development;
 
 /**
  *
  * @author Jean Palate
  */
-@Development(status = Development.Status.Beta)
+@Development(status = Development.Status.Release)
 @lombok.Getter
-@lombok.Builder(toBuilder = true, buildMethodName = "build")
-public final class EstimationSpec {
+@lombok.Builder(toBuilder = true, builderClassName = "Builder")
+public final class TsEstimationSpec {
 
     public static final double DEF_TRUNCATED = 0.0;
     public static final double DEF_EPS = 1e-6;
 
-    public static final EstimationSpec DEFAULT = builder().build();
+    public static final TsEstimationSpec DEFAULT = builder().build();
 
      @lombok.NonNull
-    private IndexRange estimationRange;
+    private TimeSelector estimationSpan;
     private Double truncatedParameter;
     private double estimationPrecision;
 
     public static Builder builder() {
         return new Builder()
-                .estimationRange(IndexRange.EMPTY)
+                .estimationSpan(TimeSelector.all())
                 .truncatedParameter(DEF_TRUNCATED)
                 .estimationPrecision(DEF_EPS);
     }

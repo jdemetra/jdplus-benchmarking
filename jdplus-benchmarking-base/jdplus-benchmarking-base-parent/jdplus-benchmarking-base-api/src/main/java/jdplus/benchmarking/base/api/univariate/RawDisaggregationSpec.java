@@ -40,7 +40,8 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
     public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
-
+    public static final int DEF_OBSPOS = -1;
+    
     @Override
     public AlgorithmDescriptor getAlgorithmDescriptor() {
         return DESCRIPTOR;
@@ -48,6 +49,7 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
 
     @lombok.NonNull
     private AggregationType aggregationType;
+    private int observationPosition;
     private int frequencyRatio;
 
     @lombok.NonNull
@@ -65,6 +67,7 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     public static RawDisaggregationSpec chowLin(int frequencyRatio) {
         return new Builder().aggregationType(DEF_AGGREGATION)
                 .frequencyRatio(frequencyRatio)
+                .observationPosition(DEF_OBSPOS)
                 .modelSpec(ModelSpec.CHOWLIN)
                 .estimationSpec(EstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
@@ -74,6 +77,7 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     public static RawDisaggregationSpec fernandez(int frequencyRatio) {
         return new Builder().aggregationType(DEF_AGGREGATION)
                 .frequencyRatio(frequencyRatio)
+                .observationPosition(DEF_OBSPOS)
                 .modelSpec(ModelSpec.FERNANDEZ)
                 .estimationSpec(EstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
@@ -82,8 +86,9 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
 
     public static Builder builder(int frequencyRatio) {
         return new Builder()
-                .frequencyRatio(frequencyRatio)
                 .aggregationType(DEF_AGGREGATION)
+                .frequencyRatio(frequencyRatio)
+                .observationPosition(DEF_OBSPOS)
                 .estimationSpec(EstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
                 .modelSpec(ModelSpec.DEFAULT);
@@ -91,9 +96,6 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
 
     @Override
     public RawDisaggregationSpec validate() throws IllegalArgumentException {
-        if (aggregationType != AggregationType.Sum && aggregationType != AggregationType.Average) {
-            throw new IllegalArgumentException(aggregationType.name() + " not allowed in disaggregation (consider interpolation)");
-        }
         switch (modelSpec.getResidualsModel()) {
             case Rw, RwAr1 -> {
                 if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {

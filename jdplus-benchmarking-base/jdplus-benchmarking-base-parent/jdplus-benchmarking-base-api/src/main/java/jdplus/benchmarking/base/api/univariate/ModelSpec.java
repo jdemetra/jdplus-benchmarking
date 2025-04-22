@@ -53,6 +53,16 @@ public final class ModelSpec {
             .diffuseRegressors(DEF_DIFFUSE)
             .build();
 
+    public static final ModelSpec LITTERMAN = new Builder()
+            .residualsModel(ResidualsModel.RwAr1)
+            .constant(false)
+            .trend(false)
+//            .log(DEF_LOG)
+            .parameter(Parameter.undefined())
+            .zeroInitialization(DEF_ZERO)
+            .diffuseRegressors(DEF_DIFFUSE)
+            .build();
+
     @lombok.NonNull
     private ResidualsModel residualsModel;
     private boolean constant, trend;

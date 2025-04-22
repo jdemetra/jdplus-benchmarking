@@ -5,6 +5,7 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.toolkit.base.api.data.AggregationType;
 import tck.demetra.data.Data;
 import jdplus.toolkit.base.api.data.Parameter;
@@ -36,11 +37,7 @@ public class ProcessorITest {
 
         TemporalDisaggregationIResults rslti = ProcessorI.process(y, q, speci);
 //        System.out.println(rslti.getDisaggregatedSeries());
-        TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.builder()
-                .aggregationType(AggregationType.Sum)
-                .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
-                .constant(true)
-                .build();
+        TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.CHOWLIN;
 
         TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec);
 //        System.out.println(rslt.getDisaggregatedSeries());
