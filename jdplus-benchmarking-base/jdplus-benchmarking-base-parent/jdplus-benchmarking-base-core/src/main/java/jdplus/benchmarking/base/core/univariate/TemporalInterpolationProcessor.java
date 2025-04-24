@@ -39,7 +39,6 @@ import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 public class TemporalInterpolationProcessor {
 
     public TemporalDisaggregationResults process(TsData y, TsData[] indicators, TemporalInterpolationSpec spec) {
-        y = y.select(spec.getEstimationSpec().getEstimationSpan());
         int lfreq = y.getAnnualFrequency();
         if (indicators == null || indicators.length == 0) {
             int hfreq = spec.getDefaultPeriod();
@@ -66,7 +65,7 @@ public class TemporalInterpolationProcessor {
         int obspos = spec.getObservationPosition();
         hystart = hystart.plus(obspos == -1 ? frequencyRatio - 1 : obspos);
         // high-frequency variant of y
-        TsDomain hydom = TsDomain.of(hystart, 1 + frequencyRatio * (y.length() - 1));
+//        TsDomain hydom = TsDomain.of(hystart, 1 + frequencyRatio * (y.length() - 1));
 //        TsPeriod hyend = hydom.getEndPeriod();
         TsPeriod hxstart = hdom.getStartPeriod(); //, hxend = hdom.getEndPeriod();
         int startOffset = hxstart.until(hystart);
@@ -84,8 +83,8 @@ public class TemporalInterpolationProcessor {
 
         TsData yc = y.drop(bydrop, 0); //eydrop);
         TsDomain ydom = yc.getDomain();
-        TsDomain ldom = ydom.select(spec.getEstimationSpec().getEstimationSpan());
-        IndexRange range = IndexRange.of(ydom.indexOf(ldom.getStartPeriod()), ydom.indexOf(ldom.getEndPeriod()));
+        TsDomain ydomc = y.getDomain().select(spec.getEstimationSpec().getEstimationSpan()).intersection(ydom);
+        IndexRange range = IndexRange.of(ydom.indexOf(ydomc.getStartPeriod()), ydom.indexOf(ydomc.getEndPeriod()));
 
         EstimationSpec espec = EstimationSpec.builder()
                 .estimationPrecision(spec.getEstimationSpec().getEstimationPrecision())
