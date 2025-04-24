@@ -17,11 +17,8 @@ package jdplus.benchmarking.base.api.univariate;
 
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.data.AggregationType;
-import jdplus.toolkit.base.api.data.Parameter;
-import jdplus.toolkit.base.api.data.ParameterType;
 import nbbrd.design.Development;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
-import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.util.Validatable;
 
 /**
@@ -44,11 +41,7 @@ public final class RawInterpolationSpec implements ProcSpecification, Validatabl
         return DESCRIPTOR;
     }
 
-    public static final AggregationType DEF_AGGREGATION = AggregationType.Last;
-    
-     @lombok.NonNull
-    private AggregationType interpolationType;
-    private int observationPosition;
+    private int firstObservationPosition;
     private int frequencyRatio;
 
     @lombok.NonNull
@@ -65,8 +58,8 @@ public final class RawInterpolationSpec implements ProcSpecification, Validatabl
 
     public static Builder builder(int frequencyRatio) {
         return new Builder()
-                .interpolationType(DEF_AGGREGATION)
                 .frequencyRatio(frequencyRatio)
+                .firstObservationPosition(0)
                 .estimationSpec(EstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
                 .modelSpec(ModelSpec.DEFAULT);
@@ -74,9 +67,6 @@ public final class RawInterpolationSpec implements ProcSpecification, Validatabl
 
     @Override
     public RawInterpolationSpec validate() throws IllegalArgumentException {
-        if (interpolationType == AggregationType.Sum || interpolationType == AggregationType.Average) {
-            throw new IllegalArgumentException(interpolationType.name() + " not allowed in interpolation (consider disaggregation)");
-        }
         switch (modelSpec.getResidualsModel()) {
             case Rw, RwAr1 -> {
                 if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {

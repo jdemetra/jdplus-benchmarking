@@ -140,14 +140,15 @@ public class RawDisaggregationProcessor {
     }
 
     private void disaggregateEstimation(RawDisaggregationModel model, RawDisaggregationEstimation estimation, final double[] z, final double[] e) {
+        int cstart = model.getStartOffset() == 0 ? 0 : model.getRatio() - model.getStartOffset();
         double[] hy = model.getHy().toArray();
         FastMatrix hX = model.getX();
         FastMatrix hXC = model.getXc();
 
         StateComponent ncmp = estimation.getNoise();
         ISsfLoading nloading = estimation.getLoading();
-        Ssf cssf = Ssf.of(SsfCumulator.of(ncmp, nloading, model.getRatio(), 0),
-                SsfCumulator.defaultLoading(nloading, model.getRatio(), 0));
+        Ssf cssf = Ssf.of(SsfCumulator.of(ncmp, nloading, model.getRatio(), cstart),
+                SsfCumulator.defaultLoading(nloading, model.getRatio(), cstart));
         DiffuseSmoother smoother = DiffuseSmoother.builder(cssf)
                 .calcVariance(true)
                 .rescaleVariance(false)
@@ -215,6 +216,7 @@ public class RawDisaggregationProcessor {
     }
 
     private RawTemporalDisaggregationResults disaggregate2(RawDisaggregationModel model, RawDisaggregationSpec spec) {
+        int cstart = model.getStartOffset() == 0 ? 0 : model.getRatio() - model.getStartOffset();
         RawDisaggregationEstimation edm = estimateDisaggregationModel(model, spec);
 
         double[] yh = new double[model.getHy().length()];
@@ -237,8 +239,8 @@ public class RawDisaggregationProcessor {
         DiffuseConcentratedLikelihood dll = edm.getDll();
         // full residuals are obtained by applying the filter on the series without the
         // regression effects
-        Ssf ssf = Ssf.of(SsfCumulator.of(edm.getNoise(), edm.getLoading(), model.getRatio(), 0),
-                SsfCumulator.defaultLoading(edm.getLoading(), model.getRatio(), 0));
+        Ssf ssf = Ssf.of(SsfCumulator.of(edm.getNoise(), edm.getLoading(), model.getRatio(), cstart),
+                SsfCumulator.defaultLoading(edm.getLoading(), model.getRatio(), cstart));
         DoubleSeq res = residuals(model, dll.coefficients(), ssf);
 
         // correct the ll (and the coeff) with the scaling factors
@@ -261,6 +263,7 @@ public class RawDisaggregationProcessor {
     }
 
     private RawTemporalDisaggregationResults disaggregate(RawDisaggregationModel model, RawDisaggregationSpec spec) {
+        int cstart = model.getStartOffset() == 0 ? 0 : model.getRatio() - model.getStartOffset();
         RawDisaggregationEstimation edm = estimateDisaggregationModel(model, spec);
         StateComponent ncmp = edm.getNoise();
         ISsfLoading nloading = edm.getLoading();
@@ -270,8 +273,8 @@ public class RawDisaggregationProcessor {
         StateComponent rcmp = model.nx() == 0 ? ncmp : RegSsf.of(ncmp, Xc);
         ISsfLoading rloading = model.nx() == 0 ? nloading : RegSsf.defaultLoading(ncmp.dim(), nloading, Xc);
         SsfData ssfdata = new SsfData(y);
-        Ssf ssf = Ssf.of(SsfCumulator.of(rcmp, rloading, model.getRatio(), 0),
-                SsfCumulator.defaultLoading(rloading, model.getRatio(), 0));
+        Ssf ssf = Ssf.of(SsfCumulator.of(rcmp, rloading, model.getRatio(), cstart),
+                SsfCumulator.defaultLoading(rloading, model.getRatio(), cstart));
         DefaultSmoothingResults srslts;
         srslts = switch (spec.getAlgorithmSpec().getAlgorithm()) {
             case Augmented ->
@@ -300,8 +303,8 @@ public class RawDisaggregationProcessor {
             double v = rloading.ZVZ(i, srslts.P(i).extract(1, dim, 1, dim));
             vyh[i] = v <= 0 ? 0 : sigma * Math.sqrt(v);
         }
-        Ssf cssf = Ssf.of(SsfCumulator.of(ncmp, nloading, model.getRatio(), 0),
-                SsfCumulator.defaultLoading(nloading, model.getRatio(), 0));
+        Ssf cssf = Ssf.of(SsfCumulator.of(ncmp, nloading, model.getRatio(), cstart),
+                SsfCumulator.defaultLoading(nloading, model.getRatio(), cstart));
         DoubleSeq res = residuals(model, dll.coefficients(), cssf);
         // correct first the ll (and the coeff) with the scaling factors
         dll = dll.rescale(yfac, xfac);
@@ -416,7 +419,7 @@ public class RawDisaggregationProcessor {
         }
         DefaultDiffuseFilteringResults fr = DkToolkit.filter(ssf, new SsfData(y), false);
         DoubleSeq errors = fr.errors(true, false);
-         int n = (errors.length() + model.getRatio() - 1) / model.getRatio();
+        int n = (errors.length() + model.getRatio() - 1) / model.getRatio();
         DataBlock err = DataBlock.of(errors.extract(model.getRatio() - 1, n, model.getRatio()).toArray());
         err.mul(1 / model.getYfactor());
         return err;

@@ -18,10 +18,7 @@ package jdplus.benchmarking.base.api.univariate;
 
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.data.AggregationType;
-import jdplus.toolkit.base.api.data.Parameter;
-import jdplus.toolkit.base.api.data.ParameterType;
 import nbbrd.design.Development;
-import jdplus.toolkit.base.api.timeseries.TimeSelector;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.util.Validatable;
@@ -40,11 +37,6 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
     public static final String FAMILY = "temporaldisaggregation";
     public static final String METHOD = "generic";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
-
-    public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
-    public static final boolean DEF_FAST = true, DEF_RESCALE = true, DEF_LOG = false, DEF_DIFFUSE = false;
-
-    public static final double DEF_EPS = 1e-5;
 
     public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
     public static final int DEF_PERIOD = 4, DEF_OBSPOS = -1;
@@ -79,40 +71,6 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
     @Override
     public AlgorithmDescriptor getAlgorithmDescriptor() {
         return DESCRIPTOR;
-    }
-
-    public static enum Model {
-
-        Wn,
-        Ar1,
-        Rw,
-        RwAr1,
-        I2, I3;
-
-        public boolean hasParameter() {
-            return this == Ar1 || this == RwAr1;
-        }
-
-        public boolean isStationary() {
-            return this == Ar1 || this == Wn;
-        }
-
-        public int getParametersCount() {
-            return (this == Ar1 || this == RwAr1) ? 1 : 0;
-        }
-
-        public int getDifferencingOrder() {
-            return switch (this) {
-                case Rw, RwAr1 ->
-                    1;
-                case I2 ->
-                    2;
-                case I3 ->
-                    3;
-                default ->
-                    0;
-            };
-        }
     }
 
     @lombok.NonNull

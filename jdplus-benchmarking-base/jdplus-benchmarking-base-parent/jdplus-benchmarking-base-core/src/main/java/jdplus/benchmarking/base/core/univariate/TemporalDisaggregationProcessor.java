@@ -35,7 +35,6 @@ import jdplus.toolkit.base.core.ssf.univariate.SsfRegressionModel;
 import jdplus.toolkit.base.core.stats.tests.NiidTests;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec.Model;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
 import java.util.ArrayList;

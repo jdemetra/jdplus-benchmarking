@@ -17,11 +17,8 @@ package jdplus.benchmarking.base.api.univariate;
 
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.data.AggregationType;
-import jdplus.toolkit.base.api.data.Parameter;
-import jdplus.toolkit.base.api.data.ParameterType;
 import nbbrd.design.Development;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
-import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.util.Validatable;
 
 /**

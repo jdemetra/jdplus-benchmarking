@@ -37,7 +37,7 @@ public final class ModelSpec {
             .residualsModel(ResidualsModel.Ar1)
             .constant(true)
             .trend(false)
-//            .log(DEF_LOG)
+            //            .log(DEF_LOG)
             .parameter(Parameter.undefined())
             .zeroInitialization(DEF_ZERO)
             .diffuseRegressors(DEF_DIFFUSE)
@@ -47,7 +47,7 @@ public final class ModelSpec {
             .residualsModel(ResidualsModel.Rw)
             .constant(false)
             .trend(false)
-//            .log(DEF_LOG)
+            //            .log(DEF_LOG)
             .parameter(Parameter.undefined())
             .zeroInitialization(DEF_ZERO)
             .diffuseRegressors(DEF_DIFFUSE)
@@ -57,7 +57,7 @@ public final class ModelSpec {
             .residualsModel(ResidualsModel.RwAr1)
             .constant(false)
             .trend(false)
-//            .log(DEF_LOG)
+            //            .log(DEF_LOG)
             .parameter(Parameter.undefined())
             .zeroInitialization(DEF_ZERO)
             .diffuseRegressors(DEF_DIFFUSE)
@@ -86,5 +86,23 @@ public final class ModelSpec {
                 .parameter(Parameter.undefined())
                 .zeroInitialization(DEF_ZERO)
                 .diffuseRegressors(DEF_DIFFUSE);
+    }
+
+    public void check() {
+        switch (residualsModel) {
+            case Rw, RwAr1 -> {
+                if (constant && !zeroInitialization) {
+                    throw new IllegalArgumentException("constant not allowed");
+                }
+            }
+            case I2, I3 -> {
+                if (constant && !zeroInitialization) {
+                    throw new IllegalArgumentException("constant not allowed");
+                }
+                if (trend && !zeroInitialization) {
+                    throw new IllegalArgumentException("trend not allowed");
+                }
+            }
+        }
     }
 }

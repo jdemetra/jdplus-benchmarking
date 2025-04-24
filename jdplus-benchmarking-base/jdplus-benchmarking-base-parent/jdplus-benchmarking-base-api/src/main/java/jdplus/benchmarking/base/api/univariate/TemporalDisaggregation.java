@@ -48,8 +48,8 @@ public class TemporalDisaggregation {
         return PROCESSOR.get().process(aggregatedSeries, indicators, spec, items);
     }
 
-    public ProcResults process(TsData aggregatedSeries, TsDomain domain, TemporalDisaggregationSpec spec, List<String> items) {
-        return PROCESSOR.get().process(aggregatedSeries, domain, spec, items);
+    public ProcResults process(TsData aggregatedSeries, int nBackcasts, int nForecasts, TemporalDisaggregationSpec spec, List<String> items) {
+        return PROCESSOR.get().process(aggregatedSeries, nBackcasts, nForecasts, spec, items);
     }
 
     @Algorithm
@@ -58,6 +58,6 @@ public class TemporalDisaggregation {
 
         ProcResults process(TsData aggregatedSeries, TsData[] indicators, TemporalDisaggregationSpec spec, List<String> items);
 
-        ProcResults process(TsData aggregatedSeries, TsDomain domain, TemporalDisaggregationSpec spec, List<String> items);
+        ProcResults process(TsData aggregatedSeries, int nBackcasts, int nForecasts, TemporalDisaggregationSpec spec, List<String> items);
     }
 }

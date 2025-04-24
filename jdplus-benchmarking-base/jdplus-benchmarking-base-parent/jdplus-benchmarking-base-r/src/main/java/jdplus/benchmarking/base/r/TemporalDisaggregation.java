@@ -22,13 +22,7 @@ import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.benchmarking.base.api.univariate.ModelBasedDentonSpec;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationIResults;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationISpec;
-import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec.Model;
 import jdplus.toolkit.base.api.timeseries.TsData;
-import jdplus.toolkit.base.api.timeseries.TsDomain;
-import jdplus.toolkit.base.api.timeseries.TsPeriod;
-import jdplus.toolkit.base.api.timeseries.TsUnit;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
@@ -41,6 +35,8 @@ import jdplus.benchmarking.base.api.univariate.ModelSpec;
 import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
+import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 import jdplus.benchmarking.base.core.univariate.ADLProcessor;
 import jdplus.benchmarking.base.core.univariate.ADLResults;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonProcessor;
@@ -50,9 +46,13 @@ import jdplus.benchmarking.base.core.univariate.RawInterpolationProcessor;
 import jdplus.benchmarking.base.core.univariate.RawDisaggregationProcessor;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationProcessor;
+import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TimeSelector;
+import jdplus.toolkit.base.api.timeseries.TsDomain;
+import jdplus.toolkit.base.api.timeseries.TsPeriod;
+import jdplus.toolkit.base.api.timeseries.TsUnit;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 
 /**
@@ -66,7 +66,7 @@ public class TemporalDisaggregation {
             double rho, boolean fixedrho, double truncatedRho) {
         TemporalDisaggregationISpec spec = TemporalDisaggregationISpec.builder()
                 .constant(true)
-                .residualsModel(Model.valueOf(model))
+                .residualsModel(ResidualsModel.valueOf(model))
                 .aggregationType(AggregationType.valueOf(aggregation))
                 .observationPosition(obspos)
                 .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
@@ -97,38 +97,48 @@ public class TemporalDisaggregation {
         return ModelBasedDentonProcessor.process(y, indicator, builder.build());
     }
 
-//    public TemporalDisaggregationResults process(TsData y, boolean constant, boolean trend, TsData[] indicators,
-//            String model, int freq, int nExt, String aggregation, int obspos,
-//            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-//            String algorithm, boolean diffuseregs) {
-//        TemporalDisaggregationSpec.Builder builder = TemporalDisaggregationSpec.builder()
-//                .constant(constant)
-//                .trend(trend)
-//                .residualsModel(TemporalDisaggregationSpec.Model.valueOf(model))
-//                .aggregationType(AggregationType.valueOf(aggregation))
-//                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
-//                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
-//                .algorithm(SsfInitialization.valueOf(algorithm))
-//                .zeroInitialization(zeroinit)
-//                .diffuseRegressors(diffuseregs)
-//                .rescale(true);
-//        if (aggregation.equals("UserDefined")) {
-//            builder.observationPosition(obspos);
-//        }
-//        if (indicators == null) {
-//            TsUnit unit = TsUnit.ofAnnualFrequency(freq);
-//            TsPeriod start = TsPeriod.of(unit, y.getStart().start());
-//            TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
-//            TsDomain all = TsDomain.of(start, start.until(end) + nExt);
-//            return TemporalDisaggregationProcessor.process(y, all, builder.build());
-//        } else {
-//            for (int i = 0; i < indicators.length; ++i) {
-//                indicators[i] = indicators[i].cleanExtremities();
-//            }
-//            return TemporalDisaggregationProcessor.process(y, indicators, builder.build());
-//        }
-//    }
-//
+    public TemporalDisaggregationResults process(TsData y, boolean constant, boolean trend, TsData[] indicators,
+            String model, int freq, int nExt, String aggregation, int obspos,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs) {
+         ModelSpec mspec=ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+        
+        TsEstimationSpec espec=TsEstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+        
+        AlgorithmSpec aspec=AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();              
+       TemporalDisaggregationSpec.Builder builder = TemporalDisaggregationSpec.builder()
+               .modelSpec(mspec)
+               .estimationSpec(espec)
+               .algorithmSpec(aspec);
+        if (aggregation.equals("UserDefined")) {
+            builder.observationPosition(obspos);
+        }
+        if (indicators == null) {
+            TsUnit unit = TsUnit.ofAnnualFrequency(freq);
+            TsPeriod start = TsPeriod.of(unit, y.getStart().start());
+            TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
+            TsDomain all = TsDomain.of(start, start.until(end) + nExt);
+            return TemporalDisaggregationProcessor.process(y, all, builder.build());
+        } else {
+            for (int i = 0; i < indicators.length; ++i) {
+                indicators[i] = indicators[i].cleanExtremities();
+            }
+            return TemporalDisaggregationProcessor.process(y, indicators, builder.build());
+        }
+    }
+
     public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend,
             String model, int frequencyRatio, int nbcasts, int nfcasts, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
@@ -166,8 +176,7 @@ public class TemporalDisaggregation {
             return RawDisaggregationProcessor.process(DoubleSeq.of(y), nbcasts, nfcasts, spec);
         } else {
             RawInterpolationSpec spec = RawInterpolationSpec.builder(frequencyRatio)
-                    .interpolationType(type)
-                    .observationPosition(obspos)
+                    .firstObservationPosition(obspos)
                     .modelSpec(mspec)
                     .estimationSpec(espec)
                     .algorithmSpec(aspec)
@@ -223,8 +232,7 @@ public class TemporalDisaggregation {
             return RawDisaggregationProcessor.process(DoubleSeq.of(y), X, startOffset, spec);
         } else {
             RawInterpolationSpec spec = RawInterpolationSpec.builder(frequencyRatio)
-                    .interpolationType(type)
-                    .observationPosition(obspos)
+                    .firstObservationPosition(obspos)
                     .modelSpec(mspec)
                     .estimationSpec(espec)
                     .algorithmSpec(aspec)

@@ -24,6 +24,10 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
+import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
+import jdplus.benchmarking.base.api.univariate.ModelSpec;
+import jdplus.benchmarking.base.api.univariate.ResidualsModel;
+import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 
 /**
  *
@@ -33,10 +37,10 @@ public class AdvancedSpecUI extends BaseTemporalDisaggregationSpecUI {
 
     public static final String DISPLAYNAME = "Advanced options";
     public static final String EPS_NAME = "Precision", KF_NAME = "Method", FAST_NAME = "Fast", ALGORITHM_NAME = "Algorithm",
-            ZERO_NAME = "Zero initialization", TRUNCATED_NAME = "Truncated rho", DREGS_NAME = "Diffuse regression coefficients", RESCALE_NAME="Rescale";
+            ZERO_NAME = "Zero initialization", TRUNCATED_NAME = "Truncated rho", DREGS_NAME = "Diffuse regression coefficients", RESCALE_NAME = "Rescale";
     public static final String EPS_DESC = "Precision", KF_DESC = "Kalman filter used for estimation", FAST_DESC = "Fast processing (Kohn-Ansley)", ALGORITHM_DESC = "Algorithm",
-            ZERO_DESC = "Zero initialization", TRUNCATED_DESC = "Lower bound for the estimated coefficient", DREGS_DESC = "Diffuse regression coefficients", RESCALE_DESC="Rescale the model";
-    public static final int EPS_ID = 0, KF_ID = 10, FAST_ID = 15, ZERO_ID = 20, TRUNCATED_ID = 25, DREGS_ID = 30, RESCALE_ID=40, ALGORITHM_ID=50;
+            ZERO_DESC = "Zero initialization", TRUNCATED_DESC = "Lower bound for the estimated coefficient", DREGS_DESC = "Diffuse regression coefficients", RESCALE_DESC = "Rescale the model";
+    public static final int EPS_ID = 0, KF_ID = 10, FAST_ID = 15, ZERO_ID = 20, TRUNCATED_ID = 25, DREGS_ID = 30, RESCALE_ID = 40, ALGORITHM_ID = 50;
 
     @Override
     public String toString() {
@@ -48,82 +52,103 @@ public class AdvancedSpecUI extends BaseTemporalDisaggregationSpecUI {
     }
 
     public double getEpsilon() {
-        return core().getEstimationPrecision();
+        return core().getEstimationSpec().getEstimationPrecision();
     }
 
     public void setEpsilon(double eps) {
+        TsEstimationSpec espec = core().getEstimationSpec().toBuilder()
+                .estimationPrecision(eps)
+                .build();
         update(core()
                 .toBuilder()
-                .estimationPrecision(eps)
+                .estimationSpec(espec)
                 .build());
     }
 
     public boolean isZeroInitialization() {
-        return core().isZeroInitialization();
+        return core().getModelSpec().isZeroInitialization();
     }
 
     public void setZeroInitialization(boolean t) {
-
-        TemporalDisaggregationSpec.Builder builder = core().toBuilder();
-        builder.zeroInitialization(t);
-        if (!core().getResidualsModel().isStationary() && !t) {
+        ModelSpec.Builder builder = core().getModelSpec().toBuilder()
+                .zeroInitialization(t);
+        if (!core().getModelSpec().getResidualsModel().isStationary() && !t) {
             builder.constant(false);
         }
-        update(builder.build());
-    }
+
+        update(core()
+                .toBuilder()
+                .modelSpec(builder.build())
+                .build());
+     }
 
     public double getTruncatedRho() {
-        return core().getTruncatedParameter();
+        return core().getEstimationSpec().getTruncatedParameter();
     }
 
     public void setTruncatedRho(double t) {
+         TsEstimationSpec espec = core().getEstimationSpec().toBuilder()
+                .truncatedParameter(t)
+                .build();
         update(core()
                 .toBuilder()
-                .truncatedParameter(t)
+                .estimationSpec(espec)
                 .build());
     }
 
     public SsfInitialization getAlgorithm() {
-        return core().getAlgorithm();
+        return core().getAlgorithmSpec().getAlgorithm();
     }
 
     public void setAlgorithm(SsfInitialization initialization) {
+        AlgorithmSpec aspec = core().getAlgorithmSpec().toBuilder()
+                .algorithm(initialization)
+                .build();
         update(core()
                 .toBuilder()
-                .algorithm(initialization)
+                .algorithmSpec(aspec)
                 .build());
     }
 
     public boolean isDiffuseRegression() {
-        return core().isDiffuseRegressors();
+        return core().getModelSpec().isDiffuseRegressors();
     }
 
     public void setDiffuseRegression(boolean t) {
+       ModelSpec mspec = core().getModelSpec().toBuilder()
+                .diffuseRegressors(t)
+                .build();
         update(core()
                 .toBuilder()
-                .diffuseRegressors(t)
+                .modelSpec(mspec)
                 .build());
     }
 
     public boolean isFast() {
-        return core().isFast();
+        return core().getAlgorithmSpec().isFast();
     }
 
     public void setFast(boolean t) {
+        AlgorithmSpec aspec = core().getAlgorithmSpec().toBuilder()
+                .fast(t)
+                .build();
         update(core()
                 .toBuilder()
-                .fast(t)
+                .algorithmSpec(aspec)
                 .build());
     }
 
     public boolean isRescale() {
-        return core().isRescale();
+        return core().getAlgorithmSpec().isRescale();
     }
 
     public void setRescale(boolean t) {
+        AlgorithmSpec aspec = core().getAlgorithmSpec().toBuilder()
+                .rescale(t)
+                .build();
         update(core()
                 .toBuilder()
-                .rescale(t)
+                .algorithmSpec(aspec)
                 .build());
     }
 
@@ -168,7 +193,7 @@ public class AdvancedSpecUI extends BaseTemporalDisaggregationSpecUI {
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
             desc.setDisplayName(EPS_NAME);
             desc.setShortDescription(EPS_DESC);
-            edesc.setReadOnly(isRo() || !core().getResidualsModel().hasParameter());
+            edesc.setReadOnly(isRo() || !core().getModelSpec().getResidualsModel().hasParameter());
             return edesc;
         } catch (IntrospectionException ex) {
             return null;
@@ -182,8 +207,8 @@ public class AdvancedSpecUI extends BaseTemporalDisaggregationSpecUI {
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
             desc.setDisplayName(ZERO_NAME);
             desc.setShortDescription(ZERO_DESC);
-            edesc.setReadOnly(isRo() || core().getResidualsModel() == TemporalDisaggregationSpec.Model.Wn
-                    || core().getResidualsModel().getDifferencingOrder() > 1);
+            edesc.setReadOnly(isRo() || core().getModelSpec().getResidualsModel() == ResidualsModel.Wn
+                    || core().getModelSpec().getResidualsModel().getDifferencingOrder() > 1);
             return edesc;
         } catch (IntrospectionException ex) {
             return null;
@@ -197,7 +222,7 @@ public class AdvancedSpecUI extends BaseTemporalDisaggregationSpecUI {
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
             desc.setDisplayName(TRUNCATED_NAME);
             desc.setShortDescription(TRUNCATED_DESC);
-            edesc.setReadOnly(isRo() || (core().getResidualsModel() != TemporalDisaggregationSpec.Model.Ar1 || core().getParameter().isFixed()));
+            edesc.setReadOnly(isRo() || (core().getModelSpec().getResidualsModel() != ResidualsModel.Ar1 || core().getModelSpec().getParameter().isFixed()));
             return edesc;
         } catch (IntrospectionException ex) {
             return null;
@@ -256,15 +281,16 @@ public class AdvancedSpecUI extends BaseTemporalDisaggregationSpecUI {
     }
 
     private EnhancedPropertyDescriptor dregsDesc() {
-        if (! core().isParameterEstimation())
+        if (!core().getModelSpec().isParameterEstimation()) {
             return null;
+        }
         try {
             PropertyDescriptor desc = new PropertyDescriptor("DiffuseRegression", this.getClass());
             EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, DREGS_ID);
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
             desc.setDisplayName(DREGS_NAME);
             desc.setShortDescription(DREGS_DESC);
-            edesc.setReadOnly(isRo() || !core().getResidualsModel().hasParameter());
+            edesc.setReadOnly(isRo() || !core().getModelSpec().getResidualsModel().hasParameter());
             return edesc;
         } catch (IntrospectionException ex) {
             return null;

@@ -17,6 +17,7 @@
 package jdplus.benchmarking.base.information;
 
 import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
+import jdplus.benchmarking.base.api.univariate.EstimationSpec;
 import jdplus.benchmarking.base.api.univariate.ModelSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.toolkit.base.api.DemetraVersion;
@@ -159,7 +160,7 @@ public class TemporalDisaggregationSpecMapping {
         info.set(CONSTANT, spec.getModelSpec().isConstant());
         info.set(TREND, spec.getModelSpec().isTrend());
         info.set(FREQ, spec.getDefaultPeriod());
-        if (spec.getAlgorithmSpec().getAlgorithm() != TemporalDisaggregationSpec.DEF_ALGORITHM || verbose) {
+        if (spec.getAlgorithmSpec().getAlgorithm() != AlgorithmSpec.DEF_ALGORITHM || verbose) {
             info.set(SSF, spec.getAlgorithmSpec().getAlgorithm().name());
         }
         if (spec.getModelSpec().isZeroInitialization() || verbose) {
@@ -168,16 +169,16 @@ public class TemporalDisaggregationSpecMapping {
 //        if (spec.isLog() != TemporalDisaggregationSpec.DEF_LOG || verbose) {
 //            info.set(LOG, spec.isLog());
 //        }
-        if (spec.getModelSpec().isDiffuseRegressors() != TemporalDisaggregationSpec.DEF_DIFFUSE || verbose) {
+        if (spec.getModelSpec().isDiffuseRegressors() != ModelSpec.DEF_DIFFUSE || verbose) {
             info.set(DIFFUSEREGS, spec.getModelSpec().isDiffuseRegressors());
         }
-        if (spec.getAlgorithmSpec().isFast() != TemporalDisaggregationSpec.DEF_FAST || verbose) {
+        if (spec.getAlgorithmSpec().isFast() != AlgorithmSpec.DEF_FAST || verbose) {
             info.set(FAST, spec.getAlgorithmSpec().isFast());
         }
-        if (spec.getAlgorithmSpec().isRescale() != TemporalDisaggregationSpec.DEF_RESCALE || verbose) {
+        if (spec.getAlgorithmSpec().isRescale() != AlgorithmSpec.DEF_RESCALE || verbose) {
             info.set(RESCALING, spec.getAlgorithmSpec().isRescale());
         }
-        if (spec.getEstimationSpec().getEstimationPrecision() != TemporalDisaggregationSpec.DEF_EPS || verbose) {
+        if (spec.getEstimationSpec().getEstimationPrecision() != EstimationSpec.DEF_EPS || verbose) {
             info.set(EPS, spec.getEstimationSpec().getEstimationPrecision());
         }
         if (spec.getEstimationSpec().getTruncatedParameter() != 0 || verbose) {

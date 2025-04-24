@@ -45,14 +45,14 @@ public final class TemporalDisaggregationISpec implements ProcSpecification, Val
     private AggregationType aggregationType;
     private int observationPosition;
     @lombok.NonNull
-    private TemporalDisaggregationSpec.Model residualsModel;
+    private ResidualsModel residualsModel;
     private boolean constant;
     private Parameter parameter;
     private double truncatedRho;
     private double estimationPrecision;
 
     public boolean isParameterEstimation() {
-        return (residualsModel == TemporalDisaggregationSpec.Model.Ar1 || residualsModel == TemporalDisaggregationSpec.Model.RwAr1)
+        return (residualsModel == ResidualsModel.Ar1 || residualsModel == ResidualsModel.RwAr1)
                 && parameter.getType() != ParameterType.Fixed;
     }
 
@@ -62,7 +62,7 @@ public final class TemporalDisaggregationISpec implements ProcSpecification, Val
     public static Builder builder() {
         return new Builder()
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
+                .residualsModel(ResidualsModel.Ar1)
                 .constant(true)
                 .parameter(Parameter.initial(.9))
                 .truncatedRho(-1)

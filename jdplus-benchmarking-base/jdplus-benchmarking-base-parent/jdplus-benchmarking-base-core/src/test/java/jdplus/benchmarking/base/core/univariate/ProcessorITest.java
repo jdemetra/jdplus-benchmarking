@@ -28,7 +28,7 @@ public class ProcessorITest {
     public void testQ() {
         TemporalDisaggregationISpec speci = TemporalDisaggregationISpec.builder()
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
+                .residualsModel(ResidualsModel.Ar1)
                 .truncatedRho(-1)
                 .constant(true)
                 .build();
@@ -47,7 +47,7 @@ public class ProcessorITest {
     public void testQ2() {
         TemporalDisaggregationISpec speci = TemporalDisaggregationISpec.builder()
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
+                .residualsModel(ResidualsModel.Ar1)
                 .constant(true)
                 .truncatedRho(.5)
                 .parameter(Parameter.initial(.6))
@@ -63,7 +63,7 @@ public class ProcessorITest {
     public void testQ3() {
         TemporalDisaggregationISpec speci = TemporalDisaggregationISpec.builder()
                 .aggregationType(AggregationType.Sum)
-                .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
+                .residualsModel(ResidualsModel.Ar1)
                 .constant(true)
                 .parameter(Parameter.fixed(.6))
                 .build();
