@@ -102,6 +102,8 @@ public class TemporalDisaggregationProcessor2 {
             String name = "var-" + (i + 1);
             vars.add(Variable.variable(name, new UserVariable(name, indicators[i], null)));
         }
+        
+        TsDomain edom=ydomc.intersection(ldom);
 
         return TemporalDisaggregationResults.builder()
                 .originalSeries(y)
@@ -115,7 +117,7 @@ public class TemporalDisaggregationProcessor2 {
                 .stats(rslts.getStats())
                 .residualsDiagnostics(
                         ResidualsDiagnostics.builder()
-                                .fullResiduals(TsData.of(yc.getStart(), rslts.getResidualsDiagnostics().getFullResiduals()))
+                                .fullResiduals(TsData.of(edom.getStartPeriod(), rslts.getResidualsDiagnostics().getFullResiduals()))
                                 .niid(rslts.getResidualsDiagnostics().getNiid())
                                 .build())
                 .indicators(vars.toArray(Variable[]::new))

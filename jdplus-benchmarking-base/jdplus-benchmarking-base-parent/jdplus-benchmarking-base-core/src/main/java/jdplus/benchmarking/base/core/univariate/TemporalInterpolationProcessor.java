@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import jdplus.benchmarking.base.api.univariate.EstimationSpec;
 import jdplus.benchmarking.base.api.univariate.IndexRange;
 import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.TemporalInterpolationSpec;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.TsException;
@@ -38,7 +38,7 @@ import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 @lombok.experimental.UtilityClass
 public class TemporalInterpolationProcessor {
 
-    public TemporalDisaggregationResults process(TsData y, TsData[] indicators, TemporalDisaggregationSpec spec) {
+    public TemporalDisaggregationResults process(TsData y, TsData[] indicators, TemporalInterpolationSpec spec) {
         y = y.select(spec.getEstimationSpec().getEstimationSpan());
         int lfreq = y.getAnnualFrequency();
         if (indicators == null || indicators.length == 0) {
@@ -67,8 +67,8 @@ public class TemporalInterpolationProcessor {
         hystart = hystart.plus(obspos == -1 ? frequencyRatio - 1 : obspos);
         // high-frequency variant of y
         TsDomain hydom = TsDomain.of(hystart, 1 + frequencyRatio * (y.length() - 1));
-        TsPeriod hyend = hydom.getEndPeriod();
-        TsPeriod hxstart = hdom.getStartPeriod(), hxend = hdom.getEndPeriod();
+//        TsPeriod hyend = hydom.getEndPeriod();
+        TsPeriod hxstart = hdom.getStartPeriod(); //, hxend = hdom.getEndPeriod();
         int startOffset = hxstart.until(hystart);
 //        int endOffset = hxend.until(hyend);
         int bydrop = 0;
@@ -131,7 +131,7 @@ public class TemporalInterpolationProcessor {
                 .build();
     }
 
-    public TemporalDisaggregationResults process(TsData y, int nBackcasts, int nForecasts, TemporalDisaggregationSpec spec) {
+    public TemporalDisaggregationResults process(TsData y, int nBackcasts, int nForecasts, TemporalInterpolationSpec spec) {
         int hfreq = spec.getDefaultPeriod(), lfreq = y.getAnnualFrequency();
         if (lfreq >= hfreq || hfreq % lfreq != 0) {
             throw new TsException(TsException.INCOMPATIBLE_FREQ);

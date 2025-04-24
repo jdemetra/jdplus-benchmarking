@@ -16,6 +16,7 @@ import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.TemporalInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
@@ -459,29 +460,46 @@ public class TemporalDisaggregationProcessorTest {
 //        assertTrue(rslt3 != null);
 //    }
 //
-//    @Test
-//    public void testLast() {
-//        TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.builder()
-//                .aggregationType(AggregationType.Last)
-//                .residualsModel(TemporalDisaggregationSpec.Model.Rw)
-//                .constant(false)
-//                .rescale(true)
-//                .algorithm(SsfInitialization.Augmented)
-//                .build();
-//        TsData y1 = TsData.ofInternal(TsPeriod.yearly(1976),  Data.PCRA);
-//        TsData q1 = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  Data.IND_PCR);
-//        TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y1, new TsData[]{q1}, spec);
-//        assertTrue(rslt1 != null);
-//        TsData y2 = TsData.ofInternal(TsPeriod.yearly(1979),  Data.PCRA);
-//        TsData q2 = TsData.ofInternal(TsPeriod.quarterly(1977, 3),  Data.IND_PCR);
-//        TemporalDisaggregationResults rslt2 = TemporalDisaggregationProcessor.process(y2, new TsData[]{q2}, spec);
-//        assertTrue(rslt2 != null);
-//        TsData y3 = TsData.ofInternal(TsPeriod.yearly(1979),  Data.PCRA);
-//        TsData q3 = TsData.ofInternal(TsPeriod.quarterly(1977, 3),  Data.IND_PCR).drop(0, 30);
-//        TemporalDisaggregationResults rslt3 = TemporalDisaggregationProcessor.process(y3, new TsData[]{q3}, spec);
-//        assertTrue(rslt3 != null);
-//    }
-//
+
+    @Test
+    public void testLast() {
+        AlgorithmSpec aspe1 = AlgorithmSpec.builder()
+                .fast(false)
+                .rescale(true)
+                .algorithm(SsfInitialization.Augmented)
+                .build();
+
+        TsEstimationSpec espec = TsEstimationSpec.builder()
+                .estimationPrecision(1e-9)
+                .build();
+
+        ModelSpec mspec = ModelSpec.builder()
+                .residualsModel(ResidualsModel.Ar1)
+                .constant(true)
+                .build();
+        TemporalInterpolationSpec spec = TemporalInterpolationSpec.builder()
+                .observationPosition(-1)
+                .modelSpec(mspec)
+                .algorithmSpec(aspe1)
+                .estimationSpec(espec)
+                .build();
+        TsData y1 = TsData.ofInternal(TsPeriod.yearly(1976), Data.PCRA);
+        TsData q1 = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
+        TemporalDisaggregationResults rslt1 = TemporalInterpolationProcessor.process(y1, new TsData[]{q1}, spec);
+        assertTrue(rslt1 != null);
+        TsData y2 = TsData.ofInternal(TsPeriod.yearly(1979), Data.PCRA);
+        TsData q2 = TsData.ofInternal(TsPeriod.quarterly(1977, 3), Data.IND_PCR);
+        TemporalDisaggregationResults rslt2 = TemporalInterpolationProcessor.process(y2, new TsData[]{q2}, spec);
+        assertTrue(rslt2 != null);
+        TsData y3 = TsData.ofInternal(TsPeriod.yearly(1979), Data.PCRA);
+        TsData q3 = TsData.ofInternal(TsPeriod.quarterly(1977, 3), Data.IND_PCR).drop(0, 30);
+        TemporalDisaggregationResults rslt3 = TemporalInterpolationProcessor.process(y3, new TsData[]{q3}, spec);
+        assertTrue(rslt3 != null);
+//        System.out.println(rslt1.getDisaggregatedSeries().getValues());
+//        System.out.println(rslt2.getDisaggregatedSeries().getValues());
+//        System.out.println(rslt3.getDisaggregatedSeries().getValues());
+    }
+
 //    @Test
 //    public void testFirst() {
 //        TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.builder()
@@ -540,7 +558,6 @@ public class TemporalDisaggregationProcessorTest {
 //        TsData y1 = TsData.ofInternal(TsPeriod.yearly(1976),  Data.PCRA);
 //        TsData q1 = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  Data.IND_PCR);
 //        TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y1, new TsData[]{q1}, spec);
-
     ////        System.out.println(rslt1.getDisaggregatedSeries());
 //        TsData y2 = TsData.ofInternal(TsPeriod.yearly(1976),  Data.PCRA);
 //        TsData q2 = TsData.ofInternal(TsPeriod.quarterly(1977, 3),  Data.IND_PCR);
@@ -609,6 +626,34 @@ public class TemporalDisaggregationProcessorTest {
                         TsData qc = q.drop(k, l);
                         TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor2.process(yc, new TsData[]{qc}, spec);
                         TsData d = rslt.getDisaggregatedSeries().aggregate(y.getTsUnit(), AggregationType.Sum, true);
+                        TsDomain c = d.getDomain().intersection(yc.getDomain());
+                        double distance = TsData.fitToDomain(yc, c).distance(TsData.fitToDomain(d, c));
+//                        System.out.println(distance);
+                        assertTrue(distance < 1e-9);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testBatchLast() {
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
+
+        TemporalInterpolationSpec spec = TemporalInterpolationSpec.builder()
+                .observationPosition(-1)
+                .modelSpec(ModelSpec.CHOWLIN)
+                .build();
+
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                TsData yc = y.drop(i, j);
+                for (int k = 1; k < 12; ++k) {
+                    for (int l = 0; l < 12; ++l) {
+                        TsData qc = q.drop(k, l);
+                        TemporalDisaggregationResults rslt = TemporalInterpolationProcessor.process(yc, new TsData[]{qc}, spec);
+                        TsData d = rslt.getDisaggregatedSeries().aggregate(y.getTsUnit(), AggregationType.Last, true);
                         TsDomain c = d.getDomain().intersection(yc.getDomain());
                         double distance = TsData.fitToDomain(yc, c).distance(TsData.fitToDomain(d, c));
 //                        System.out.println(distance);
