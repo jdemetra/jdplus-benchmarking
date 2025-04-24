@@ -40,7 +40,7 @@ public class RawInterpolationModelBuilder {
     private DataBlock hy;
 
     // (rescaled) regressors
-    private final FastMatrix X;
+    private final FastMatrix Xo, X;
 
     // offset between the position of the first X, hY and the position of the first y in the case of interpolation 
     private final int startOffset;
@@ -82,9 +82,10 @@ public class RawInterpolationModelBuilder {
             throw new IllegalArgumentException("At least one regressor should be specified");
         }
 
+        boolean rescale = spec.getAlgorithmSpec().isRescale();
         hy = buildHY(regressors.getRowsCount());
         X = buildX(regressors, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
-
+        Xo=(rescale && ! X.isEmpty()) ? X.deepClone() : X;
         estimationStart = startOffset + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
 
         int nxy = 1 + (X.getRowsCount() - startOffset - 1) / ratio;
@@ -96,7 +97,7 @@ public class RawInterpolationModelBuilder {
             throw new IllegalArgumentException("Not enough data");
         }
 
-        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
+        scale(rescale ? new AbsMeanNormalizer() : null);
     }
 
     public RawInterpolationModelBuilder(@NonNull DoubleSeq y, @NonNull RawInterpolationSpec spec, int nBackcasts, int nForecasts) {
@@ -107,8 +108,10 @@ public class RawInterpolationModelBuilder {
             throw new IllegalArgumentException("Disaggregation ratio should be specified");
         }
         int nhy = 1 + (y.length() - 1) * ratio + nBackcasts + nForecasts;
+        boolean rescale = spec.getAlgorithmSpec().isRescale();
         hy = buildHY(nhy);
         X = buildX(nhy, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
+        Xo=(rescale && ! X.isEmpty()) ? X.deepClone() : X;
 
         estimationStart = nBackcasts + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
 
@@ -119,7 +122,7 @@ public class RawInterpolationModelBuilder {
             throw new IllegalArgumentException("Not enough data");
         }
 
-        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
+        scale(rescale ? new AbsMeanNormalizer() : null);
     }
 
     RawInterpolationModel build() {

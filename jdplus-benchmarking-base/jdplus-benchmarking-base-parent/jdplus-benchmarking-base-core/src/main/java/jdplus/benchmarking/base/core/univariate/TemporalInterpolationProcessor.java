@@ -84,7 +84,7 @@ public class TemporalInterpolationProcessor {
         TsData yc = y.drop(bydrop, 0); //eydrop);
         TsDomain ydom = yc.getDomain();
         TsDomain ydomc = y.getDomain().select(spec.getEstimationSpec().getEstimationSpan()).intersection(ydom);
-        IndexRange range = IndexRange.of(ydom.indexOf(ydomc.getStartPeriod()), ydom.indexOf(ydomc.getEndPeriod()));
+        IndexRange range = IndexRange.of(ydom.indexOf(ydomc.getStartPeriod()), 1+ydom.indexOf(ydomc.getLastPeriod()));
 
         EstimationSpec espec = EstimationSpec.builder()
                 .estimationPrecision(spec.getEstimationSpec().getEstimationPrecision())
@@ -146,7 +146,7 @@ public class TemporalInterpolationProcessor {
         hStart = hStart.plus(obspos - nBackcasts);
         TsDomain ydom = y.getDomain();
         TsDomain ldom = ydom.select(spec.getEstimationSpec().getEstimationSpan());
-        IndexRange range = IndexRange.of(ydom.indexOf(ldom.getStartPeriod()), ydom.indexOf(ldom.getEndPeriod()));
+        IndexRange range = IndexRange.of(ydom.indexOf(ldom.getStartPeriod()), 1+ydom.indexOf(ldom.getLastPeriod()));
         EstimationSpec espec = EstimationSpec.builder()
                 .estimationPrecision(spec.getEstimationSpec().getEstimationPrecision())
                 .truncatedParameter(spec.getEstimationSpec().getTruncatedParameter())

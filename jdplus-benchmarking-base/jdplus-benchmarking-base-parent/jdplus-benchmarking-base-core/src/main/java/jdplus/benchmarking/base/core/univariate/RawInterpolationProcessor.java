@@ -88,7 +88,7 @@ public class RawInterpolationProcessor {
     private RawTemporalDisaggregationResults compute(RawInterpolationModel model, RawInterpolationSpec spec) {
         return spec.getAlgorithmSpec().isFast() ? interpolate2(model, spec) : interpolate(model, spec);
     }
-
+    
     private RawTemporalDisaggregationResults interpolate2(RawInterpolationModel model, RawInterpolationSpec spec) {
         RawInterpolationEstimation eim = estimateInterpolationModel(model, spec);
         double[] yh = new double[model.getHy().length()];
@@ -117,6 +117,7 @@ public class RawInterpolationProcessor {
                 .disaggregatedSeries(DoubleSeq.of(yh))
                 .stdevDisaggregatedSeries(DoubleSeq.of(eyh))
                 .regressionEffects(regeffect)
+                .regressorsName(regNames(model, spec))
                 .residualsDiagnostics(diagnostic(res, model.getRatio()))
                 .build();
     }
@@ -147,7 +148,7 @@ public class RawInterpolationProcessor {
         double[] vyh = new double[Y.length];
         ISsfLoading loading = rssf.loading();
         double f = 1 / model.getYfactor();
-        double sigma = f * Math.sqrt(dll.ssq() / dll.dim());
+        double sigma = f * Math.sqrt(dll.sigma2());
         for (int i = 0, j = 0; i < O.length; ++i, ++j) {
             if (Double.isFinite(O[j])) {
                 yh[i] = O[j];
@@ -174,6 +175,7 @@ public class RawInterpolationProcessor {
                 .stdevDisaggregatedSeries(DoubleSeq.of(vyh))
                 .regressionEffects(regeffect)
                 .residualsDiagnostics(diagnostic(res, model.getRatio()))
+                .regressorsName(regNames(model, spec))
                 .build();
     }
 
@@ -366,11 +368,11 @@ public class RawInterpolationProcessor {
     }
 
     private DoubleSeq regeffect(RawInterpolationModel model, DoubleSeq coeff) {
-        FastMatrix X = model.getX();
+        FastMatrix X = model.getXo();
         if (X.isEmpty()) {
             return DoubleSeq.empty();
         }
-        DataBlock regs = DataBlock.make(model.getX().getRowsCount());
+        DataBlock regs = DataBlock.make(X.getRowsCount());
         regs.product(X.rowsIterator(), DataBlock.of(coeff));
         return regs;
     }
@@ -488,4 +490,21 @@ public class RawInterpolationProcessor {
         }
 
     }
+    
+    private String[] regNames(RawInterpolationModel model, RawInterpolationSpec spec){
+        FastMatrix xo = model.getXo();
+        if (xo.isEmpty())
+            return new String[0];
+        String[] names=new String[xo.getColumnsCount()];
+        int i=0;
+        if (spec.getModelSpec().isConstant())
+            names[i++]="Constant";
+        if (spec.getModelSpec().isTrend())
+            names[i++]="Trend";
+        for (int j=1; i<names.length; ++i, ++j)
+            names[i]="Var-"+j;
+        return names;
+    }
+
+    
 }

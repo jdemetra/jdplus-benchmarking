@@ -33,6 +33,7 @@ class RawDisaggregationModel {
         this.hy = builder.getHy();
         this.ratio = builder.getRatio();
         this.startOffset = builder.getStartOffset();
+        this.Xo=builder.getXo();
         this.X = builder.getX();
         this.Xc = builder.getXc();
         this.estimationStart = builder.getEstimationStart();
@@ -67,7 +68,7 @@ class RawDisaggregationModel {
     DoubleSeq hy;
     // original regressors, rescaled and/or cumulated regressors 
     // hy, X and Xc must start at the beginning of an aggregation period (low-frequency)
-    FastMatrix X, Xc;
+    FastMatrix Xo, X, Xc;
 
     // range used to estimate the regression.
     // periods containing missing values at the beginning/end of the regression variables and of the endogenous variable are excluded

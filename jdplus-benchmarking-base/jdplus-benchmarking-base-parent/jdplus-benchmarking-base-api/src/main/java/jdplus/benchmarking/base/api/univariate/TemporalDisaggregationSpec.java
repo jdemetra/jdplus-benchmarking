@@ -20,7 +20,6 @@ import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.data.AggregationType;
 import nbbrd.design.Development;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
-import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.util.Validatable;
 
 /**
@@ -38,31 +37,28 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
     public static final String METHOD = "generic";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
-    public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
-    public static final int DEF_PERIOD = 4, DEF_OBSPOS = -1;
+    public static final boolean DEF_AVERAGE = false;
+    public static final int DEF_PERIOD = 4;
 
     public static final TemporalDisaggregationSpec CHOWLIN = new Builder()
-            .aggregationType(AggregationType.Sum)
+            .average(false)
             .defaultPeriod(DEF_PERIOD)
-            .observationPosition(DEF_OBSPOS)
             .modelSpec(ModelSpec.CHOWLIN)
             .algorithmSpec(AlgorithmSpec.DEFAULT)
             .estimationSpec(TsEstimationSpec.DEFAULT)
             .build();
 
     public static final TemporalDisaggregationSpec FERNANDEZ = new Builder()
-            .aggregationType(AggregationType.Sum)
+            .average(false)
             .defaultPeriod(DEF_PERIOD)
-            .observationPosition(DEF_OBSPOS)
             .modelSpec(ModelSpec.FERNANDEZ)
             .algorithmSpec(AlgorithmSpec.DEFAULT)
             .estimationSpec(TsEstimationSpec.DEFAULT)
             .build();
 
     public static final TemporalDisaggregationSpec LITTERMAN = new Builder()
-            .aggregationType(AggregationType.Sum)
+            .average(false)
             .defaultPeriod(DEF_PERIOD)
-            .observationPosition(DEF_OBSPOS)
             .modelSpec(ModelSpec.LITTERMAN)
             .algorithmSpec(AlgorithmSpec.DEFAULT)
             .estimationSpec(TsEstimationSpec.DEFAULT)
@@ -73,9 +69,7 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
         return DESCRIPTOR;
     }
 
-    @lombok.NonNull
-    private AggregationType aggregationType;
-    private int observationPosition;
+    private boolean average;
     private int defaultPeriod;
 
     @lombok.NonNull
@@ -93,8 +87,7 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
     public static Builder builder() {
         return new Builder()
                 .defaultPeriod(DEF_PERIOD)
-                .observationPosition(DEF_OBSPOS)
-                .aggregationType(DEF_AGGREGATION)
+                .average(DEF_AVERAGE)
                 .estimationSpec(TsEstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
                 .modelSpec(ModelSpec.DEFAULT);

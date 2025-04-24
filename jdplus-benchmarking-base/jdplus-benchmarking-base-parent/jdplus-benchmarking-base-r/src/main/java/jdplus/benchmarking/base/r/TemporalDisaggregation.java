@@ -36,6 +36,7 @@ import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.TemporalInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 import jdplus.benchmarking.base.core.univariate.ADLProcessor;
 import jdplus.benchmarking.base.core.univariate.ADLResults;
@@ -47,12 +48,10 @@ import jdplus.benchmarking.base.core.univariate.RawDisaggregationProcessor;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationProcessor;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
+import jdplus.benchmarking.base.core.univariate.TemporalInterpolationProcessor;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TimeSelector;
-import jdplus.toolkit.base.api.timeseries.TsDomain;
-import jdplus.toolkit.base.api.timeseries.TsPeriod;
-import jdplus.toolkit.base.api.timeseries.TsUnit;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 
 /**
@@ -101,7 +100,8 @@ public class TemporalDisaggregation {
             String model, int freq, int nExt, String aggregation, int obspos,
             double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
             String algorithm, boolean diffuseregs) {
-         ModelSpec mspec=ModelSpec.builder()
+        AggregationType type = AggregationType.valueOf(aggregation);
+        ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
                 .trend(trend)
                 .residualsModel(ResidualsModel.valueOf(model))
@@ -109,34 +109,188 @@ public class TemporalDisaggregation {
                 .diffuseRegressors(diffuseregs)
                 .zeroInitialization(zeroinit)
                 .build();
-        
-        TsEstimationSpec espec=TsEstimationSpec.builder()
+
+        TsEstimationSpec espec = TsEstimationSpec.builder()
                 .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
                 .build();
-        
-        AlgorithmSpec aspec=AlgorithmSpec.builder()
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
                 .algorithm(SsfInitialization.valueOf(algorithm))
                 .rescale(true)
-                .build();              
-       TemporalDisaggregationSpec.Builder builder = TemporalDisaggregationSpec.builder()
-               .modelSpec(mspec)
-               .estimationSpec(espec)
-               .algorithmSpec(aspec);
-        if (aggregation.equals("UserDefined")) {
-            builder.observationPosition(obspos);
-        }
-        if (indicators == null) {
-            TsUnit unit = TsUnit.ofAnnualFrequency(freq);
-            TsPeriod start = TsPeriod.of(unit, y.getStart().start());
-            TsPeriod end = TsPeriod.of(unit, y.getDomain().end());
-            TsDomain all = TsDomain.of(start, start.until(end) + nExt);
-            return TemporalDisaggregationProcessor.process(y, all, builder.build());
-        } else {
-            for (int i = 0; i < indicators.length; ++i) {
-                indicators[i] = indicators[i].cleanExtremities();
+                .build();
+        if (type == AggregationType.Average || type == AggregationType.Sum) {
+            TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.builder()
+                    .modelSpec(mspec)
+                    .estimationSpec(espec)
+                    .algorithmSpec(aspec)
+                    .average(type == AggregationType.Average)
+                    .defaultPeriod(freq)
+                    .build();
+            if (indicators == null) {
+                return TemporalDisaggregationProcessor.process(y, 0, nExt, spec);
+            } else {
+                for (int i = 0; i < indicators.length; ++i) {
+                    indicators[i] = indicators[i].cleanExtremities();
+                }
+                return TemporalDisaggregationProcessor.process(y, indicators, spec);
             }
-            return TemporalDisaggregationProcessor.process(y, indicators, builder.build());
+        } else {
+            if (type == AggregationType.First) {
+                obspos = 0;
+            } else if (type == AggregationType.Last) {
+                obspos = -1;
+            }
+            TemporalInterpolationSpec spec = TemporalInterpolationSpec.builder()
+                    .modelSpec(mspec)
+                    .estimationSpec(espec)
+                    .algorithmSpec(aspec)
+                    .observationPosition(obspos)
+                    .defaultPeriod(freq)
+                    .build();
+            if (indicators == null) {
+                return TemporalInterpolationProcessor.process(y, 0, nExt, spec);
+            } else {
+                for (int i = 0; i < indicators.length; ++i) {
+                    indicators[i] = indicators[i].cleanExtremities();
+                }
+                return TemporalInterpolationProcessor.process(y, indicators, spec);
+            }
         }
+    }
+
+    public TemporalDisaggregationResults processDisaggregation(TsData y, boolean constant, boolean trend, TsData[] indicators,
+            String model, boolean average, double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs) {
+        if (indicators == null) {
+            throw new IllegalArgumentException("Indicators should not be null");
+        }
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+
+        TsEstimationSpec espec = TsEstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+        TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.builder()
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .average(average)
+                .build();
+        for (int i = 0; i < indicators.length; ++i) {
+            indicators[i] = indicators[i].cleanExtremities();
+        }
+        return TemporalDisaggregationProcessor.process(y, indicators, spec);
+    }
+
+    public TemporalDisaggregationResults processDisaggregation(TsData y, boolean constant, boolean trend,
+            String model, int freq, boolean average,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+
+        TsEstimationSpec espec = TsEstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+        TemporalDisaggregationSpec spec = TemporalDisaggregationSpec.builder()
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .average(average)
+                .defaultPeriod(freq)
+                .build();
+        return TemporalDisaggregationProcessor.process(y, nbackcasts, nforecasts, spec);
+    }
+
+    public TemporalDisaggregationResults processInterpolation(TsData y, boolean constant, boolean trend, TsData[] indicators,
+            String model, int obspos,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs) {
+
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+        if (indicators == null) {
+            throw new IllegalArgumentException("Indicators should not be null");
+        }
+
+        TsEstimationSpec espec = TsEstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+        TemporalInterpolationSpec spec = TemporalInterpolationSpec.builder()
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .observationPosition(obspos)
+                .build();
+        return TemporalInterpolationProcessor.process(y, indicators, spec);
+
+    }
+
+    public TemporalDisaggregationResults processInterpolation(TsData y, boolean constant, boolean trend,
+            String model, int freq, int obspos,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+
+        TsEstimationSpec espec = TsEstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+
+        TemporalInterpolationSpec spec = TemporalInterpolationSpec.builder()
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .observationPosition(obspos)
+                .defaultPeriod(freq)
+                .build();
+        return TemporalInterpolationProcessor.process(y, nbackcasts, nforecasts, spec);
+
     }
 
     public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend,
@@ -146,7 +300,7 @@ public class TemporalDisaggregation {
 
         AggregationType type = AggregationType.valueOf(aggregation);
 
-        ModelSpec mspec=ModelSpec.builder()
+        ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
                 .trend(trend)
                 .residualsModel(ResidualsModel.valueOf(model))
@@ -154,21 +308,21 @@ public class TemporalDisaggregation {
                 .diffuseRegressors(diffuseregs)
                 .zeroInitialization(zeroinit)
                 .build();
-        
-        EstimationSpec espec=EstimationSpec.builder()
+
+        EstimationSpec espec = EstimationSpec.builder()
                 .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
                 .build();
-        
-        AlgorithmSpec aspec=AlgorithmSpec.builder()
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
                 .algorithm(SsfInitialization.valueOf(algorithm))
                 .rescale(true)
-                .build();              
-        
+                .build();
+
         if (type == AggregationType.Average || type == AggregationType.Sum) {
-            
+
             RawDisaggregationSpec spec = RawDisaggregationSpec.builder(frequencyRatio)
                     .frequencyRatio(frequencyRatio)
-                    .aggregationType(type)
+                    .average(type == AggregationType.Average)
                     .modelSpec(mspec)
                     .estimationSpec(espec)
                     .algorithmSpec(aspec)
@@ -202,7 +356,7 @@ public class TemporalDisaggregation {
         }
         AggregationType type = AggregationType.valueOf(aggregation);
 
-        ModelSpec mspec=ModelSpec.builder()
+        ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
                 .trend(trend)
                 .residualsModel(ResidualsModel.valueOf(model))
@@ -210,21 +364,21 @@ public class TemporalDisaggregation {
                 .diffuseRegressors(diffuseregs)
                 .zeroInitialization(zeroinit)
                 .build();
-        
-        EstimationSpec espec=EstimationSpec.builder()
+
+        EstimationSpec espec = EstimationSpec.builder()
                 .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
                 .build();
-        
-        AlgorithmSpec aspec=AlgorithmSpec.builder()
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
                 .algorithm(SsfInitialization.valueOf(algorithm))
                 .rescale(true)
-                .build();              
-        
+                .build();
+
         if (type == AggregationType.Average || type == AggregationType.Sum) {
-            
+
             RawDisaggregationSpec spec = RawDisaggregationSpec.builder(frequencyRatio)
                     .frequencyRatio(frequencyRatio)
-                    .aggregationType(type)
+                    .average(type == AggregationType.Average)
                     .modelSpec(mspec)
                     .estimationSpec(espec)
                     .algorithmSpec(aspec)
@@ -239,6 +393,155 @@ public class TemporalDisaggregation {
                     .build();
             return RawInterpolationProcessor.process(DoubleSeq.of(y), X, startOffset, spec);
         }
+    }
+
+    public RawTemporalDisaggregationResults processRawDisaggregation(double[] y, boolean constant, boolean trend, Matrix indicators, int startOffset,
+            String model, int frequencyRatio, boolean average,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs) {
+
+        if (indicators == null) {
+            indicators = Matrix.empty();
+        }
+        if (startOffset < 0) {
+            throw new IllegalArgumentException("Start offset should be non-negative");
+        }
+        FastMatrix X = FastMatrix.of(indicators);
+        if (DoubleSeq.of(X.getStorage()).anyMatch(z -> !Double.isFinite(z))) {
+            throw new IllegalArgumentException("indicators can't contain missing values");
+        }
+
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+
+        EstimationSpec espec = EstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+
+        RawDisaggregationSpec spec = RawDisaggregationSpec.builder(frequencyRatio)
+                .frequencyRatio(frequencyRatio)
+                .average(average)
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .build();
+        return RawDisaggregationProcessor.process(DoubleSeq.of(y), X, startOffset, spec);
+    }
+
+    public RawTemporalDisaggregationResults processRawDisaggregation(double[] y, boolean constant, boolean trend,
+            String model, int frequencyRatio, boolean average,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+
+        EstimationSpec espec = EstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+
+        RawDisaggregationSpec spec = RawDisaggregationSpec.builder(frequencyRatio)
+                .frequencyRatio(frequencyRatio)
+                .average(average)
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .build();
+        return RawDisaggregationProcessor.process(DoubleSeq.of(y), nbackcasts, nforecasts, spec);
+    }
+
+    public RawTemporalDisaggregationResults processRawInterpolation(double[] y, boolean constant, boolean trend, Matrix indicators, int startOffset,
+            String model, int frequencyRatio, int obspos,
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs) {
+
+        if (indicators == null) {
+            indicators = Matrix.empty();
+        }
+        if (startOffset < 0) {
+            throw new IllegalArgumentException("Start offset should be non-negative");
+        }
+        FastMatrix X = FastMatrix.of(indicators);
+        if (DoubleSeq.of(X.getStorage()).anyMatch(z -> !Double.isFinite(z))) {
+            throw new IllegalArgumentException("indicators can't contain missing values");
+        }
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+
+        EstimationSpec espec = EstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+
+        RawInterpolationSpec spec = RawInterpolationSpec.builder(frequencyRatio)
+                .firstObservationPosition(obspos)
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .build();
+        return RawInterpolationProcessor.process(DoubleSeq.of(y), X, startOffset, spec);
+    }
+
+    public RawTemporalDisaggregationResults processRawInterpolation(double[] y, boolean constant, boolean trend,
+            int frequencyRatio, int obspos, double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(constant)
+                .trend(trend)
+                .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
+                .diffuseRegressors(diffuseregs)
+                .zeroInitialization(zeroinit)
+                .build();
+
+        EstimationSpec espec = EstimationSpec.builder()
+                .truncatedParameter(truncatedRho <= -1 ? null : truncatedRho)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.valueOf(algorithm))
+                .rescale(true)
+                .build();
+
+        RawInterpolationSpec spec = RawInterpolationSpec.builder(frequencyRatio)
+                .firstObservationPosition(obspos)
+                .modelSpec(mspec)
+                .estimationSpec(espec)
+                .algorithmSpec(aspec)
+                .build();
+        return RawInterpolationProcessor.process(DoubleSeq.of(y), nbackcasts, nforecasts, spec);
     }
 
     public ADLResults processADL(TsData y, boolean constant, boolean trend, TsData[] indicators,

@@ -37,9 +37,9 @@ import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 public class BasicSpecUI extends BaseTemporalDisaggregationSpecUI {
 
     public static final String DISPLAYNAME = "Basic";
-    public static final String ERROR_NAME = "Error", PARAM_NAME = "Parameter", CONSTANT_NAME = "Constant", TREND_NAME = "Trend", TYPE_NAME = "Type", SPAN_NAME = "Estimation span", DEFFREQ_NAME = "Default frequency";
-    public static final String ERROR_DESC = "Model of the regression error", PARAM_DESC = "Parameter", CONSTANT_DESC = "Constant", TREND_DESC = "Trend", TYPE_DESC = "Type", SPAN_DESC = "Estimation span", DEFFREQ_DESC = "Default frequency";
-    public static final int SPAN_ID = 0, ERROR_ID = 5, PARAM_ID = 10, CONSTANT_ID = 15, TREND_ID = 20, TYPE_ID = 30, DEFFREQ_ID = 40;
+    public static final String ERROR_NAME = "Error", PARAM_NAME = "Parameter", CONSTANT_NAME = "Constant", TREND_NAME = "Trend", AVERAGE_NAME="Average", TYPE_NAME = "Type", SPAN_NAME = "Estimation span", DEFFREQ_NAME = "Default frequency";
+    public static final String ERROR_DESC = "Model of the regression error", PARAM_DESC = "Parameter", CONSTANT_DESC = "Constant", TREND_DESC = "Trend", TYPE_DESC = "Type", AVERAGE_DESC= "Average", SPAN_DESC = "Estimation span", DEFFREQ_DESC = "Default frequency";
+    public static final int SPAN_ID = 0, ERROR_ID = 5, PARAM_ID = 10, CONSTANT_ID = 15, TREND_ID = 20, TYPE_ID = 30, AVERAGE_ID = 31, DEFFREQ_ID = 40;
 
     @Override
     public String toString() {
@@ -110,13 +110,13 @@ public class BasicSpecUI extends BaseTemporalDisaggregationSpecUI {
                 .build());
     }
 
-    public Utility.AggregationType getType() {
-        return Utility.convert(core().getAggregationType());
+    public boolean isAverage() {
+        return core().isAverage();
     }
 
-    public void setType(Utility.AggregationType type) {
+    public void setAverage(boolean average) {
         update(core().toBuilder()
-                .aggregationType(Utility.convert(type))
+                .average(average)
                 .build());
     }
 
@@ -164,7 +164,7 @@ public class BasicSpecUI extends BaseTemporalDisaggregationSpecUI {
         if (desc != null) {
             props.add(desc);
         }
-        desc = typeDesc();
+        desc = averageDesc();
         if (desc != null) {
             props.add(desc);
         }
@@ -249,13 +249,13 @@ public class BasicSpecUI extends BaseTemporalDisaggregationSpecUI {
         }
     }
 
-    private EnhancedPropertyDescriptor typeDesc() {
+    private EnhancedPropertyDescriptor averageDesc() {
         try {
-            PropertyDescriptor desc = new PropertyDescriptor("Type", this.getClass());
-            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, TYPE_ID);
+            PropertyDescriptor desc = new PropertyDescriptor("Average", this.getClass());
+            EnhancedPropertyDescriptor edesc = new EnhancedPropertyDescriptor(desc, AVERAGE_ID);
             edesc.setRefreshMode(EnhancedPropertyDescriptor.Refresh.All);
-            desc.setDisplayName(TYPE_NAME);
-            desc.setShortDescription(TYPE_DESC);
+            desc.setDisplayName(AVERAGE_NAME);
+            desc.setShortDescription(AVERAGE_DESC);
             edesc.setReadOnly(isRo());
             return edesc;
         } catch (IntrospectionException ex) {

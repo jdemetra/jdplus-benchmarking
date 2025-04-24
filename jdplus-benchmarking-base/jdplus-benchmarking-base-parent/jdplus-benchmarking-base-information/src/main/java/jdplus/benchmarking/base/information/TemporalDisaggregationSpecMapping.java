@@ -93,7 +93,7 @@ public class TemporalDisaggregationSpecMapping {
         }
         n = info.get(AGGTYPE, String.class);
         if (n != null) {
-            builder.aggregationType(AggregationType.valueOf(n));
+            builder.average(n.equals(AggregationType.Average));
         }
         Boolean b = info.get(CONSTANT, Boolean.class);
         if (b != null) {
@@ -154,8 +154,8 @@ public class TemporalDisaggregationSpecMapping {
         if (p != null && p.isDefined()) {
             info.set(PARAMETER, p);
         }
-        if (spec.getAggregationType() != TemporalDisaggregationSpec.DEF_AGGREGATION || verbose) {
-            info.set(AGGTYPE, spec.getAggregationType().name());
+        if (spec.isAverage() != TemporalDisaggregationSpec.DEF_AVERAGE || verbose) {
+            info.set(AGGTYPE, spec.isAverage() ? AggregationType.Average.name() : AggregationType.Sum.name());
         }
         info.set(CONSTANT, spec.getModelSpec().isConstant());
         info.set(TREND, spec.getModelSpec().isTrend());

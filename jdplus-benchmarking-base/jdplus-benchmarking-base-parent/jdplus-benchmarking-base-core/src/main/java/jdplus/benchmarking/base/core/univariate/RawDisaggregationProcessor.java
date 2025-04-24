@@ -259,6 +259,7 @@ public class RawDisaggregationProcessor {
                 .stdevDisaggregatedSeries(DoubleSeq.of(eyh))
                 .regressionEffects(regeffect)
                 .residualsDiagnostics(diagnostic(res, model.getRatio()))
+                .regressorsName(regNames(model, spec))
                 .build();
     }
 
@@ -323,6 +324,7 @@ public class RawDisaggregationProcessor {
                 .stdevDisaggregatedSeries(DoubleSeq.of(vyh))
                 .regressionEffects(regeffect)
                 .residualsDiagnostics(diagnostic(res, model.getRatio()))
+                .regressorsName(regNames(model, spec))
                 .build();
     }
 
@@ -396,11 +398,11 @@ public class RawDisaggregationProcessor {
     }
 
     private DoubleSeq regeffect(RawDisaggregationModel model, DoubleSeq coeff) {
-        FastMatrix X = model.getX();
+        FastMatrix X = model.getXo();
         if (X.isEmpty()) {
             return DoubleSeq.empty();
         }
-        DataBlock regs = DataBlock.make(model.getX().getRowsCount());
+        DataBlock regs = DataBlock.make(X.getRowsCount());
         regs.set(Double.NaN);
         regs.product(X.rowsIterator(), DataBlock.of(coeff));
         return regs;
@@ -517,6 +519,22 @@ public class RawDisaggregationProcessor {
                 return ParamValidation.Changed;
             }
         }
-
     }
+    
+    
+    private String[] regNames(RawDisaggregationModel model, RawDisaggregationSpec spec){
+        FastMatrix xo = model.getXo();
+        if (xo.isEmpty())
+            return new String[0];
+        String[] names=new String[xo.getColumnsCount()];
+        int i=0;
+        if (spec.getModelSpec().isConstant())
+            names[i++]="Constant";
+        if (spec.getModelSpec().isTrend())
+            names[i++]="Trend";
+        for (int j=1; i<names.length; ++i, ++j)
+            names[i]="Var-"+j;
+        return names;
+    }
+    
 }

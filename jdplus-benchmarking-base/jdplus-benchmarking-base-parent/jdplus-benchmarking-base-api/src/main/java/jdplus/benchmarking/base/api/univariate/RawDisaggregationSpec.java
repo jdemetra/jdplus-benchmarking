@@ -36,17 +36,14 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     public static final String METHOD = "generic";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
-    public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
-    public static final int DEF_OBSPOS = -1;
-    
+    public static final boolean DEF_AVERAGE = false;
+
     @Override
     public AlgorithmDescriptor getAlgorithmDescriptor() {
         return DESCRIPTOR;
     }
 
-    @lombok.NonNull
-    private AggregationType aggregationType;
-    private int observationPosition;
+    private boolean average;
     private int frequencyRatio;
 
     @lombok.NonNull
@@ -62,9 +59,9 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     }
 
     public static RawDisaggregationSpec chowLin(int frequencyRatio) {
-        return new Builder().aggregationType(DEF_AGGREGATION)
+        return new Builder()
+                .average(DEF_AVERAGE)
                 .frequencyRatio(frequencyRatio)
-                .observationPosition(DEF_OBSPOS)
                 .modelSpec(ModelSpec.CHOWLIN)
                 .estimationSpec(EstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
@@ -72,9 +69,9 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
     }
 
     public static RawDisaggregationSpec fernandez(int frequencyRatio) {
-        return new Builder().aggregationType(DEF_AGGREGATION)
+        return new Builder()
+                .average(DEF_AVERAGE)
                 .frequencyRatio(frequencyRatio)
-                .observationPosition(DEF_OBSPOS)
                 .modelSpec(ModelSpec.FERNANDEZ)
                 .estimationSpec(EstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
@@ -83,9 +80,8 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
 
     public static Builder builder(int frequencyRatio) {
         return new Builder()
-                .aggregationType(DEF_AGGREGATION)
+                .average(DEF_AVERAGE)
                 .frequencyRatio(frequencyRatio)
-                .observationPosition(DEF_OBSPOS)
                 .estimationSpec(EstimationSpec.DEFAULT)
                 .algorithmSpec(AlgorithmSpec.DEFAULT)
                 .modelSpec(ModelSpec.DEFAULT);
@@ -93,21 +89,7 @@ public final class RawDisaggregationSpec implements ProcSpecification, Validatab
 
     @Override
     public RawDisaggregationSpec validate() throws IllegalArgumentException {
-        switch (modelSpec.getResidualsModel()) {
-            case Rw, RwAr1 -> {
-                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
-                    throw new IllegalArgumentException("constant not allowed");
-                }
-            }
-            case I2, I3 -> {
-                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
-                    throw new IllegalArgumentException("constant not allowed");
-                }
-                if (modelSpec.isTrend() && !modelSpec.isZeroInitialization()) {
-                    throw new IllegalArgumentException("trend not allowed");
-                }
-            }
-        }
+        modelSpec.check();
         return this;
     }
 

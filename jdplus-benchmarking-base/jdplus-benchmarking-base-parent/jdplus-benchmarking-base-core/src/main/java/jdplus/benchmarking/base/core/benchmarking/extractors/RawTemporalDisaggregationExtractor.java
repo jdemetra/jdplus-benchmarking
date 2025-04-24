@@ -1,6 +1,17 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Copyright 2025 JDemetra+.
+ * Licensed under the EUPL, Version 1.2 or – as soon they will be approved
+ * by the European Commission - subsequent versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ *      https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 package jdplus.benchmarking.base.core.benchmarking.extractors;
 
@@ -14,15 +25,16 @@ import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationDictionaries;
 import jdplus.benchmarking.base.core.univariate.RawResidualsDiagnostics;
 import jdplus.toolkit.base.core.stats.likelihood.DiffuseLikelihoodStatistics;
+
 /**
  *
  * @author LEMASSO
  */
 @ServiceProvider(InformationExtractor.class)
-public class RawTemporalDisaggregationExtractor extends InformationMapping<RawTemporalDisaggregationResults>{
-    
+public class RawTemporalDisaggregationExtractor extends InformationMapping<RawTemporalDisaggregationResults> {
+
     public RawTemporalDisaggregationExtractor() {
-        
+
         set(TemporalDisaggregationDictionaries.DISAGG, double[].class,
                 source -> source.getDisaggregatedSeries().toArray());
         set(TemporalDisaggregationDictionaries.EDISAGG, double[].class,
@@ -33,7 +45,7 @@ public class RawTemporalDisaggregationExtractor extends InformationMapping<RawTe
         set(TemporalDisaggregationDictionaries.UDISAGG, double[].class,
                 source -> source.getDisaggregatedSeries().fn(source.getStdevDisaggregatedSeries(), (a, b) -> a + 2 * b).toArray());
         set(TemporalDisaggregationDictionaries.REGEFFECT, double[].class,
-                source -> source.getRegressionEffects().toArray());  
+                source -> source.getRegressionEffects().toArray());
         set(TemporalDisaggregationDictionaries.SMOOTHINGEFFECT, double[].class, source -> {
             return DoublesMath.subtract(source.getDisaggregatedSeries(), source.getRegressionEffects()).toArray();
         }
@@ -42,18 +54,8 @@ public class RawTemporalDisaggregationExtractor extends InformationMapping<RawTe
                 source -> source.getCoefficients().toArray());
         set(TemporalDisaggregationDictionaries.COVAR, Matrix.class,
                 source -> source.getCoefficientsCovariance());
-//        set(TemporalDisaggregationDictionaries.REGNAMES, String[].class, source -> {
-//            FastMatrix vars = source.getRegressors();
-//            int n = vars == null ? 0 : vars.getColumnsCount();
-//            if (n == 0) {
-//                return null;
-//            }
-//            String[] names = new String[n];
-//            for (int i = 0; i < names.length; ++i) {
-//                names[i] = vars[i].getName();
-//            }
-//            return names;
-//        });
+        set(TemporalDisaggregationDictionaries.REGNAMES, String[].class, 
+                source -> source.getRegressorsName());
         set(TemporalDisaggregationDictionaries.PARAMETER, Double.class, source -> {
             if (source.getMaximum() == null) {
                 return Double.NaN;
@@ -83,7 +85,7 @@ public class RawTemporalDisaggregationExtractor extends InformationMapping<RawTe
         delegate(TemporalDisaggregationDictionaries.LIKELIHOOD, DiffuseLikelihoodStatistics.class, source -> source.getStats());
         delegate(TemporalDisaggregationDictionaries.RES, RawResidualsDiagnostics.class, source -> source.getResidualsDiagnostics());
     }
-    
+
     @Override
     public Class getSourceClass() {
         return RawTemporalDisaggregationResults.class;

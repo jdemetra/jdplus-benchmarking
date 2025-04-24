@@ -34,6 +34,7 @@ class RawInterpolationModel {
         this.ratio = builder.getRatio();
         this.startOffset = builder.getStartOffset();
         this.X = builder.getX();
+        this.Xo = builder.getXo();
         this.estimationStart = builder.getEstimationStart();
         this.estimationEnd = builder.getEstimationEnd();
         this.yfactor = builder.getYfactor();
@@ -65,7 +66,7 @@ class RawInterpolationModel {
     DoubleSeq hy;
     // original regressors, rescaled and/or cumulated regressors 
     // hy, X and Xc must start at the beginning of an aggregation period (low-frequency)
-    FastMatrix X;
+    FastMatrix Xo, X;
 
     // range used to estimate the regression.
     // periods containing missing values at the beginning/end of the regression variables and of the endogenous variable are excluded

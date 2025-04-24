@@ -16,7 +16,6 @@
 package jdplus.benchmarking.base.core.univariate;
 
 import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
-import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.DoubleSeqCursor;
 import jdplus.toolkit.base.core.data.DataBlock;
@@ -42,6 +41,7 @@ public class RawDisaggregationModelBuilder {
     // (rescaled) series transformed to the highest-frequency  (same as ho but with rescaling)
     private DataBlock hy;
 
+    private final FastMatrix Xo;
     // (rescaled) regressors and cumulated regressors 
     private final FastMatrix X;
     private FastMatrix Xc;
@@ -88,9 +88,12 @@ public class RawDisaggregationModelBuilder {
         if (regressors.isEmpty()) {
             throw new IllegalArgumentException("At least one regressor should be specified");
         }
-        average = spec.getAggregationType() == AggregationType.Average;
+        average = spec.isAverage();
         hy = buildHY(regressors.getRowsCount());
+        
+        boolean rescale = spec.getAlgorithmSpec().isRescale();
         X = buildX(regressors, y.length() * ratio, 0, 0, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
+        Xo = rescale ? X.deepClone() : X;
         buildXc();
 
         estimationStart = startOffset + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
@@ -99,20 +102,22 @@ public class RawDisaggregationModelBuilder {
         ny = spec.getEstimationSpec().getEstimationRange().isEmpty() ? ny : Math.min(ny, spec.getEstimationSpec().getEstimationRange().size());
         estimationEnd = estimationStart + ny * ratio;
 
-        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
+        scale(rescale ? new AbsMeanNormalizer() : null);
     }
 
     public RawDisaggregationModelBuilder(@NonNull DoubleSeq y, @NonNull RawDisaggregationSpec spec, int nBackcasts, int nForecasts) {
         this.y = y;
         startOffset = nBackcasts;
-        average = spec.getAggregationType() == AggregationType.Average;
+        average = spec.isAverage();
         ratio = spec.getFrequencyRatio();
         if (ratio == 0) {
             throw new IllegalArgumentException("Disaggregation ratio should be specified");
         }
         int nhy = y.length() * ratio + nBackcasts + nForecasts;
+        boolean rescale = spec.getAlgorithmSpec().isRescale();
         hy = buildHY(nhy);
         X = buildX(nhy, spec.getModelSpec().isConstant(), spec.getModelSpec().isTrend());
+        Xo = rescale ? X.deepClone() : X;
         buildXc();
 
         estimationStart = nBackcasts + spec.getEstimationSpec().getEstimationRange().getStart() * ratio;
@@ -124,7 +129,7 @@ public class RawDisaggregationModelBuilder {
             throw new IllegalArgumentException("Not enough data");
         }
 
-        scale(spec.getAlgorithmSpec().isRescale() ? new AbsMeanNormalizer() : null);
+        scale(rescale ? new AbsMeanNormalizer() : null);
     }
 
     RawDisaggregationModel build() {
@@ -139,7 +144,7 @@ public class RawDisaggregationModelBuilder {
         }
 
         DoubleSeqCursor reader = y.cursor();
-        for (int j = startOffset + ratio - 1, i = 0; i < ny && j<nx; ++i, j += ratio) {
+        for (int j = startOffset + ratio - 1, i = 0; i < ny && j < nx; ++i, j += ratio) {
             dy[j] = reader.getAndNext();
         }
         return DataBlock.of(dy);

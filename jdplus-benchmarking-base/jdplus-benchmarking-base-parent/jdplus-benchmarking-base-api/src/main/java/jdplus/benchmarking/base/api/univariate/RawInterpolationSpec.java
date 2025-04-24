@@ -16,7 +16,6 @@
 package jdplus.benchmarking.base.api.univariate;
 
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
-import jdplus.toolkit.base.api.data.AggregationType;
 import nbbrd.design.Development;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
 import jdplus.toolkit.base.api.util.Validatable;
