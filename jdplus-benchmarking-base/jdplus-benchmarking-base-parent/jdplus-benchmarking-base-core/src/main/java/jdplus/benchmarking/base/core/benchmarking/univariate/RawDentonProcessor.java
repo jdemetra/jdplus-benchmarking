@@ -32,15 +32,15 @@ public class RawDentonProcessor implements RawDenton.Processor {
     public static final RawDentonProcessor PROCESSOR=new RawDentonProcessor();
 
     @Override
-    public double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int offset, RawDentonSpec spec) {
+    public double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int startOffset, RawDentonSpec spec) {
         int ratio = spec.getFrequencyRatio();
         
         DoubleSeq naggregationConstraint;
         switch (spec.getAggregationType()){
-            case Sum, Average -> naggregationConstraint=BenchmarkingUtility.constraints(highFreqSeries, aggregationConstraint, ratio, offset);
-            case Last -> naggregationConstraint=BenchmarkingUtility.constraintsByPosition(highFreqSeries, aggregationConstraint, ratio, offset, ratio-1);
-            case First -> naggregationConstraint=BenchmarkingUtility.constraintsByPosition(highFreqSeries, aggregationConstraint, ratio, offset, 0);
-            case UserDefined -> naggregationConstraint=BenchmarkingUtility.constraintsByPosition(highFreqSeries, aggregationConstraint, ratio, offset, spec.getObservationPosition());
+            case Sum, Average -> naggregationConstraint=BenchmarkingUtility.constraints(highFreqSeries, aggregationConstraint, ratio, startOffset);
+            case Last -> naggregationConstraint=BenchmarkingUtility.constraintsByPosition(highFreqSeries, aggregationConstraint, ratio, startOffset, ratio-1);
+            case First -> naggregationConstraint=BenchmarkingUtility.constraintsByPosition(highFreqSeries, aggregationConstraint, ratio, startOffset, 0);
+            case UserDefined -> naggregationConstraint=BenchmarkingUtility.constraintsByPosition(highFreqSeries, aggregationConstraint, ratio, startOffset, spec.getObservationPosition());
             default -> throw new IllegalArgumentException();
         }
         
@@ -52,7 +52,7 @@ public class RawDentonProcessor implements RawDenton.Processor {
                 .observationPosition(spec.getObservationPosition())
                 .build();
         
-        MatrixDenton denton = new MatrixDenton(specDenton, ratio, offset);
+        MatrixDenton denton = new MatrixDenton(specDenton, ratio, startOffset);
         return denton.process(highFreqSeries, naggregationConstraint);
     }
 

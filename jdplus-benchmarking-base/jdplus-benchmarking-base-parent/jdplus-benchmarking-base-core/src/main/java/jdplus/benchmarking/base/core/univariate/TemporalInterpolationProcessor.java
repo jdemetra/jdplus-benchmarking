@@ -18,8 +18,8 @@ package jdplus.benchmarking.base.core.univariate;
 import java.util.ArrayList;
 import jdplus.benchmarking.base.api.univariate.EstimationSpec;
 import jdplus.benchmarking.base.api.univariate.IndexRange;
-import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
+import jdplus.benchmarking.base.api.univariate.TemporalInterpolationSpec;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.TsException;
@@ -36,9 +36,9 @@ import jdplus.toolkit.base.core.math.matrices.FastMatrix;
  * @author Jean Palate
  */
 @lombok.experimental.UtilityClass
-public class TemporalDisaggregationProcessor {
+public class TemporalInterpolationProcessor {
 
-    public TemporalDisaggregationResults process(TsData y, TsData[] indicators, TemporalDisaggregationSpec spec) {
+    public TemporalDisaggregationResults process(TsData y, TsData[] indicators, TemporalInterpolationSpec spec) {
         int lfreq = y.getAnnualFrequency();
         if (indicators == null || indicators.length == 0) {
             int hfreq = spec.getDefaultPeriod();
@@ -60,21 +60,31 @@ public class TemporalDisaggregationProcessor {
             X.column(i).copy(TsData.fitToDomain(indicators[i], hdom).getValues());
         }
         int frequencyRatio = hfreq / lfreq;
-        TsDomain ldom = hdom.aggregate(y.getTsUnit(), true);
-        TsPeriod lxstart = ldom.getStartPeriod(), lystart = y.getStart();
-        int ndrop = lystart.until(lxstart);
-        TsData yc = y;
-        if (ndrop > 0) {
-            // shorten y
-            yc = yc.drop(ndrop, 0);
-            lystart = yc.getStart();
-        }
-        TsPeriod hxstart = hdom.getStartPeriod(), hystart = TsPeriod.of(hdom.getTsUnit(), lystart.start());
+        TsPeriod lystart = y.getStart();
+        TsPeriod hystart = TsPeriod.of(hdom.getTsUnit(), lystart.start());
+        int obspos = spec.getObservationPosition();
+        hystart = hystart.plus(obspos == -1 ? frequencyRatio - 1 : obspos);
+        // high-frequency variant of y
+//        TsDomain hydom = TsDomain.of(hystart, 1 + frequencyRatio * (y.length() - 1));
+//        TsPeriod hyend = hydom.getEndPeriod();
+        TsPeriod hxstart = hdom.getStartPeriod(); //, hxend = hdom.getEndPeriod();
         int startOffset = hxstart.until(hystart);
+//        int endOffset = hxend.until(hyend);
+        int bydrop = 0;
+//        int eydrop=0;
+        if (startOffset < 0) {
+            bydrop = 1 + (-startOffset - 1) / frequencyRatio;
+            startOffset += bydrop * frequencyRatio;
+        }
+//        if (endOffset>0){ 
+//            eydrop=1+(endOffset-1)/frequencyRatio;         
+//            endOffset-=eydrop*frequencyRatio;
+//        }
 
-        TsDomain ydomc = y.getDomain().select(spec.getEstimationSpec().getEstimationSpan()).intersection(yc.getDomain());
+        TsData yc = y.drop(bydrop, 0); //eydrop);
         TsDomain ydom = yc.getDomain();
-        IndexRange range = IndexRange.of(ydom.indexOf(ydomc.getStartPeriod()), 1 + ydom.indexOf(ydomc.getLastPeriod()));
+        TsDomain ydomc = y.getDomain().select(spec.getEstimationSpec().getEstimationSpan()).intersection(ydom);
+        IndexRange range = IndexRange.of(ydom.indexOf(ydomc.getStartPeriod()), 1+ydom.indexOf(ydomc.getLastPeriod()));
 
         EstimationSpec espec = EstimationSpec.builder()
                 .estimationPrecision(spec.getEstimationSpec().getEstimationPrecision())
@@ -82,13 +92,13 @@ public class TemporalDisaggregationProcessor {
                 .estimationRange(range)
                 .build();
 
-        RawDisaggregationSpec rawSpec = RawDisaggregationSpec.builder(frequencyRatio)
-                .average(spec.isAverage())
+        RawInterpolationSpec rawSpec = RawInterpolationSpec.builder(frequencyRatio)
+                .firstObservationPosition(startOffset)
                 .modelSpec(spec.getModelSpec())
                 .algorithmSpec(spec.getAlgorithmSpec())
                 .estimationSpec(espec)
                 .build();
-        RawTemporalDisaggregationResults rslts = RawDisaggregationProcessor.process(yc.getValues(), X, startOffset, rawSpec);
+        RawTemporalDisaggregationResults rslts = RawInterpolationProcessor.process(yc.getValues(), X, startOffset, rawSpec);
         TsPeriod hStart = hdom.getStartPeriod();
         ArrayList<Variable> vars = new ArrayList<>();
         if (spec.getModelSpec().isConstant()) {
@@ -102,11 +112,9 @@ public class TemporalDisaggregationProcessor {
             vars.add(Variable.variable(name, new UserVariable(name, indicators[i], null)));
         }
 
-        TsDomain edom = ydomc.intersection(ldom);
-
         return TemporalDisaggregationResults.builder()
                 .originalSeries(y)
-                .disaggregationDomain(yc.getDomain())
+                .disaggregationDomain(y.getDomain())
                 .disaggregatedSeries(TsData.of(hStart, rslts.getDisaggregatedSeries()))
                 .stdevDisaggregatedSeries(TsData.of(hStart, rslts.getStdevDisaggregatedSeries()))
                 .regressionEffects(rslts.getRegressionEffects() == null ? null : TsData.of(hStart, rslts.getRegressionEffects()))
@@ -114,39 +122,44 @@ public class TemporalDisaggregationProcessor {
                 .likelihood(rslts.getLikelihood())
                 .maximum(rslts.getMaximum())
                 .stats(rslts.getStats())
-                .residualsDiagnostics(
-                        ResidualsDiagnostics.builder()
-                                .fullResiduals(TsData.of(edom.getStartPeriod(), rslts.getResidualsDiagnostics().getFullResiduals()))
-                                .niid(rslts.getResidualsDiagnostics().getNiid())
-                                .build())
+                .residualsDiagnostics(ResidualsDiagnostics.builder()
+                        .fullResiduals(TsData.of(yc.getStart(), rslts.getResidualsDiagnostics().getFullResiduals()))
+                        .niid(rslts.getResidualsDiagnostics().getNiid())
+                        .build())
                 .indicators(vars.toArray(Variable[]::new))
                 .build();
     }
 
-    public TemporalDisaggregationResults process(TsData y, int nBackcasts, int nForecasts, TemporalDisaggregationSpec spec) {
+    public TemporalDisaggregationResults process(TsData y, int nBackcasts, int nForecasts, TemporalInterpolationSpec spec) {
         int hfreq = spec.getDefaultPeriod(), lfreq = y.getAnnualFrequency();
         if (lfreq >= hfreq || hfreq % lfreq != 0) {
             throw new TsException(TsException.INCOMPATIBLE_FREQ);
         }
+
+        int frequencyRatio = hfreq / lfreq;
+        TsPeriod lystart = y.getStart();
+        TsPeriod hStart = TsPeriod.of(TsUnit.ofAnnualFrequency(hfreq), lystart.start());
+        int obspos = spec.getObservationPosition();
+        if (obspos == -1) {
+            obspos = frequencyRatio - 1;
+        }
+        hStart = hStart.plus(obspos - nBackcasts);
         TsDomain ydom = y.getDomain();
         TsDomain ldom = ydom.select(spec.getEstimationSpec().getEstimationSpan());
-        IndexRange range = IndexRange.of(ydom.indexOf(ldom.getStartPeriod()), 1 + ydom.indexOf(ldom.getLastPeriod()));
+        IndexRange range = IndexRange.of(ydom.indexOf(ldom.getStartPeriod()), 1+ydom.indexOf(ldom.getLastPeriod()));
         EstimationSpec espec = EstimationSpec.builder()
                 .estimationPrecision(spec.getEstimationSpec().getEstimationPrecision())
                 .truncatedParameter(spec.getEstimationSpec().getTruncatedParameter())
                 .estimationRange(range)
                 .build();
-        RawDisaggregationSpec rawSpec = RawDisaggregationSpec.builder(hfreq / lfreq)
-                .average(spec.isAverage())
+        RawInterpolationSpec rawSpec = RawInterpolationSpec.builder(hfreq / lfreq)
+                .firstObservationPosition(obspos)
                 .modelSpec(spec.getModelSpec())
                 .algorithmSpec(spec.getAlgorithmSpec())
                 .estimationSpec(espec)
                 .build();
 
-        TsPeriod hStart = TsPeriod.of(TsUnit.ofAnnualFrequency(hfreq), y.getStart().start());
-        hStart = hStart.plus(-nBackcasts);
-
-        RawTemporalDisaggregationResults rslts = RawDisaggregationProcessor.process(y.getValues(), nBackcasts, nForecasts, rawSpec);
+        RawTemporalDisaggregationResults rslts = RawInterpolationProcessor.process(y.getValues(), nBackcasts, nForecasts, rawSpec);
 
         ArrayList<Variable> vars = new ArrayList<>();
         if (spec.getModelSpec().isConstant()) {
@@ -166,11 +179,10 @@ public class TemporalDisaggregationProcessor {
                 .likelihood(rslts.getLikelihood())
                 .maximum(rslts.getMaximum())
                 .stats(rslts.getStats())
-                .residualsDiagnostics(
-                        ResidualsDiagnostics.builder()
-                                .fullResiduals(TsData.of(y.getStart(), rslts.getResidualsDiagnostics().getFullResiduals()))
-                                .niid(rslts.getResidualsDiagnostics().getNiid())
-                                .build())
+                .residualsDiagnostics(ResidualsDiagnostics.builder()
+                        .fullResiduals(TsData.of(y.getStart(), rslts.getResidualsDiagnostics().getFullResiduals()))
+                        .niid(rslts.getResidualsDiagnostics().getNiid())
+                        .build())
                 .indicators(vars.toArray(Variable[]::new))
                 .build();
     }

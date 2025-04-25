@@ -131,7 +131,7 @@ public class TemporalDisaggregationViewFactory extends ProcDocumentViewFactory<T
                     PREVIEW_GROWTHCHART,
                     s -> {
                         List<Ts> ts = s.getInput();
-                        AggregationType aggregationType = s.getSpecification().getAggregationType();
+                        AggregationType aggregationType = s.getSpecification().isAverage() ? AggregationType.Average : AggregationType.Sum;
                         TsUnit unit = ts.get(0).getData().getDomain().getTsUnit();
                         List<Ts> items = new ArrayList<>();
                         items.add(ts.get(0));

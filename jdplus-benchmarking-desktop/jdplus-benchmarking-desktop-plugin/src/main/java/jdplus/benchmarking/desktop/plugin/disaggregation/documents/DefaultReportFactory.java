@@ -208,23 +208,23 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
         TemporalDisaggregationResults results = doc.getResult();
         TemporalDisaggregationSpec specification = doc.getSpecification();
         out.write(specification.toString());
-        if (specification.getResidualsModel().hasParameter()) {
+        if (specification.getModelSpec().getResidualsModel().hasParameter()) {
             if (results != null) {
                 out.write("\trho=");
                 out.write(Double.toString(results.getMaximum().getParameters()[0]));
-            } else if (specification.getParameter().isFixed()) {
+            } else if (specification.getModelSpec().getParameter().isFixed()) {
                 out.write("\trho=");
-                out.write(specification.getParameter().toString());
+                out.write(specification.getModelSpec().getParameter().toString());
             }
         }
         out.write(NL2);
         // write regression variables
         if (results == null) {
-            if (specification.isConstant()) {
+            if (specification.getModelSpec().isConstant()) {
                 out.write("Constant");
                 out.write(NL);
             }
-            if (specification.isTrend()) {
+            if (specification.getModelSpec().isTrend()) {
                 out.write("Trend");
                 out.write(NL);
             }
@@ -246,7 +246,7 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
 //            if (specification.getOption() != TsDisaggregation.SsfOption.DKF) {
 //                idx = results.getEstimatedSsf().getNonStationaryDim();
 //            }
-            if (specification.isConstant()) {
+            if (specification.getModelSpec().isConstant()) {
                 out.write("Constant");
                 out.write('\t');
                 out.write(Double.toString(b.get(idx)));
@@ -257,7 +257,7 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
                 out.write(NL);
                 ++idx;
             }
-            if (specification.isTrend()) {
+            if (specification.getModelSpec().isTrend()) {
                 out.write("Trend");
                 out.write('\t');
                 out.write(Double.toString(b.get(idx)));

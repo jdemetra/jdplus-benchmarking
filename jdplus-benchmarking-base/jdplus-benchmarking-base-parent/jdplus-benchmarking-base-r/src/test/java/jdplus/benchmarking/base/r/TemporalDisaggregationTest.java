@@ -40,7 +40,7 @@ public class TemporalDisaggregationTest {
         TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
         TsData q = TsData.of(TsPeriod.quarterly(1977, 1), Doubles.of(Data.IND_PCR));
         TemporalDisaggregationResults rslt = TemporalDisaggregation.process(y, true, false, new TsData[]{q}, "Ar1", 0, 0, "Sum", 0, 0, false, 0, false, "Diffuse", false);
-        System.out.println(rslt.getData("disagg", TsData.class));
+//        System.out.println(rslt.getData("disagg", TsData.class));
     }
 
     @Test
@@ -68,24 +68,24 @@ public class TemporalDisaggregationTest {
         TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
         TemporalDisaggregationResults rslt = TemporalDisaggregation.process(y, false, false, null, "RwAr1", 4, 0, "Sum", 0, 0, false, 0, false, "Augmented", false);
     }
-    
+
     @Test
     public void testChowLinRaw() {
         double[] y = Data.PCRA;
-        FastMatrix x = FastMatrix.make(Data.IND_PCR.length, 1); 
+        FastMatrix x = FastMatrix.make(Data.IND_PCR.length, 1);
         x.column(0).add(DoubleSeq.of(Data.IND_PCR));
-        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, x, "Ar1", 4, 0, "Sum", 0, 0, false, 0, false, "Augmented", false);
+        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, x, 0, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
         //System.out.println(rslt.getDisaggregatedSeries());   
     }
 
     @Test
     public void testChowLinRawWithoutIndicator() {
         double[] y = Data.PCRA;
-        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, null, "Ar1", 4, 2, "Sum", 0, 0, false, 0, false, "Augmented", false);
+        //     RawDisaggregationResults rslt = TemporalDisaggregation.processRaw(y, false, false, null, 0, "Ar1", 4, "Sum", 0, 0, false, 0, false, "Augmented", false);
         //System.out.println(rslt.getDisaggregatedSeries());
-        
-        double[] y2Arr = {500,510,525,520};
-        RawTemporalDisaggregationResults rslt2 = TemporalDisaggregation.processRaw(y2Arr, false, false, null, "Rw", 5, 0, "Sum", 0, 0, false, 0, false, "SqrtDiffuse", false);
-        System.out.println(rslt.getRegressionEffects().toArray().length);
+
+        double[] y2Arr = {500, 510, 525, 520};
+//        RawDisaggregationResults rslt2 = TemporalDisaggregation.processRaw(y2Arr, false, false, null, 0, "Rw", 5, "Sum", 0, 0, false, 0, false, "SqrtDiffuse", false);
+//        System.out.println(rslt.getRegressionEffects().toArray().length);
     }
 }
