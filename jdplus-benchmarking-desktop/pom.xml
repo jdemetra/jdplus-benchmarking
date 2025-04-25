@@ -6,7 +6,7 @@
     <parent>
         <groupId>eu.europa.ec.joinup.sat</groupId>
         <artifactId>jdplus-benchmarking</artifactId>
-        <version>1.2.1</version>
+        <version>2.0.0</version>
     </parent>
 
     <artifactId>jdplus-benchmarking-desktop</artifactId>
@@ -16,7 +16,7 @@
 
     <properties>
         <!-- dependencies -->
-        <netbeans.version>RELEASE220</netbeans.version>
+        <netbeans.version>RELEASE250</netbeans.version>
     </properties>
 
     <modules>
@@ -30,7 +30,7 @@
                 <plugin>
                     <groupId>org.apache.netbeans.utilities</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>14.1</version>
+                    <version>14.3</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -41,6 +41,8 @@
                 <configuration>
                     <!-- Force lookup of annotation processors in classpath by resetting paths -->
                     <annotationProcessorPaths combine.self="override"/>
+                    <!-- Explicit request to search for annotation processors in classpath (since JDK23) -->
+                    <proc>full</proc>
                 </configuration>
             </plugin>
             <plugin>

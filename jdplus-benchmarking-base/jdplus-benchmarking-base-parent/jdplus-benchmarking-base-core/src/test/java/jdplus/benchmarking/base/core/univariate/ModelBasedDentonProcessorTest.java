@@ -35,14 +35,14 @@ public class ModelBasedDentonProcessorTest {
     @Test
     public void testSomeMethod() {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1978),  Data.PCRA);
-        TsData q = TsData.ofInternal(TsPeriod.monthly(1977, 1),  Data.IND_PCR);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1),  Data.IND_PCR);
         ModelBasedDentonSpec spec=ModelBasedDentonSpec.builder()
                 .aggregationType(AggregationType.Average)
                 .build();
         ModelBasedDentonResults rslts = ModelBasedDentonProcessor.process(y, q, spec);
-//        System.out.println(rslts.getBiRatios());
-//        System.out.println(rslts.getStdevBiRatios());
-//        System.out.println(rslts.getDisaggregatedSeries());
+        System.out.println(rslts.getBiRatios().getValues());
+        System.out.println(rslts.getStdevBiRatios().getValues());
+        System.out.println(rslts.getDisaggregatedSeries().getValues());
         
     }
     

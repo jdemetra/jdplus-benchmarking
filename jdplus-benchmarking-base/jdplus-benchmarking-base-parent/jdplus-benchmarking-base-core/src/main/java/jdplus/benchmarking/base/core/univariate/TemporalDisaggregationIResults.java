@@ -34,4 +34,5 @@ public class TemporalDisaggregationIResults implements GenericExplorable {
     private double a,b;
     private ObjectiveFunctionPoint maximum;
     private LikelihoodStatistics likelihood;
+    
 }

@@ -72,7 +72,7 @@ public class ModelSummary extends AbstractHtmlElement {
 
     private void writeHeader(HtmlStream stream) throws IOException {
         String model;
-        model = switch (specification.getResidualsModel()) {
+        model = switch (specification.getModelSpec().getResidualsModel()) {
             case Wn ->
                 "OLS";
             case Ar1 ->
@@ -88,13 +88,13 @@ public class ModelSummary extends AbstractHtmlElement {
     }
 
     private void writeModel(HtmlStream stream) throws IOException {
-        if (!specification.getResidualsModel().hasParameter()) {
+        if (!specification.getModelSpec().getResidualsModel().hasParameter()) {
             return;
         }
         stream.write(HtmlTag.LINEBREAK);
         stream.write(HtmlTag.HEADER2, h2, "Model");
         stream.write("Rho = ");
-        Parameter p = specification.getParameter();
+        Parameter p = specification.getModelSpec().getParameter();
 
         if (!p.isFixed()) {
             double[] parameters = results.getMaximum().getParameters();
@@ -153,7 +153,7 @@ public class ModelSummary extends AbstractHtmlElement {
         if (b.isEmpty()) {
             return;
         }
-        int nhp = specification.getResidualsModel().getParametersCount();
+        int nhp = specification.getModelSpec().getResidualsModel().getParametersCount();
         T t = new T(ll.degreesOfFreedom() - nhp);
 
         stream.write(HtmlTag.LINEBREAK);
@@ -170,7 +170,7 @@ public class ModelSummary extends AbstractHtmlElement {
 //        if (specification.getOption() != TsDisaggregation.SsfOption.DKF) {
 //            idx = results.getEstimatedSsf().getNonStationaryDim();
 //        }
-        if (specification.isConstant()) {
+        if (specification.getModelSpec().isConstant()) {
             stream.open(HtmlTag.TABLEROW);
             stream.write(new HtmlTableCell("Constant", 100));
             stream.write(new HtmlTableCell(format(b.get(idx)), 100));
@@ -182,7 +182,7 @@ public class ModelSummary extends AbstractHtmlElement {
             ++idx;
         }
 
-        if (specification.isTrend()) {
+        if (specification.getModelSpec().isTrend()) {
             stream.open(HtmlTag.TABLEROW);
             stream.write(new HtmlTableCell("Trend", 100));
             stream.write(new HtmlTableCell(format(b.get(idx)), 100));

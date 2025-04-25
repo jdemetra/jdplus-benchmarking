@@ -16,6 +16,10 @@
  */
 package jdplus.benchmarking.base.information;
 
+import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
+import jdplus.benchmarking.base.api.univariate.EstimationSpec;
+import jdplus.benchmarking.base.api.univariate.ModelSpec;
+import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.toolkit.base.api.DemetraVersion;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.Parameter;
@@ -25,6 +29,7 @@ import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 import jdplus.toolkit.base.api.timeseries.TimeSelector;
 
 /**
@@ -64,15 +69,18 @@ public class TemporalDisaggregationSpecMapping {
             throw new IllegalArgumentException();
         }
         TemporalDisaggregationSpec.Builder builder = TemporalDisaggregationSpec.builder();
+        ModelSpec.Builder mbuilder=ModelSpec.builder();
+        TsEstimationSpec.Builder ebuilder=TsEstimationSpec.builder();
+        AlgorithmSpec.Builder abuilder=AlgorithmSpec.builder();
         TimeSelector sel = info.get(SPAN, TimeSelector.class);
         if (sel != null) {
-            builder.estimationSpan(sel);
+            ebuilder.estimationSpan(sel);
         }
         String n = info.get(MODEL, String.class);
         if (n != null) {
-            builder.residualsModel(TemporalDisaggregationSpec.Model.valueOf(n));
+            mbuilder.residualsModel(ResidualsModel.valueOf(n));
         } else {
-            builder.residualsModel(TemporalDisaggregationSpec.Model.Ar1)
+            mbuilder.residualsModel(ResidualsModel.Ar1)
                     .constant(true);
         }
         Integer i = info.get(FREQ, Integer.class);
@@ -81,96 +89,100 @@ public class TemporalDisaggregationSpecMapping {
         }
         Parameter p = info.get(PARAMETER, Parameter.class);
         if (p != null) {
-            builder.parameter(p);
+            mbuilder.parameter(p);
         }
         n = info.get(AGGTYPE, String.class);
         if (n != null) {
-            builder.aggregationType(AggregationType.valueOf(n));
+            builder.average(n.equals(AggregationType.Average));
         }
         Boolean b = info.get(CONSTANT, Boolean.class);
         if (b != null) {
-            builder.constant(b);
+            mbuilder.constant(b);
         }
         b = info.get(TREND, Boolean.class);
         if (b != null) {
-            builder.trend(b);
+            mbuilder.trend(b);
         }
         n = info.get(SSF, String.class);
         if (n != null) {
-            builder.algorithm(SsfInitialization.valueOf(n));
+            abuilder.algorithm(SsfInitialization.valueOf(n));
         }
         b = info.get(ZEROINIT, Boolean.class);
         if (b != null) {
-            builder.zeroInitialization(b);
+            mbuilder.zeroInitialization(b);
         }
-        b = info.get(LOG, Boolean.class);
-        if (b != null) {
-            builder.log(b);
-        }
+//        b = info.get(LOG, Boolean.class);
+//        if (b != null) {
+//            mbuilder.log(b);
+//        }
         b = info.get(DIFFUSEREGS, Boolean.class);
         if (b != null) {
-            builder.diffuseRegressors(b);
+            mbuilder.diffuseRegressors(b);
         }
         b = info.get(FAST, Boolean.class);
         if (b != null) {
-            builder.fast(b);
+            abuilder.fast(b);
         }
         b = info.get(RESCALING, Boolean.class);
         if (b != null) {
-            builder.rescale(b);
+            abuilder.rescale(b);
         }
         Double t = info.get(TRUNCATED, Double.class);
         if (t != null) {
-            builder.truncatedParameter(t);
+            ebuilder.truncatedParameter(t);
         }
         Double e = info.get(EPS, Double.class);
         if (e != null) {
-            builder.estimationPrecision(e);
+            ebuilder.estimationPrecision(e);
         }
-        return builder.build();
+        return builder
+                .modelSpec(mbuilder.build())
+                .estimationSpec(ebuilder.build())
+                .algorithmSpec(abuilder.build())
+                .build();
     }
 
     public InformationSet write(TemporalDisaggregationSpec spec, boolean verbose) {
         InformationSet info = new InformationSet();
         info.set(ProcSpecification.ALGORITHM, TemporalDisaggregationSpec.DESCRIPTOR);
-        TimeSelector span = spec.getEstimationSpan();
+        TimeSelector span = spec.getEstimationSpec().getEstimationSpan();
         if (span.getType() != TimeSelector.SelectionType.All) {
             info.set(SPAN, span);
         }
-        info.set(MODEL, spec.getResidualsModel().name());
-        Parameter p = spec.getParameter();
+        info.set(MODEL, spec.getModelSpec().getResidualsModel().name());
+        Parameter p = spec.getModelSpec().getParameter();
         if (p != null && p.isDefined()) {
             info.set(PARAMETER, p);
         }
-        if (spec.getAggregationType() != TemporalDisaggregationSpec.DEF_AGGREGATION || verbose) {
-            info.set(AGGTYPE, spec.getAggregationType().name());
+        if (spec.isAverage() != TemporalDisaggregationSpec.DEF_AVERAGE || verbose) {
+            info.set(AGGTYPE, spec.isAverage() ? AggregationType.Average.name() : AggregationType.Sum.name());
         }
-        info.set(CONSTANT, spec.isConstant());
-        info.set(TREND, spec.isTrend());
+        info.set(CONSTANT, spec.getModelSpec().isConstant());
+        info.set(TREND, spec.getModelSpec().isTrend());
         info.set(FREQ, spec.getDefaultPeriod());
-        if (spec.getAlgorithm() != TemporalDisaggregationSpec.DEF_ALGORITHM || verbose) {
-            info.set(SSF, spec.getAlgorithm().name());
+        if (spec.getAlgorithmSpec().getAlgorithm() != AlgorithmSpec.DEF_ALGORITHM || verbose) {
+            info.set(SSF, spec.getAlgorithmSpec().getAlgorithm().name());
         }
-        if (spec.isZeroInitialization() || verbose) {
-            info.set(ZEROINIT, spec.isZeroInitialization());
+        if (spec.getModelSpec().isZeroInitialization() || verbose) {
+            info.set(ZEROINIT, spec.getModelSpec().isZeroInitialization());
         }
-        if (spec.isLog() != TemporalDisaggregationSpec.DEF_LOG || verbose) {
-            info.set(LOG, spec.isLog());
+//        if (spec.isLog() != TemporalDisaggregationSpec.DEF_LOG || verbose) {
+//            info.set(LOG, spec.isLog());
+//        }
+        if (spec.getModelSpec().isDiffuseRegressors() != ModelSpec.DEF_DIFFUSE || verbose) {
+            info.set(DIFFUSEREGS, spec.getModelSpec().isDiffuseRegressors());
         }
-        if (spec.isDiffuseRegressors() != TemporalDisaggregationSpec.DEF_DIFFUSE || verbose) {
-            info.set(DIFFUSEREGS, spec.isDiffuseRegressors());
+        if (spec.getAlgorithmSpec().isFast() != AlgorithmSpec.DEF_FAST || verbose) {
+            info.set(FAST, spec.getAlgorithmSpec().isFast());
         }
-        if (spec.isFast() != TemporalDisaggregationSpec.DEF_FAST || verbose) {
-            info.set(FAST, spec.isFast());
+        if (spec.getAlgorithmSpec().isRescale() != AlgorithmSpec.DEF_RESCALE || verbose) {
+            info.set(RESCALING, spec.getAlgorithmSpec().isRescale());
         }
-        if (spec.isRescale() != TemporalDisaggregationSpec.DEF_RESCALE || verbose) {
-            info.set(RESCALING, spec.isRescale());
+        if (spec.getEstimationSpec().getEstimationPrecision() != EstimationSpec.DEF_EPS || verbose) {
+            info.set(EPS, spec.getEstimationSpec().getEstimationPrecision());
         }
-        if (spec.getEstimationPrecision() != TemporalDisaggregationSpec.DEF_EPS || verbose) {
-            info.set(EPS, spec.getEstimationPrecision());
-        }
-        if (spec.getTruncatedParameter() != 0 || verbose) {
-            info.set(TRUNCATED, spec.getTruncatedParameter());
+        if (spec.getEstimationSpec().getTruncatedParameter() != 0 || verbose) {
+            info.set(TRUNCATED, spec.getEstimationSpec().getTruncatedParameter());
         }
         return info;
     }

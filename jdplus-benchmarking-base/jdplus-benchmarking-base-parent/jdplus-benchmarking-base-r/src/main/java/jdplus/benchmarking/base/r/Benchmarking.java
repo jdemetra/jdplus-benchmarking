@@ -33,6 +33,9 @@ import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
 import jdplus.toolkit.base.r.util.Dictionary;
 import java.util.Map;
+import jdplus.benchmarking.base.api.benchmarking.univariate.RawDenton;
+import jdplus.benchmarking.base.api.benchmarking.univariate.RawDentonSpec;
+import jdplus.toolkit.base.api.data.DoubleSeq;
 
 /**
  *
@@ -64,7 +67,45 @@ public class Benchmarking {
                 .build();
         return Denton.benchmark(TsUnit.ofAnnualFrequency(nfreq), bench.cleanExtremities(), spec);
     }
-
+    
+    public double[] dentonRaw(double[] source, double[] bench, int frequencyRatio, int differencing, boolean multiplicative, boolean modified, String conversion, int pos, int startOffset) {
+        RawDentonSpec spec = RawDentonSpec
+                .builder()
+                .differencing(differencing)
+                .multiplicative(multiplicative)
+                .modified(modified)
+                .aggregationType(AggregationType.valueOf(conversion))
+                .observationPosition(pos-1)
+                .frequencyRatio(frequencyRatio)
+                 .build();
+        return RawDenton.benchmark(DoubleSeq.of(source), DoubleSeq.of(bench), startOffset, spec);
+    }
+    
+    /**
+     * TODO: replace startOffset by nbackcasts/nforecasts
+     * @param bench
+     * @param frequencyRatio
+     * @param differencing
+     * @param multiplicative
+     * @param modified
+     * @param conversion
+     * @param pos
+     * @param startOffset
+     * @return 
+     */
+    public double[] dentonRaw(double[] bench, int frequencyRatio, int differencing, boolean multiplicative, boolean modified, String conversion, int pos, int startOffset) {
+        RawDentonSpec spec = RawDentonSpec
+                .builder()
+                .differencing(differencing)
+                .multiplicative(multiplicative)
+                .modified(modified)
+                .aggregationType(AggregationType.valueOf(conversion))
+                .observationPosition(pos-1)
+                .frequencyRatio(frequencyRatio)
+                 .build();
+        return RawDenton.benchmark(DoubleSeq.of(bench), spec);
+    }
+    
     public TsData cholette(TsData source, TsData bench, double rho, double lambda, String bias, String conversion, int pos) {
         CholetteSpec spec = CholetteSpec.builder()
                 .rho(rho)
@@ -75,10 +116,11 @@ public class Benchmarking {
                 .build();
         return Cholette.benchmark(source.cleanExtremities(), bench.cleanExtremities(), spec);
     }
-
-    public TsData grp(TsData source, TsData bench, String conversion, int pos, double eps, int iter, boolean denton) {
+    
+    public TsData grp(TsData source, TsData bench, String objective, String conversion, int pos, double eps, int iter, boolean denton) {
         AggregationType type = AggregationType.valueOf(conversion);
         GrpSpec spec=GrpSpec.builder()
+                .objective(GrpSpec.Objective.valueOf(objective))
                 .aggregationType(type)
                 .observationPosition(pos-1)
                 .maxIter(iter)

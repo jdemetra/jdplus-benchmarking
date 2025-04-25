@@ -3,6 +3,7 @@ import jdplus.benchmarking.base.api.benchmarking.univariate.Cholette;
 import jdplus.benchmarking.base.api.benchmarking.univariate.CubicSpline;
 import jdplus.benchmarking.base.api.benchmarking.univariate.Denton;
 import jdplus.benchmarking.base.api.benchmarking.univariate.GrowthRatePreservation;
+import jdplus.benchmarking.base.api.benchmarking.univariate.RawDenton;
 import jdplus.benchmarking.base.api.calendarization.Calendarization;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregation;
 
@@ -22,6 +23,7 @@ module jdplus.benchmarking.base.api {
     exports jdplus.benchmarking.base.api.univariate;
 
     uses Denton.Processor;
+    uses RawDenton.Processor;
     uses CubicSpline.Processor;
     uses MultivariateCholette.Processor;
     uses Calendarization.Processor;

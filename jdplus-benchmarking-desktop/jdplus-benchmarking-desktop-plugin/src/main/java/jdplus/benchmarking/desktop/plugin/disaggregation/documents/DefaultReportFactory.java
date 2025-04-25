@@ -16,38 +16,41 @@
  */
 package jdplus.benchmarking.desktop.plugin.disaggregation.documents;
 
+import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
+import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationDocument;
+import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
-import jdplus.toolkit.desktop.plugin.ui.mru.SourceId;
-import jdplus.toolkit.desktop.plugin.util.NbComponents;
-import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.toolkit.base.api.timeseries.Ts;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
 import jdplus.toolkit.base.api.util.Paths;
-import java.awt.Dimension;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import javax.swing.JTextPane;
 import jdplus.toolkit.base.core.dstats.T;
 import jdplus.toolkit.base.core.stats.DescriptiveStatistics;
 import jdplus.toolkit.base.core.stats.likelihood.DiffuseConcentratedLikelihood;
-import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationDocument;
-import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
+import jdplus.toolkit.desktop.plugin.ui.mru.SourceId;
+import jdplus.toolkit.desktop.plugin.util.NbComponents;
+import jdplus.toolkit.desktop.plugin.workspace.WorkspaceFactory;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.filesystems.FileChooserBuilder;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
 
 @ServiceProvider(service = TemporalDisaggregationReportFactory.class,
         position = 10)
@@ -104,7 +107,7 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
                     try {
                         String sfile = file.getAbsolutePath();
                         sfile = Paths.changeExtension(sfile, "txt");
-                        try (FileWriter writer = new FileWriter(sfile, Charset.defaultCharset())) {
+                        try (var writer = Files.newBufferedWriter(Path.of(sfile), Charset.defaultCharset())) {
                             writer.append(report);
                         }
                     } catch (IOException ex) {
@@ -205,23 +208,23 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
         TemporalDisaggregationResults results = doc.getResult();
         TemporalDisaggregationSpec specification = doc.getSpecification();
         out.write(specification.toString());
-        if (specification.getResidualsModel().hasParameter()) {
+        if (specification.getModelSpec().getResidualsModel().hasParameter()) {
             if (results != null) {
                 out.write("\trho=");
                 out.write(Double.toString(results.getMaximum().getParameters()[0]));
-            } else if (specification.getParameter().isFixed()) {
+            } else if (specification.getModelSpec().getParameter().isFixed()) {
                 out.write("\trho=");
-                out.write(specification.getParameter().toString());
+                out.write(specification.getModelSpec().getParameter().toString());
             }
         }
         out.write(NL2);
         // write regression variables
         if (results == null) {
-            if (specification.isConstant()) {
+            if (specification.getModelSpec().isConstant()) {
                 out.write("Constant");
                 out.write(NL);
             }
-            if (specification.isTrend()) {
+            if (specification.getModelSpec().isTrend()) {
                 out.write("Trend");
                 out.write(NL);
             }
@@ -243,7 +246,7 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
 //            if (specification.getOption() != TsDisaggregation.SsfOption.DKF) {
 //                idx = results.getEstimatedSsf().getNonStationaryDim();
 //            }
-            if (specification.isConstant()) {
+            if (specification.getModelSpec().isConstant()) {
                 out.write("Constant");
                 out.write('\t');
                 out.write(Double.toString(b.get(idx)));
@@ -254,7 +257,7 @@ public class DefaultReportFactory implements TemporalDisaggregationReportFactory
                 out.write(NL);
                 ++idx;
             }
-            if (specification.isTrend()) {
+            if (specification.getModelSpec().isTrend()) {
                 out.write("Trend");
                 out.write('\t');
                 out.write(Double.toString(b.get(idx)));

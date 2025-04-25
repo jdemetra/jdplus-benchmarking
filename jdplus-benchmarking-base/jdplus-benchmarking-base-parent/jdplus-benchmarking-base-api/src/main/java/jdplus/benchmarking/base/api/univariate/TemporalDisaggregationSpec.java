@@ -18,12 +18,8 @@ package jdplus.benchmarking.base.api.univariate;
 
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.data.AggregationType;
-import jdplus.toolkit.base.api.data.Parameter;
-import jdplus.toolkit.base.api.data.ParameterType;
 import nbbrd.design.Development;
-import jdplus.toolkit.base.api.timeseries.TimeSelector;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
-import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.util.Validatable;
 
 /**
@@ -41,36 +37,31 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
     public static final String METHOD = "generic";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
-    public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
-    public static final boolean DEF_FAST = true, DEF_RESCALE = true, DEF_LOG = false, DEF_DIFFUSE = false;
+    public static final boolean DEF_AVERAGE = false;
+    public static final int DEF_PERIOD = 4;
 
-    public static final double DEF_EPS = 1e-5;
-
-    public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
-
-    public static final TemporalDisaggregationSpec CHOWLIN = builder()
-            .estimationSpan(TimeSelector.all())
-            .aggregationType(AggregationType.Sum)
-            .residualsModel(TemporalDisaggregationSpec.Model.Ar1)
-            .constant(true)
-            .truncatedParameter(0.0)
-            .fast(DEF_FAST)
-            .estimationPrecision(DEF_EPS)
-            .rescale(DEF_RESCALE)
-            .algorithm(DEF_ALGORITHM)
-            .defaultPeriod(4)
+    public static final TemporalDisaggregationSpec CHOWLIN = new Builder()
+            .average(false)
+            .defaultPeriod(DEF_PERIOD)
+            .modelSpec(ModelSpec.CHOWLIN)
+            .algorithmSpec(AlgorithmSpec.DEFAULT)
+            .estimationSpec(TsEstimationSpec.DEFAULT)
             .build();
 
-    public static final TemporalDisaggregationSpec FERNANDEZ = builder()
-            .estimationSpan(TimeSelector.all())
-            .aggregationType(AggregationType.Sum)
-            .residualsModel(TemporalDisaggregationSpec.Model.Rw)
-            .constant(false)
-            .fast(DEF_FAST)
-            .estimationPrecision(DEF_EPS)
-            .rescale(DEF_RESCALE)
-            .algorithm(DEF_ALGORITHM)
-            .defaultPeriod(4)
+    public static final TemporalDisaggregationSpec FERNANDEZ = new Builder()
+            .average(false)
+            .defaultPeriod(DEF_PERIOD)
+            .modelSpec(ModelSpec.FERNANDEZ)
+            .algorithmSpec(AlgorithmSpec.DEFAULT)
+            .estimationSpec(TsEstimationSpec.DEFAULT)
+            .build();
+
+    public static final TemporalDisaggregationSpec LITTERMAN = new Builder()
+            .average(false)
+            .defaultPeriod(DEF_PERIOD)
+            .modelSpec(ModelSpec.LITTERMAN)
+            .algorithmSpec(AlgorithmSpec.DEFAULT)
+            .estimationSpec(TsEstimationSpec.DEFAULT)
             .build();
 
     @Override
@@ -78,94 +69,46 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
         return DESCRIPTOR;
     }
 
-    public static enum Model {
-
-        Wn,
-        Ar1,
-        Rw,
-        RwAr1,
-        I2, I3;
-
-        public boolean hasParameter() {
-            return this == Ar1 || this == RwAr1;
-        }
-
-        public boolean isStationary() {
-            return this == Ar1 || this == Wn;
-        }
-
-        public int getParametersCount() {
-            return (this == Ar1 || this == RwAr1) ? 1 : 0;
-        }
-
-        public int getDifferencingOrder() {
-            return switch (this) {
-                case Rw, RwAr1 ->
-                    1;
-                case I2 ->
-                    2;
-                case I3 ->
-                    3;
-                default ->
-                    0;
-            };
-        }
-    }
-
-    @lombok.NonNull
-    private AggregationType aggregationType;
-    private int observationPosition;
+    private boolean average;
     private int defaultPeriod;
 
     @lombok.NonNull
-    private Model residualsModel;
-    private boolean constant, trend;
-    private Parameter parameter;
+    ModelSpec modelSpec;
+
     @lombok.NonNull
-    private TimeSelector estimationSpan;
-    private boolean log, diffuseRegressors;
-    private Double truncatedParameter;
-    private boolean zeroInitialization, fast;
+    TsEstimationSpec estimationSpec;
 
-    private double estimationPrecision;
-    private SsfInitialization algorithm;
-    private boolean rescale;
-
-    public boolean isParameterEstimation() {
-        return (residualsModel == Model.Ar1 || residualsModel == Model.RwAr1)
-                && parameter.getType() != ParameterType.Fixed;
-    }
+    @lombok.NonNull
+    AlgorithmSpec algorithmSpec;
 
     public static class Builder implements Validatable.Builder<TemporalDisaggregationSpec> {
     }
 
     public static Builder builder() {
         return new Builder()
-                .aggregationType(DEF_AGGREGATION)
-                .residualsModel(Model.Ar1)
-                .constant(true)
-                .estimationSpan(TimeSelector.all())
-                .fast(DEF_FAST)
-                .algorithm(DEF_ALGORITHM)
-                .rescale(DEF_RESCALE)
-                .parameter(Parameter.undefined())
-                .estimationPrecision(DEF_EPS)
-                .defaultPeriod(4);
+                .defaultPeriod(DEF_PERIOD)
+                .average(DEF_AVERAGE)
+                .estimationSpec(TsEstimationSpec.DEFAULT)
+                .algorithmSpec(AlgorithmSpec.DEFAULT)
+                .modelSpec(ModelSpec.DEFAULT);
     }
 
     @Override
     public TemporalDisaggregationSpec validate() throws IllegalArgumentException {
-        switch (residualsModel) {
+//        if (aggregationType != AggregationType.Sum && aggregationType != AggregationType.Average) {
+//            throw new IllegalArgumentException(aggregationType.name() + " not allowed in disaggregation (consider interpolation)");
+//        }
+        switch (modelSpec.getResidualsModel()) {
             case Rw, RwAr1 -> {
-                if (constant && !zeroInitialization) {
+                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("constant not allowed");
                 }
             }
             case I2, I3 -> {
-                if (constant && !zeroInitialization) {
+                if (modelSpec.isConstant() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("constant not allowed");
                 }
-                if (trend && !zeroInitialization) {
+                if (modelSpec.isTrend() && !modelSpec.isZeroInitialization()) {
                     throw new IllegalArgumentException("trend not allowed");
                 }
             }
@@ -175,27 +118,17 @@ public final class TemporalDisaggregationSpec implements ProcSpecification, Vali
 
     @Override
     public String display() {
-        if (aggregationType == AggregationType.Average || aggregationType == AggregationType.Sum) {
-            return switch (residualsModel) {
-                case Ar1 ->
-                    "Chow-Lin";
-                case Rw ->
-                    "Fernandez";
-                case RwAr1 ->
-                    "Litterman";
-                case Wn ->
-                    "Ols";
-                default ->
-                    "regression";
-            };
-        } else {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Interpolation [")
-                    .append(residualsModel.name())
-                    .append(']');
-            return builder.toString();
-        }
-
+        return switch (modelSpec.getResidualsModel()) {
+            case Ar1 ->
+                "Chow-Lin";
+            case Rw ->
+                "Fernandez";
+            case RwAr1 ->
+                "Litterman";
+            case Wn ->
+                "Ols";
+            default ->
+                "regression";
+        };
     }
-
 }
