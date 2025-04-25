@@ -7,14 +7,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+This is a major release of benchmarking extensions for JDemetra+ v3.  
+[JDemetra+ v3.5.0 or later](https://github.com/jdemetra/jdplus-main) version is required to run it.
+
 ### Added
 
 - ![STAT] Add missing options in the growth rate preservation method
-- ![STAT] Add disaggregation and interpolation of series with any periodicities (provided that the high frequency is a multiple of the low frequency)
+- ![STAT] Add disaggregation and interpolation of series with any periodicity (provided that the high frequency is a multiple of the low frequency)
+- ![STAT] Add benchmarking (denton) of series with any periodicity (provided that the high frequency is a multiple of the low frequency)
 
 ### Changed
 
-- Modernize use of NIO API
+- ![STAT] Split disaggregation and interpolation 
+- ![OTHER] Modernize use of NIO API
+- ![OTHER] Bump jdplus-main from 3.2.4 to [3.5.0](https://github.com/jdemetra/jdplus-main/releases/tag/v3.5.0)
 
 ## [1.2.1] - 2024-07-12
 
