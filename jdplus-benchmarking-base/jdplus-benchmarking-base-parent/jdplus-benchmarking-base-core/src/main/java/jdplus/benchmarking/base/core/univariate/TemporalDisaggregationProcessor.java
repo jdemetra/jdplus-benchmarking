@@ -109,7 +109,7 @@ public class TemporalDisaggregationProcessor {
                 .disaggregationDomain(yc.getDomain())
                 .disaggregatedSeries(TsData.of(hStart, rslts.getDisaggregatedSeries()))
                 .stdevDisaggregatedSeries(TsData.of(hStart, rslts.getStdevDisaggregatedSeries()))
-                .regressionEffects(rslts.getRegressionEffects() == null ? null : TsData.of(hStart, rslts.getRegressionEffects()))
+                .regressionEffects(rslts.getRegressionEffects().isEmpty() ? null : TsData.of(hStart, rslts.getRegressionEffects()))
                 .hyperParametersCount(rslts.getHyperParametersCount())
                 .likelihood(rslts.getLikelihood())
                 .maximum(rslts.getMaximum())
