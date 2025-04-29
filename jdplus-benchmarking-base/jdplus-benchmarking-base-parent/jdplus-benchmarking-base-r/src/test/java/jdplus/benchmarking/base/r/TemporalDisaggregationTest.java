@@ -16,6 +16,7 @@
  */
 package jdplus.benchmarking.base.r;
 
+import jdplus.benchmarking.base.core.univariate.ModelBasedDentonResults;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import tck.demetra.data.Data;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
@@ -87,5 +88,16 @@ public class TemporalDisaggregationTest {
         double[] y2Arr = {500, 510, 525, 520};
 //        RawDisaggregationResults rslt2 = TemporalDisaggregation.processRaw(y2Arr, false, false, null, 0, "Rw", 5, "Sum", 0, 0, false, 0, false, "SqrtDiffuse", false);
 //        System.out.println(rslt.getRegressionEffects().toArray().length);
+    }
+    
+    @Test
+    public void testModelBasedDenton() {
+        TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
+        TsData q = TsData.of(TsPeriod.quarterly(1977, 1), Doubles.of(Data.IND_PCR));
+        ModelBasedDentonResults rslt = TemporalDisaggregation.processModelBasedDenton(y, q, 1, "Sum", 0, null, null, null, null);
+        System.out.println(rslt.getLikelihood().toString());
+        System.out.println(rslt.getLikelihood().getObservationsCount());
+        System.out.println(rslt.getLikelihood().getEffectiveObservationsCount());
+//        System.out.println(rslt.getData("disagg", TsData.class));
     }
 }
