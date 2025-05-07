@@ -515,12 +515,14 @@ public class TemporalDisaggregation {
     }
 
     public RawTemporalDisaggregationResults processRawInterpolation(double[] y, boolean constant, boolean trend,
-            int frequencyRatio, int obspos, double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
+            String model, int frequencyRatio, int obspos, 
+            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
             String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
 
         ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
                 .trend(trend)
+                .residualsModel(ResidualsModel.valueOf(model))
                 .parameter(fixedrho ? Parameter.fixed(rho) : Parameter.initial(rho))
                 .diffuseRegressors(diffuseregs)
                 .zeroInitialization(zeroinit)
