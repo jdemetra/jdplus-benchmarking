@@ -164,7 +164,8 @@ public class MultivariateCholetteTest {
         MultivariateCholetteSpec spec1 = builder.build();
         
         MultivariateCholetteSpec spec2 = builder
-                .lambda(.5)
+                .lambda(1)
+                .rho(1)
                 .temporalConstraint(c4)
                 .build();
         
@@ -372,6 +373,49 @@ public class MultivariateCholetteTest {
 //        assertTrue(distance(Y2, rslt.get("s2").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
 //        assertTrue(distance(Y3, rslt.get("s3").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
 //    }
-
+@Test
+    public void testTableFictiveData4() {
+        
+        Map<String, TsData> input = new HashMap<>();
+        
+        double[] s1 = {107,107,108,107,108,107,108,108};
+        input.put("s1", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1));
+        
+        double[] s2 = {118,159,119,169,148,119,120,120};
+        input.put("s2", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2));
+        
+        double[] s3 = {101,101,102,102,102,101,101,102};
+        input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
+        
+        double[] a = {327,329,329,331,329,327,330,331};
+        input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
+        
+        double[] y1 = {430,430};
+        input.put("y1", TsData.ofInternal(TsPeriod.yearly(2021), y1));
+        
+        double[] y2 = {480,481};
+        input.put("y2", TsData.ofInternal(TsPeriod.yearly(2021), y2));
+        
+        double[] y3 = {406,406};
+        input.put("y3", TsData.ofInternal(TsPeriod.yearly(2021), y3));        
+        
+        ContemporaneousConstraint c1 = ContemporaneousConstraint.parse("a=s1+s2+s3");
+        
+        TemporalConstraint c2 = TemporalConstraint.parse("y1=sum(s1)");
+        TemporalConstraint c3 = TemporalConstraint.parse("y2=sum(s2)");
+        TemporalConstraint c4 = TemporalConstraint.parse("y3=sum(s3)");
+        
+        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
+                .lambda(1)
+                .rho(1)
+                .contemporaneousConstraint(c1)
+                .temporalConstraint(c2)
+                .temporalConstraint(c3)
+                .temporalConstraint(c4)
+                .build();
+        
+        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
+       // PASS with LAMBDA = 0.5
+    }
     
 }
