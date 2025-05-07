@@ -66,7 +66,7 @@ public class RawModelBasedDentonExtractor extends InformationMapping<RawModelBas
 
     @Override
     public Class getSourceClass() {
-        return ModelBasedDentonResults.class;
+        return RawModelBasedDentonResults.class;
     }
 
 }
