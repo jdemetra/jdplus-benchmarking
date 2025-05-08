@@ -5,6 +5,7 @@
  */
 package jdplus.benchmarking.base.core.benchmarking.multivariate;
 
+import internal.ssf.FastStateSmoother2;
 import jdplus.benchmarking.base.core.ssf.ContemporaneousSsfCholette;
 import jdplus.benchmarking.base.core.ssf.MultivariateSsfCholette;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
@@ -326,9 +327,6 @@ class MultivariateCholetteEngine {
     }
 
     private double[] calcWeights(double[] x) {
-        if (lambda == 1) {
-            return x;
-        }
         double[] w = new double[x.length];
         if (lambda == 0) {
             for (int i = 0; i < w.length; ++i) {
@@ -338,7 +336,11 @@ class MultivariateCholetteEngine {
             for (int i = 0; i < w.length; ++i) {
                 w[i] = Math.sqrt(Math.abs(x[i]));
             }
-        } else {
+        } else if (lambda == 1){
+              for (int i = 0; i < w.length; ++i) {
+                w[i] = Math.abs(x[i]);
+            }
+        } else{
             for (int i = 0; i < w.length; ++i) {
                 w[i] = Math.pow(Math.abs(x[i]), lambda);
             }
@@ -375,7 +377,9 @@ class MultivariateCholetteEngine {
         }
         ISsf adapter = M2uAdapter.of(ssf);
         ISsfData data = M2uAdapter.of(new SsfMatrix(M));
-        DataBlockStorage states = DkToolkit.fastSmooth(adapter, data);
+        
+        FastStateSmoother2 smoother = new FastStateSmoother2(adapter);
+        DataBlockStorage states = smoother.process(data);
 
         int neq = nvars + ncnts;
         for (int i = 0; i < rcnt.size(); ++i) {
@@ -389,5 +393,7 @@ class MultivariateCholetteEngine {
             rslts.put(rcnt.get(i), TsData.ofInternal(sc.getStart(), y));
         }
     }
+    
+    
     
 }
