@@ -327,9 +327,6 @@ class MultivariateCholetteEngine {
     }
 
     private double[] calcWeights(double[] x) {
-        if (lambda == 1) {
-            return x;
-        }
         double[] w = new double[x.length];
         if (lambda == 0) {
             for (int i = 0; i < w.length; ++i) {
@@ -339,7 +336,11 @@ class MultivariateCholetteEngine {
             for (int i = 0; i < w.length; ++i) {
                 w[i] = Math.sqrt(Math.abs(x[i]));
             }
-        } else {
+        } else if (lambda == 1){
+              for (int i = 0; i < w.length; ++i) {
+                w[i] = Math.abs(x[i]);
+            }
+        } else{
             for (int i = 0; i < w.length; ++i) {
                 w[i] = Math.pow(Math.abs(x[i]), lambda);
             }

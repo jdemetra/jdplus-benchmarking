@@ -143,6 +143,7 @@ public class MultivariateSsfCholette {
 
         @Override
         public void a0(DataBlock a0) {
+            a0.set(0);
         }
 
         @Override
