@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-05-12
+
+This is a bugfix release of benchmarking extensions for JDemetra+ v3.  
+[JDemetra+ v3.5.0 or later](https://github.com/jdemetra/jdplus-main) version is required to run it.
+
 ## [2.0.0] - 2025-04-25
 
 This is a major release of benchmarking extensions for JDemetra+ v3.  
@@ -32,7 +37,8 @@ This is a major release of benchmarking extensions for JDemetra+ v3.
 
 ## [1.0.0] - 2023-12-12
 
-[Unreleased]: https://github.com/jdemetra/jdplus-benchmarking/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/jdemetra/jdplus-benchmarking/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/jdemetra/jdplus-benchmarking/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/jdemetra/jdplus-benchmarking/compare/v1.2.1...v2.0.0
 [1.2.1]: https://github.com/jdemetra/jdplus-benchmarking/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/jdemetra/jdplus-benchmarking/compare/v1.1.0...v1.2.0
