@@ -6,7 +6,7 @@
 
     <groupId>eu.europa.ec.joinup.sat</groupId>
     <artifactId>jdplus-benchmarking</artifactId>
-    <version>2.0.1-SNAPSHOT</version>
+    <version>2.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
@@ -38,7 +38,7 @@
     <properties>
         <!-- Java 17 config -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.build.outputTimestamp>2025-04-25T11:58:27Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2025-05-12T09:10:01Z</project.build.outputTimestamp>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.release>17</maven.compiler.release>
@@ -51,16 +51,16 @@
         <!-- annotations & processors -->
         <lombok.version>1.18.38</lombok.version>
         <java-service.version>1.9.0</java-service.version>
-        <java-design.version>1.5.1</java-design.version>
-        <checker-qual.version>3.49.3</checker-qual.version>
+        <java-design.version>1.6.0</java-design.version>
+        <checker-qual.version>3.49.4</checker-qual.version>
 
         <!-- test frameworks -->
-        <junit.version>5.12.2</junit.version>
+        <junit.version>5.13.1</junit.version>
         <assertj-core.version>3.27.3</assertj-core.version>
 
         <!-- dependencies -->
         <jd2.version>2.2.6</jd2.version>
-        <jdplus-main.version>3.5.0</jdplus-main.version>
+        <jdplus-main.version>3.5.1</jdplus-main.version>
         <protobuf.version>4.30.2</protobuf.version>
     </properties>
 
@@ -126,7 +126,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.4.1</version>
+                    <version>3.5.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -187,12 +187,12 @@
                 <plugin>
                     <groupId>com.github.nbbrd.heylogs</groupId>
                     <artifactId>heylogs-maven-plugin</artifactId>
-                    <version>0.9.3</version>
+                    <version>0.10.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.xolstice.maven.plugins</groupId>
+                    <groupId>io.github.ascopes</groupId>
                     <artifactId>protobuf-maven-plugin</artifactId>
-                    <version>0.6.1</version>
+                    <version>3.4.2</version>
                 </plugin>
                 <plugin>
                     <groupId>com.amashchenko.maven.plugin</groupId>
@@ -215,9 +215,9 @@
                     <version>1.1.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.7.0</version>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>0.8.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jreleaser</groupId>
@@ -270,30 +270,14 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.1</version>
-                <executions>
-                    <!-- 1.3 Detect OS properties for protoc -->
-                    <!-- Not used as an extension since NetBeans doesn't support extensions -->
-                    <!-- Must define os.detected.classifier property in settings so NetBeans can use it -->
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>detect</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
+                <groupId>io.github.ascopes</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <configuration>
                     <!-- 1.4 Configure protoc -->
-                    <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
-                    </protocArtifact>
-                    <!-- 1.5 Avoid compilation of unchanged proto definitions -->
-                    <checkStaleness>true</checkStaleness>
+                    <protocVersion>${protobuf.version}</protocVersion>
+                    <!-- 1.5 Embed proto definitions in jars and don't fail on missing sources -->
+                    <embedSourcesInClassOutputs>true</embedSourcesInClassOutputs>
+                    <failOnMissingSources>false</failOnMissingSources>
                 </configuration>
             </plugin>
             <plugin>
@@ -448,11 +432,12 @@
                             <goal>check</goal>
                         </goals>
                         <inherited>false</inherited>
-                        <configuration>
-                            <semver>true</semver>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <semver>true</semver>
+                    <tagPrefix>v</tagPrefix>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -506,52 +491,38 @@
             </build>
         </profile>
 
-        <!-- Deploy SNAPSHOTS to OSSRH -->
+        <!-- Deploy SNAPSHOTS to Central Portal -->
         <profile>
             <id>snapshot-deploy</id>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>ossrh</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-                </snapshotRepository>
-            </distributionManagement>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                            <stagingProgressTimeoutMinutes>10</stagingProgressTimeoutMinutes>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
 
-        <!-- Deploy RELEASES to OSSRH -->
+        <!-- Deploy RELEASES to Central Portal -->
         <profile>
             <id>release-deploy</id>
-            <distributionManagement>
-                <repository>
-                    <id>ossrh</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-            </distributionManagement>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                            <stagingProgressTimeoutMinutes>10</stagingProgressTimeoutMinutes>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -571,7 +542,7 @@
         </repository>
         <repository>
             <id>jdemetra-snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
             <releases>
                 <enabled>false</enabled>
             </releases>

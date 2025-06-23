@@ -95,9 +95,27 @@ public class TemporalDisaggregationTest {
         TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
         TsData q = TsData.of(TsPeriod.quarterly(1977, 1), Doubles.of(Data.IND_PCR));
         ModelBasedDentonResults rslt = TemporalDisaggregation.processModelBasedDenton(y, q, 1, "Sum", 0, null, null, null, null);
-        System.out.println(rslt.getLikelihood().toString());
-        System.out.println(rslt.getLikelihood().getObservationsCount());
-        System.out.println(rslt.getLikelihood().getEffectiveObservationsCount());
+//        System.out.println(rslt.getLikelihood().toString());
+//        System.out.println(rslt.getLikelihood().getObservationsCount());
+//        System.out.println(rslt.getLikelihood().getEffectiveObservationsCount());
 //        System.out.println(rslt.getData("disagg", TsData.class));
+    }
+    
+    @Test
+    public void testRawInterpolation() {
+        double[] y = Data.IND_PCR;
+        RawTemporalDisaggregationResults rslt = TemporalDisaggregation.processRawInterpolation(y, true, false, "Ar1", 3, 1, 0, false, 0, false, "SqrtDiffuse", false,1,1);     
+//        System.out.println(rslt.getDisaggregatedSeries().toString());
+    }
+    
+    @Test
+    public void testInterpolationRwWithoutIndicator() {
+        double[] yArr = {500, 510, 525, 520};
+        TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(yArr));
+        TemporalDisaggregationResults rslt = TemporalDisaggregation.processInterpolation(y, false, false, "Rw", 12, -1, 0, false, 0, false, "SqrtDiffuse", false,0,6);
+        TemporalDisaggregationResults rslt2 = TemporalDisaggregation.processDisaggregation(y, false, false, "Rw", 12, false, 0, false, 0, false, "SqrtDiffuse", false,0,6);
+//        System.out.println(rslt.getRegressionEffects().toString());
+//        System.out.println(rslt2.getRegressionEffects().toString());
+//        System.out.println(rslt.getDisaggregatedSeries().toString());
     }
 }

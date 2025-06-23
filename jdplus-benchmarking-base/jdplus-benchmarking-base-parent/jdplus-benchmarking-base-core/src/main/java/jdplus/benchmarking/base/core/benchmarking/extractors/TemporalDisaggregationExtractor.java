@@ -83,7 +83,7 @@ public class TemporalDisaggregationExtractor extends InformationMapping<Temporal
         });
         set(TemporalDisaggregationDictionaries.SPART, Double.class, source -> {
             TsData re = source.getRegressionEffects();
-            if (re == null) {
+            if (re == null || re.isEmpty()) {
                 return null;
             }
             DoubleSeq T = source.getDisaggregatedSeries().getValues();
