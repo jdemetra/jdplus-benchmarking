@@ -5,6 +5,7 @@ import jdplus.benchmarking.base.api.benchmarking.univariate.Denton;
 import jdplus.benchmarking.base.api.benchmarking.univariate.GrowthRatePreservation;
 import jdplus.benchmarking.base.api.benchmarking.univariate.RawDenton;
 import jdplus.benchmarking.base.api.calendarization.Calendarization;
+import jdplus.benchmarking.base.api.multivariate.MultivariateChowLin;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.MultivariateCholetteProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.CholetteProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.CubicSplineProcessor;
@@ -12,6 +13,7 @@ import jdplus.benchmarking.base.core.benchmarking.univariate.DentonProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.GRPProcessor;
 import jdplus.benchmarking.base.core.benchmarking.univariate.RawDentonProcessor;
 import jdplus.benchmarking.base.core.calendarization.CalendarizationProcessor;
+import jdplus.benchmarking.base.core.multivariate.MultivariateChowLinProcessor;
 import jdplus.toolkit.base.api.information.InformationExtractor;
 
 module jdplus.benchmarking.base.core {
@@ -33,7 +35,10 @@ module jdplus.benchmarking.base.core {
 
     provides MultivariateCholette.Processor with
             MultivariateCholetteProcessor;
-
+    
+    provides MultivariateChowLin.Processor with
+            MultivariateChowLinProcessor;
+    
     provides InformationExtractor with
             jdplus.benchmarking.base.core.benchmarking.extractors.TemporalDisaggregationExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.RawTemporalDisaggregationExtractor,

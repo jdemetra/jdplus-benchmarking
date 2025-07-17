@@ -640,7 +640,7 @@ public class TemporalDisaggregationProcessorTest {
             }
         }
     }
-
+    
     @Test
     public void testBatchLast() {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);

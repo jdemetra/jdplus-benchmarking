@@ -16,6 +16,7 @@
 package jdplus.benchmarking.base.core.univariate;
 
 import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
+import jdplus.benchmarking.base.api.univariate.EstimationSpec;
 import jdplus.benchmarking.base.api.univariate.ModelSpec;
 import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
@@ -176,35 +177,47 @@ public class RawDisaggregationProcessorTest {
 //        //System.out.println(rslt.getDisaggregatedSeries());
 //    }
 //    
-//    @Test
-//    public void testWithExtrapolation() {
-//        double[] yArr = {500,510,525,520};
-//        double[] xArr = {97,98,98.5,99.5,104,
-//                         99,100,100.5,101,105.5,
-//                         103,104.5,103.5,104.5,109,
-//                         104,107,103,108,113,
-//                         110};
-//        FastMatrix X=FastMatrix.make(xArr.length, 1);
-//        X.column(0).copy(DoubleSeq.of(xArr));
-//        
-//        RawDisaggregationSpec spec1 = RawDisaggregationSpec.builder()
-//                .frequencyRatio(5)
-//                .aggregationType(AggregationType.Sum)
-//                .residualsModel(ResidualsModel.Rw)
-//                //                .diffuseRegressors(true)
-//                .constant(false)
-//                .fast(true)
-//                .estimationPrecision(1e-9)
-//                .rescale(true)
-//                .algorithm(SsfInitialization.Augmented)
-//                .build();
-//           
-//        //RawTemporalDisaggregationResults rslt = RawTemporalDisaggregationProcessor.process(DoubleSeq.of(yArr), X, spec1);
-//        //System.out.println(rslt.getDisaggregatedSeries());
-//        
-//        RawTemporalDisaggregationResults rslt2 = RawDisaggregationProcessor.process(DoubleSeq.of(yArr), 5, 0, spec1);
-//        //System.out.println(rslt2.getDisaggregatedSeries());
-//        
+    @Test
+    public void testWithExtrapolation() {
+        double[] yArr = {500,510,525,520};
+        double[] xArr = {97,98,98.5,99.5,104,
+                         99,100,100.5,101,105.5,
+                         103,104.5,103.5,104.5,109,
+                         104,107,103,108,113,
+                         110};
+        FastMatrix X=FastMatrix.make(xArr.length, 1);
+        X.column(0).copy(DoubleSeq.of(xArr));
+        
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(true)
+                .trend(false)
+                .residualsModel(ResidualsModel.valueOf("Rw"))
+                .parameter(Parameter.initial(0))
+                .diffuseRegressors(false)
+                .zeroInitialization(true)
+                .build();
+
+        EstimationSpec espec = EstimationSpec.builder()
+                .truncatedParameter(0.0)
+                .build();
+
+        AlgorithmSpec aspec = AlgorithmSpec.builder()
+                .algorithm(SsfInitialization.SqrtDiffuse)
+                .rescale(false)
+                .build();
+        
+        RawDisaggregationSpec spec = RawDisaggregationSpec.builder(5)
+                    .frequencyRatio(5)
+                    .average(false)
+                    .modelSpec(mspec)
+                    .estimationSpec(espec)
+                    .algorithmSpec(aspec)
+                    .build();
+           
+        RawTemporalDisaggregationResults rslt = RawDisaggregationProcessor.process(DoubleSeq.of(yArr), X, 0, spec);
+        System.out.println(rslt.getCoefficients());
+        System.out.println(rslt.getDisaggregatedSeries());
+              
 //         RawDisaggregationSpec spec3 = RawDisaggregationSpec.builder()
 //                .frequencyRatio(5)
 //                .aggregationType(AggregationType.Sum)
@@ -239,8 +252,8 @@ public class RawDisaggregationProcessorTest {
 //        //System.out.println(rslt5.getDisaggregatedSeries());
 //        
 //        RawTemporalDisaggregationResults rslt6 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), 3, 0, spec5);
-//        //System.out.println(rslt6.getDisaggregatedSeries());
-//    }
+        //System.out.println(rslt6.getDisaggregatedSeries());
+    }
 }
 
     
