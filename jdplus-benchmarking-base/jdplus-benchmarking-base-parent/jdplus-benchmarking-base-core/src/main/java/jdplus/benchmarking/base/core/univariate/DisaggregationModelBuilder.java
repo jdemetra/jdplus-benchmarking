@@ -35,7 +35,7 @@ import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import lombok.NonNull;
 import jdplus.toolkit.base.core.data.normalizer.DataNormalizer;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 

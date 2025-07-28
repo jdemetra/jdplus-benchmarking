@@ -24,7 +24,7 @@ import jdplus.toolkit.base.core.data.normalizer.AbsMeanNormalizer;
 import jdplus.toolkit.base.core.data.normalizer.DataNormalizer;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import lombok.NonNull;
-import org.checkerframework.checker.index.qual.NonNegative;
+import nbbrd.design.NonNegative;
 
 /**
  *
