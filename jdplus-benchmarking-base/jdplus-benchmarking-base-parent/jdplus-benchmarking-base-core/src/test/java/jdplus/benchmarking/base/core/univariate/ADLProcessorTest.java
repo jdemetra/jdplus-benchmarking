@@ -28,6 +28,7 @@ import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
+//import static jdplus.benchmarking.base.api.univariate.ADLSpec.builder;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
@@ -239,5 +240,17 @@ public class ADLProcessorTest {
             System.out.println(crslt.getLikelihood().diffuseCorrection());
         }
 
+    }
+    
+    @Test
+    public void testADL11_2() {
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
+        
+        ADLSpec spec = ADLSpec.builder().aggregationType(AggregationType.Average).build();
+
+        ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, spec);
+        System.out.print(rslts.getDisaggregatedSeries());
+        System.out.print(rslts.getStdevDisaggregatedSeries());
     }
 }

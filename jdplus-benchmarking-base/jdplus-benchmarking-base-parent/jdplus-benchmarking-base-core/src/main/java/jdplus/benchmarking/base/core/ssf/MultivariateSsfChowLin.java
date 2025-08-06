@@ -16,6 +16,7 @@
  */
 package jdplus.benchmarking.base.core.ssf;
 
+import java.util.HashMap;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
@@ -46,6 +47,7 @@ public class MultivariateSsfChowLin {
 
         private final int nvars;
         private int conversion = 4;
+        private HashMap<Integer, FastMatrix> xc = null;
         private double[] rho;
         private Constraint[] constraints = null;
 
@@ -57,19 +59,25 @@ public class MultivariateSsfChowLin {
             this.conversion = c;
             return this;
         }
-
+        
+        
         public Builder rho(double[] rho) {
             this.rho = rho;
             return this;
         }
-
+        
+        public Builder xc(HashMap<Integer, FastMatrix> xc) {
+            this.xc = xc;
+            return this;
+        }
+        
         public Builder constraints(Constraint[] constraints) {
             this.constraints = constraints;
             return this;
         }
 
         public IMultivariateSsf build() {
-            Data data = new Data(nvars, conversion, rho, constraints);
+            Data data = new Data(nvars, conversion, rho, xc, constraints);
             return new MultivariateSsf(new Initialization(data), new Dynamics(data), new Measurements(data));
         }
 
@@ -80,13 +88,39 @@ public class MultivariateSsfChowLin {
         final int nvars;
         final int c;
         final double[] rho;
+        final int[] nxc, nxcc;
+        final int Np;
+        final HashMap<Integer, FastMatrix> xc;
         final Constraint[] constraints;
 
-        Data(int nvars, int c, double[] rho, Constraint[] constraints) {
+        Data(int nvars, int c, double[] rho, HashMap<Integer, FastMatrix> xc, Constraint[] constraints) {
+            
+            int[] nxc = new int[nvars];
+            int[] nxcc = new int[nvars];
+            int Np = 0;
+            
+            for (Integer i : xc.keySet()) {
+                nxc[i] = xc.get(i).getColumnsCount();
+                nxcc[i] = Np;                
+                Np += xc.get(i).getColumnsCount();
+            }
+            
             this.nvars = nvars;
             this.c = c;
             this.rho = rho;
+            this.nxc = nxc;
+            this.nxcc = nxcc;
+            this.Np = Np;
+            this.xc = xc;
             this.constraints = constraints;
+        }
+        
+        double xc(int pos, int v, int k) {
+            return xc.get(v).get(pos, k);
+        }
+
+        double mxc(int pos, int v, int k, double m) {
+            return xc.get(v).get(pos, k) * m;
         }
     }
 
@@ -100,39 +134,51 @@ public class MultivariateSsfChowLin {
 
         @Override
         public int getStateDim() {
-            return 2 * info.nvars;
+            return 2 * info.nvars + info.Np;
+            
         }
 
         @Override
         public boolean isDiffuse() {
-            for (double r : info.rho){
-                if (r == 1) {
-                    return true;
+            if(info.Np > 0){
+                return true;
+            }else{
+                for (double r : info.rho){
+                    if (r == 1) {
+                        return true;
+                    }
                 }
-            }
-            return false;
+                return false;
+            }   
         }
 
         @Override
         public int getDiffuseDim() {
-            int nd = 0;
+            int nrd = 0;
             for (double r : info.rho){
                 if (r == 1) {
-                    nd += 1;
+                    nrd += 1;
                 }
             }
-            return nd;
+            return nrd + info.Np;
         }
 
         @Override
         public void diffuseConstraints(FastMatrix b) {
             int nd = 0;
-            for (int j = 1, k = 0; j < 2 * info.nvars; j += 2, ++k) {
-                if(info.rho[k] == 1){
-                    b.set(j, nd, 1);
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];   
+                if(info.rho[i] == 1){
+                    b.set(ip + 1, nd, 1);
                     nd += 1;
-                } 
-            }
+                }
+                if (info.nxc[i] > 0){
+                    for (int p = 0; p < info.nxc[i]; ++p) {
+                        b.set(ip + 2 + p, nd, 1);
+                        nd += 1;
+                    }
+                }
+            }    
         }
 
         @Override
@@ -142,19 +188,26 @@ public class MultivariateSsfChowLin {
 
         @Override
         public void Pf0(FastMatrix pf0) {
-            for (int k = 0, j = 0; k < info.nvars; ++k, j += 2) {
-                if (info.rho[k] != 1) {
-                    double v = 1 / (1 - info.rho[k] * info.rho[k]);
-                    pf0.set(j + 1, j + 1, v);
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];   
+                if(info.rho[i] != 1){
+                    double v = 1 / (1 - info.rho[i] * info.rho[i]);
+                    pf0.set(ip + 1, ip + 1, v);
                 }
             }
         }
 
         @Override
         public void Pi0(FastMatrix pi0) {
-            for (int k = 0, j = 0; k < info.nvars; ++k, j += 2) {
-                if (info.rho[k] == 1) {
-                    pi0.set(j + 1, j + 1, 1);
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];   
+                if(info.rho[i] == 1){
+                    pi0.set(ip + 1, ip + 1, 1);
+                }
+                if (info.nxc[i] > 0){
+                    for (int p = 0; p < info.nxc[i]; ++p) {
+                        pi0.set(ip + 2 + p, ip + 2 + p, 1);
+                    }
                 }
             }
         }
@@ -175,13 +228,17 @@ public class MultivariateSsfChowLin {
 
         @Override
         public void V(int pos, FastMatrix qm) {
-            qm.diagonal().extract(2, -1, 2).set(1);
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                qm.set(ip + 1, ip + 1, 1);
+            }
         }
 
         @Override
         public void S(int pos, FastMatrix cm) {
             for (int i = 0; i < info.nvars; ++i) {
-                cm.set(2 * i + 1, i, 1);
+                int ip = 2 * i + info.nxcc[i];
+                cm.set(ip + 1, i, 1);
             }
         }
 
@@ -197,12 +254,18 @@ public class MultivariateSsfChowLin {
 
         @Override
         public void T(int pos, FastMatrix tr) {
-            for (int i = 0; i < 2 * info.nvars; i += 2) {
-                tr.set(i + 1, i + 1, info.rho[i / 2]);
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                tr.set(ip + 1, ip + 1, info.rho[i]);
                 if ((pos + 1) % info.c != 0) {
-                    tr.set(i, i + 1, 1);
+                    tr.set(ip, ip + 1, 1);
                     if (pos % info.c != 0) {
-                        tr.set(i, i, 1);
+                        tr.set(ip, ip, 1);
+                    }
+                }
+                if (info.nxc[i] > 0){
+                    for (int p = 0; p < info.nxc[i]; ++p) {
+                        tr.set(ip + 2 + p, ip + 2 + p, 1);
                     }
                 }
             }
@@ -210,61 +273,72 @@ public class MultivariateSsfChowLin {
 
         @Override
         public void TX(int pos, DataBlock x) {
-            for (int i = 0, j = 0; i < info.nvars; ++i, j += 2) {
-                // case I
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];   
                 if ((pos + 1) % info.c == 0) {
-                    x.set(j, 0);
+                    // case I
+                    x.set(ip, 0);
                 } else if (pos % info.c == 0) {
-                    // case II.
-                    double s = x.get(j + 1);
-                    x.set(j, s);
+                    // case II
+                    double s = x.get(ip + 1);
+                    x.set(ip, s);
                 } else {
                     // case III
-                    double s = x.get(j + 1);
-                    x.add(j, s);
+                    double s = x.get(ip + 1);
+                    x.add(ip, s);
                 }
-                x.mul(j + 1, info.rho[i]);
+                x.mul(ip + 1, info.rho[i]);
             }
         }
 
         @Override
         public void addSU(int pos, DataBlock x, DataBlock u) {
-            x.extract(1, -1, 2).add(u);
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                x.add(ip + 1, u.get(i));
+            }
         }
 
         @Override
         public void addV(int pos, FastMatrix p) {
-            p.diagonal().extract(1, -1, 2).add(1);
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                p.add(ip + 1, ip + 1, 1);
+            }
         }
 
         @Override
         public void XT(int pos, DataBlock x) {
-            for (int i = 0, j = 0; i < info.nvars; ++i, j += 2) {
-                // case I
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];   
                 if ((pos + 1) % info.c == 0) {
-                    x.set(j, 0);
-                    x.mul(j + 1, info.rho[i]);
-                } // case II
-                else if (pos % info.c == 0) {
-                    double x0 = x.get(j), x1 = x.get(j + 1);
-                    x.set(j, 0);
-                    x.set(j + 1, x0 + info.rho[i] * x1);
-                } // case III
-                else {
-                    double x0 = x.get(j), x1 = x.get(j + 1);
-                    x.set(j + 1, x0 + info.rho[i] * x1);
+                    // case I
+                    x.set(ip, 0);
+                    x.mul(ip + 1, info.rho[i]);
+                } else if (pos % info.c == 0) {
+                    // case II
+                    double x0 = x.get(ip), x1 = x.get(ip + 1);
+                    x.set(ip, 0);
+                    x.set(ip + 1, x0 + info.rho[i] * x1);
+                } else {
+                    // case III
+                    double x0 = x.get(ip), x1 = x.get(ip + 1);
+                    x.set(ip + 1, x0 + info.rho[i] * x1);
                 }
             }
         }
 
         @Override
         public void XS(int pos, DataBlock x, DataBlock xs) {
-            xs.copy(x.extract(1, -1, 2));
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                xs.set(i, x.get(ip + 1));
+            }
         }
 
         @Override
         public boolean isTimeInvariant() {
-            return false;
+            return true;
         }
     }
 
@@ -305,143 +379,228 @@ public class MultivariateSsfChowLin {
 
         final Data info;
         final int v;
-
+            
         Loading(Data info, int v) {
             this.info = info;
             this.v = v;
         }
-
+        
         @Override
         public void Z(int pos, DataBlock z) {
             if (v < info.nvars) {
-                int iv = 2 * v;
-                if ((pos + 1) % info.c != 0) {
+                int iv = 2 * v + info.nxcc[v];
+                if ((pos + 1) % info.c == 0) {
                     z.set(iv, 1);
                 }
-                z.set(iv + 1, 1);
+                z.set(iv + 1, 1);            
+                if (info.nxc[v] > 0){
+                    for (int p = 0; p < info.nxc[v]; ++p) {
+                        z.set(iv + 2 + p, info.xc(pos, v, p));
+                    }
+                }
             } else {
                 int k = v - info.nvars;
                 Constraint cnt = info.constraints[k];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int l = cnt.getIndex()[i];
-                    int il = 2 * l;
+                    int il = 2 * l + info.nxcc[i];
+                    z.set(il, cnt.getWeights()[i]);
                     z.set(il + 1, cnt.getWeights()[i]);
+                    if (info.nxc[i] > 0){
+                        for (int p = 0; p < info.nxc[i]; ++p) {
+                            z.set(il + 2 + p, info.mxc(pos, i, p, cnt.getWeights()[i]));
+                        }
+                    }
                 }
             }
-        }
-
+        }      
+        
         @Override
         public double ZX(int pos, DataBlock x) {
             if (v < info.nvars) {
-                int iv = 2 * v;
+                int iv = 2 * v + info.nxcc[v];
                 double r = ((pos + 1) % info.c != 0) ? 0 : x.get(iv);
-                return r + x.get(iv + 1);
+                r += x.get(iv + 1);
+                if (info.nxc[v] > 0){
+                    for (int p = 0; p < info.nxc[v]; ++p) {
+                        r += x.get(iv + 2 + p) * info.xc(pos, v, p);
+                    }
+                }   
+                return r;
             } else {
                 int k = v - info.nvars;
                 Constraint cnt = info.constraints[k];
                 double sum = 0;
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int l = cnt.getIndex()[i];
-                    int il = 2 * l;
+                    int il = 2 * l + info.nxcc[i];
+                    sum += cnt.getWeights()[i] * x.get(il);
                     sum += cnt.getWeights()[i] * x.get(il + 1);
+                    if (info.nxc[i] > 0){
+                        for (int p = 0; p < info.nxc[i]; ++p) {
+                            sum += info.mxc(pos, i, p, cnt.getWeights()[i]) * x.get(il + 2 + p);
+                        }
+                    }
                 }
                 return sum;
             }
-        }
+        }       
 
         @Override
         public void ZM(int pos, FastMatrix m, DataBlock x) {
             if (v < info.nvars) {
-                int iv = 2 * v;
+                int iv = 2 * v + info.nxcc[v];
                 if ((pos + 1) % info.c == 0) {
                     x.copy(m.row(iv));
                 }
-                x.add(m.row(iv + 1));  
+                x.add(m.row(iv + 1));
+                if (info.nxc[v] > 0){
+                    for (int p = 0; p < info.nxc[v]; ++p) {
+                        x.addAY(info.xc(pos, v, p), m.row(iv + 2 + p));
+                    }
+                }
             } else {
                 x.set(0);
                 int k = v - info.nvars;
                 Constraint cnt = info.constraints[k];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int l = cnt.getIndex()[i];
-                    int il = 2 * l;
+                    int il = 2 * l + info.nxcc[i];
+                    x.addAY(cnt.getWeights()[i], m.row(il));
                     x.addAY(cnt.getWeights()[i], m.row(il + 1));
+                    if (info.nxc[i] > 0){
+                        for (int p = 0; p < info.nxc[i]; ++p) {
+                            x.addAY(info.mxc(pos, i, p, cnt.getWeights()[i]), m.row(il + 2 + p));
+                        }
+                    }
                 }
             }
         }
 
         @Override
-        public double ZVZ(int pos, FastMatrix vm) {
-            int iv = 2 * v;
+        public double ZVZ(int pos, FastMatrix vm) {   
             if (v < info.nvars) {
+                int iv = 2 * v + info.nxcc[v];
                 double s = vm.get(iv + 1, iv + 1);                
                 if ((pos + 1) % info.c == 0) {
                     s += vm.get(iv, iv);
                     s += vm.get(iv, iv + 1);
                     s += vm.get(iv + 1, iv);
                 }
+                if (info.nxc[v] > 0){                    
+                    for (int i = 0; i < info.nxc[v]; ++i) { 
+                        for (int j = 0; j < info.nxc[v]; ++j) { 
+                            s += info.xc(pos, v, i) * vm.get(iv + 2 + i, iv + 2 + j) * info.xc(pos, v, j);
+                        }
+                        s += info.xc(pos, v, i) * (vm.get(iv + 2 + i, iv + 1) + vm.get(iv + 1, iv + 2 + i));
+                        if ((pos + 1) % info.c == 0) {
+                            s += info.xc(pos, v, i) * (vm.get(iv + 2 + i, iv) + vm.get(iv, iv + 2 + i));
+                        }
+                    }
+                }  
                 return s;                
             } else {
+                // TO OPTIMIZE...
                 int w = v-info.nvars;
                 Constraint cnt = info.constraints[w];
-                double s = 0;
+                double[] z = new double[info.nvars * 2 + info.Np];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int k = cnt.getIndex()[i];
-                    int ik = 2 * k;
-                    double dk = cnt.getWeights()[i];
-                    for (int j = 0; j < cnt.getIndex().length; ++j) {
-                        int l = cnt.getIndex()[j];
-                        int il = 2 * l;
-                        double dl = cnt.getWeights()[j];
-                        s += dk * vm.get(ik + 1, il + 1) * dl;
+                    int ik = 2 * k + info.nxcc[k];
+                    z[ik] = cnt.getWeights()[i];
+                    z[ik + 1] = cnt.getWeights()[i];
+                    if (info.nxc[i] > 0){
+                        for (int p = 0; p < info.nxc[i]; ++p) {
+                            z[ik + 2 + p] = info.mxc(pos, i, p, cnt.getWeights()[i]);
+                        }
+                    }
+                }
+                double s = 0;
+                for (int i = 0; i < z.length; ++i) { 
+                    for (int j = 0; j < z.length; ++j) { 
+                        s += z[i] * vm.get(i, j) * z[j];
                     }
                 }
                 return s;
             }
         }
 
-
         @Override
         public void VpZdZ(int pos, FastMatrix vm, double d) {
-            int iv = 2 * v;
             if (v < info.nvars) {
+                int iv = 2 * v + info.nxcc[v];
                 vm.add(iv + 1, iv + 1, d);
                 if ((pos + 1) % info.c == 0) {
                     vm.add(iv, iv, d);
                     vm.add(iv + 1, iv, d);
                     vm.add(iv, iv + 1, d);
                 } 
+                if (info.nxc[v] > 0){                    
+                    for (int i = 0; i < info.nxc[v]; ++i) { 
+                        for (int j = 0; j < info.nxc[v]; ++j) {
+                            vm.add(iv + 2 + i, iv + 2 + j, d * info.xc(pos, v, i) * info.xc(pos, v, j));
+                        }
+                        vm.add(iv + 2 + i, iv + 1, d * info.xc(pos, v, i));
+                        vm.add(iv + 1, iv + 2 + i, d * info.xc(pos, v, i));
+                        if ((pos + 1) % info.c == 0) {
+                            vm.add(iv + 2 + i, iv, d * info.xc(pos, v, i));
+                            vm.add(iv, iv + 2 + i, d * info.xc(pos, v, i));
+                        }
+                    }
+                }  
             }  else {
+                // TO OPTIMIZE...
                 int w = v-info.nvars;
                 Constraint cnt = info.constraints[w];
+                double[] z = new double[info.nvars * 2 + info.Np];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int k = cnt.getIndex()[i];
-                    int ik = 2 * k;
-                    double dk = cnt.getWeights()[i];
-                    for (int j = 0; j < cnt.getIndex().length; ++j) {
-                        int l = cnt.getIndex()[j];
-                        int il = 2 * l;
-                        double dl = cnt.getWeights()[j];
-                        vm.add(ik + 1, il + 1, d * dk * dl);
+                    int ik = 2 * k + info.nxcc[k];
+                    z[ik] = cnt.getWeights()[i];
+                    z[ik + 1] = cnt.getWeights()[i];
+                    if (info.nxc[i] > 0){
+                        for (int p = 0; p < info.nxc[i]; ++p) {
+                            z[ik + 2 + p] = info.mxc(pos, i, p, cnt.getWeights()[i]);
+                        }
                     }
                 }
+                FastMatrix zz = FastMatrix.square(z.length);
+                for (int i = 0; i < z.length; ++i) {
+                    for (int j = 0; j < z.length; ++j) {
+                        zz.set(i, j, z[i] * z[j]);
+                    }
+                }
+                zz.mul(d);
+                vm.add(zz);
             }
         }
 
         @Override
         public void XpZd(int pos, DataBlock x, double d) {
             if (v < info.nvars) {
-                int iv = 2 * v;
+                int iv = 2 * v + info.nxcc[v];
                 if ((pos + 1) % info.c == 0) {
                     x.add(iv, d);
                 }
                 x.add(iv + 1, d);
+                if (info.nxc[v] > 0){
+                    for (int p = 0; p < info.nxc[v]; ++p) {
+                        x.add(iv + 2 + p, info.xc(pos, v, p) * d);
+                    }
+                }
             } else {
                 int w= v- info.nvars;
                 Constraint cnt = info.constraints[w];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int k = cnt.getIndex()[i];
-                    int ik = 2 * k;
+                    int ik = 2 * k + info.nxcc[k];
+                    x.add(ik, cnt.getWeights()[i] * d);
                     x.add(ik + 1, cnt.getWeights()[i] * d);
+                    if (info.nxc[k] > 0){
+                        for (int p = 0; p < info.nxc[k]; ++p) {
+                            x.add(ik + 2 + p, info.mxc(pos, i, p, cnt.getWeights()[i]) * d);
+                        }
+                    }
                 }
             }
         }

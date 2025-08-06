@@ -28,16 +28,16 @@ public class MultivariateChowLin {
     public Processor getProcessor() {
         return PROCESSOR.get();
     }
-
-    public Map<String, TsData> process(Map<String, TsData> input, MultivariateChowLinSpec spec) {
-        return PROCESSOR.get().process(input, spec);
+    
+    public Map<String, TsData> process(Map<String, TsData> y, Map<String, TsData[]> indicators, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
+        return PROCESSOR.get().process(y, indicators, constraints, spec);
     }
     
     @Algorithm
     @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
     public static interface Processor {
 
-        Map<String, TsData> process(Map<String, TsData> dictionary, MultivariateChowLinSpec spec);
+        Map<String, TsData> process(Map<String, TsData> series,  Map<String, TsData[]> indicators, Map<String, TsData> constraints, MultivariateChowLinSpec spec);
 
     }
 }

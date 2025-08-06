@@ -23,9 +23,26 @@ import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
+import jdplus.toolkit.base.api.data.Doubles;
 import jdplus.toolkit.base.api.data.Parameter;
+import jdplus.toolkit.base.api.data.ParameterType;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
+import jdplus.toolkit.base.core.data.DataBlock;
+import jdplus.toolkit.base.core.math.functions.IParametricMapping;
+import jdplus.toolkit.base.core.math.functions.ParamValidation;
+import jdplus.toolkit.base.core.math.functions.levmar.LevenbergMarquardtMinimizer;
+import jdplus.toolkit.base.core.math.functions.ssq.SsqFunctionMinimizer;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
+import jdplus.toolkit.base.core.ssf.ISsfLoading;
+import jdplus.toolkit.base.core.ssf.StateComponent;
+import jdplus.toolkit.base.core.ssf.arima.AR1;
+import jdplus.toolkit.base.core.ssf.benchmarking.SsfCumulator;
+import jdplus.toolkit.base.core.ssf.dk.SsfFunction;
+import jdplus.toolkit.base.core.ssf.dk.SsfFunctionPoint;
+import jdplus.toolkit.base.core.ssf.univariate.ISsf;
+import jdplus.toolkit.base.core.ssf.univariate.ISsfBuilder;
+import jdplus.toolkit.base.core.ssf.univariate.Ssf;
+import jdplus.toolkit.base.core.ssf.univariate.SsfData;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import tck.demetra.data.Data;
@@ -253,6 +270,126 @@ public class RawDisaggregationProcessorTest {
 //        
 //        RawTemporalDisaggregationResults rslt6 = RawInterpolationProcessor.process(DoubleSeq.of(yArr), 3, 0, spec5);
         //System.out.println(rslt6.getDisaggregatedSeries());
+    }
+    
+    @Test
+    public void testMLE() {
+        double[] y = {30.0,30.6,30.8,31.7,32.1};
+        
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(false)
+                .trend(false)
+                .residualsModel(ResidualsModel.valueOf("Ar1"))
+                .build();
+        
+        RawDisaggregationSpec spec = RawDisaggregationSpec.builder(4)
+                    .frequencyRatio(4)
+                    .average(false)
+                    .modelSpec(mspec)
+                    .build();
+        
+        RawDisaggregationModel model = RawDisaggregationModelBuilder.of(DoubleSeq.of(y), FastMatrix.EMPTY, 0 , spec)
+                .build();
+                   
+        SsfData data = new SsfData(model.estimationY());
+        Mapping mapping = new Mapping(0);
+        ISsfLoading loading = AR1.defaultLoading();
+        ISsfBuilder<Parameter, Ssf> ssfBuilder = p -> Ssf.of(SsfCumulator.of(AR1.of(p.getValue(), 1, false), loading, 4, 0), SsfCumulator.defaultLoading(loading, 4, 0));
+        
+        SsfFunction<Parameter, Ssf> fn = SsfFunction.builder(data, mapping, ssfBuilder)
+                .regression(null, 0)
+                .useMaximumLikelihood(true)
+                .build();
+        
+        SsqFunctionMinimizer fmin = LevenbergMarquardtMinimizer
+                .builder()
+                .functionPrecision(spec.getEstimationSpec().getEstimationPrecision())
+                .build();
+        
+        fmin.minimize(fn.ssqEvaluate(Doubles.of(.9)));
+        
+        SsfFunctionPoint<Parameter, Ssf> rslt = (SsfFunctionPoint<Parameter, Ssf>) fmin.getResult();
+    }
+    
+    private static class Mapping implements IParametricMapping<Parameter> {
+
+        private final double lbound;
+
+        private Mapping(double lbound) {
+            this.lbound = lbound;
+        }
+
+        @Override
+        public Parameter map(DoubleSeq p) {
+            return Parameter.estimated(p.get(0));
+        }
+
+        @Override
+        public DoubleSeq getDefaultParameters() {
+            return Doubles.of(.9);
+        }
+
+        @Override
+        public boolean checkBoundaries(DoubleSeq inparams) {
+            double p = inparams.get(0);
+            if (lbound == -1) {
+                return p > -1 && p < 1;
+            } else {
+                return p >= lbound && p < 1;
+            }
+        }
+
+        @Override
+        public double epsilon(DoubleSeq inparams, int idx) {
+            return 1e-8;
+        }
+
+        @Override
+        public int getDim() {
+            return 1;
+        }
+
+        @Override
+        public double lbound(int idx) {
+            return lbound;
+        }
+
+        @Override
+        public double ubound(int idx) {
+            return 1;
+        }
+
+        @Override
+        public ParamValidation validate(DataBlock ioparams) {
+            double p = ioparams.get(0);
+            if (lbound == -1) {
+                if (p > -1 && p < 1) {
+                    return ParamValidation.Valid;
+                } else {
+                    if (p == 1) {
+                        p = 1 - 1e-6;
+                    } else if (p == -1) {
+                        p = -1 + 1e-6;
+                    } else {
+                        p = 1 / p;
+                    }
+                    ioparams.set(p);
+                    return ParamValidation.Changed;
+                }
+            } else if (p >= lbound && p < 1) {
+                return ParamValidation.Valid;
+            } else {
+                if (p < lbound) {
+                    p = lbound;
+                } else if (p == -1) {
+                    p = -1 + 1e-6;
+                } else {
+                    p = 1 / Math.abs(p);
+                }
+                ioparams.set(p);
+                return ParamValidation.Changed;
+            }
+        }
     }
 }
 

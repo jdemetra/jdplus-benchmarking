@@ -158,7 +158,7 @@ public class TemporalDisaggregationProcessorTest {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
         TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
         AlgorithmSpec aspec1 = AlgorithmSpec.builder()
-                .fast(false)
+                .fast(true)
                 .rescale(true)
                 .algorithm(SsfInitialization.Augmented)
                 .build();
@@ -206,13 +206,32 @@ public class TemporalDisaggregationProcessorTest {
     }
 
     @Test
-    public void testFernandezWithoutIndicator() {
+        public void testChowlinWithoutIndicator() {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
-        TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.FERNANDEZ;
-        TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor.process(y, 0, 8, spec1);
+        TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.CHOWLIN;
+        TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor.process(y, 0, 0, spec1);
 //        System.out.println(rslt.getDisaggregatedSeries().getValues());
     }
-
+        
+    @Test
+        public void testChowlinWithoutIndicator2() {
+        double[] y = {30.0,30.6,30.8,31.7,32.1};
+        TsData yTs = TsData.ofInternal(TsPeriod.yearly(1978), y);
+        
+        ModelSpec mspec = ModelSpec.builder()
+                .constant(false)
+                .trend(false)
+                .residualsModel(ResidualsModel.valueOf("Ar1"))
+                .build();
+        
+         TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.CHOWLIN.toBuilder()
+                .modelSpec(mspec)
+                .build();
+        
+        TemporalDisaggregationResults rslt = TemporalDisaggregationProcessor.process(yTs, 0, 0, spec1);
+//        System.out.println(rslt.getDisaggregatedSeries().getValues());
+    }
+        
     @Test
     public void testLitterman() {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1977), Data.PCRA);

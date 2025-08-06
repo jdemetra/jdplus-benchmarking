@@ -42,6 +42,7 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
     
     private int defaultPeriod;
     private boolean average;
+    private boolean[] constant, trend;
     private double[] rhos;
     private boolean fixedRhos;
     private double truncatedRhos;
@@ -49,13 +50,13 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
     private boolean diffuseRegressors;
     private boolean zeroInitialization;
     
-    @lombok.NonNull
-    @lombok.Singular
-    private List<TemporalConstraint> temporalConstraints;
-    
-    @lombok.NonNull
-    @lombok.Singular
-    private List<ModelComposition> modelCompositions;
+//    @lombok.NonNull
+//    @lombok.Singular
+//    private List<TemporalConstraint> temporalConstraints;
+//    
+//    @lombok.NonNull
+//    @lombok.Singular
+//    private List<ModelComposition> modelCompositions;
     
     @lombok.NonNull
     @lombok.Singular
@@ -86,12 +87,12 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
                 .defaultPeriod(DEF_PERIOD)
                 .average(DEF_AVERAGE)
                 .rhos(null)
+                .constant(null)
+                .trend(null)
                 .fixedRhos(DEF_FIXEDRHOS)
                 .truncatedRhos(DEF_TRUNCATEDRHOS)
                 .zeroInitialization(DEF_ZERO)
                 .algorithm(DEF_ALGORITHM)
-                .diffuseRegressors(DEF_DIFFUSE);
-        
-                
+                .diffuseRegressors(DEF_DIFFUSE);            
     }    
 }
