@@ -18,7 +18,6 @@ package jdplus.benchmarking.base.api.multivariate;
 
 import java.util.List;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
-import jdplus.benchmarking.base.api.benchmarking.multivariate.TemporalConstraint;
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;

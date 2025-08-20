@@ -4,6 +4,7 @@
  */
 package jdplus.benchmarking.base.api.multivariate;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import jdplus.toolkit.base.api.design.Algorithm;
 import jdplus.toolkit.base.api.timeseries.TsData;
@@ -29,15 +30,15 @@ public class MultivariateChowLin {
         return PROCESSOR.get();
     }
     
-    public Map<String, TsData> process(Map<String, TsData> y, Map<String, TsData[]> indicators, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
-        return PROCESSOR.get().process(y, indicators, constraints, spec);
+    public Map<String, TsData> process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
+        return PROCESSOR.get().process(mData, constraints, spec);
     }
     
     @Algorithm
     @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
     public static interface Processor {
 
-        Map<String, TsData> process(Map<String, TsData> series,  Map<String, TsData[]> indicators, Map<String, TsData> constraints, MultivariateChowLinSpec spec);
+        Map<String, TsData> process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec);
 
     }
 }
