@@ -28,7 +28,7 @@ import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 /**
  *
@@ -64,7 +64,7 @@ public class CalendarizationProcessorTest {
                 .build();
         CalendarizationProcessor processor=new CalendarizationProcessor();
         CalendarizationResults cal = processor.process(series, spec);
-        assertTrue(cal != null);
+        assertNotSame(cal, null);
 //        double[] s = cal.getDailyData();
 //        double[] es = cal.getDailyStdev();
 //        LocalDate start = cal.getStart();
@@ -94,7 +94,7 @@ public class CalendarizationProcessorTest {
                 .build();
 
         cal = processor.process(series, spec);
-        assertTrue(cal != null);
+        assertNotSame(cal, null);
 //        s = cal.getDailyData();
 //        es = cal.getDailyStdev();
 //        start = cal.getStart();
