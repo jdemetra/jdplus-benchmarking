@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
@@ -36,7 +36,7 @@ public class ContemporaneousConstraintTest {
     public void testWc() {
         ContemporaneousConstraint cnt=ContemporaneousConstraint.parse("y=s*");
         cnt=cnt.expand(Arrays.asList("s1", "s2", "s11", "y", "a"));
-        assertEquals(cnt.getComponents().size(),3);
+        assertEquals(3, cnt.getComponents().size());
     }
     
 }

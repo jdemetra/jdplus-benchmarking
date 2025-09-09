@@ -15,7 +15,8 @@ import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
@@ -53,28 +54,28 @@ public class DisaggregationModelBuilderTest {
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)))
                 .build();
-        assertTrue(model.getHEDom().length() == 16);
+        assertEquals(16, model.getHEDom().length());
         model = new DisaggregationModelBuilder(Y)
                 .aggregationType(AggregationType.Last)
                 .disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 1), 16))
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)))
                 .build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = new DisaggregationModelBuilder(Y)
                 .aggregationType(AggregationType.First)
                 .disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 1), 16))
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)))
                 .build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = new DisaggregationModelBuilder(Y)
                 .observationPosition(2)
                 .disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 1), 16))
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)))
                 .build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
     }
 
     @Test
@@ -85,15 +86,15 @@ public class DisaggregationModelBuilderTest {
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)));
         DisaggregationModel model = builder.build();
-        assertTrue(model.getHEDom().length() == 12);
+        assertEquals(12, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 2), 15)).build();
-        assertTrue(model.getHEDom().length() == 12);
+        assertEquals(12, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 3), 14)).build();
-        assertTrue(model.getHEDom().length() == 12);
+        assertEquals(12, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 1), 14)).build();
-        assertTrue(model.getHEDom().length() == 12);
+        assertEquals(12, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 2), 14)).build();
-        assertTrue(model.getHEDom().length() == 8);
+        assertEquals(8, model.getHEDom().length());
     }
 
     @Test
@@ -104,15 +105,15 @@ public class DisaggregationModelBuilderTest {
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)));
         DisaggregationModel model = builder.build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 2), 15)).build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 3), 14)).build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 1), 13)).build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 1), 12)).build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
     }
 
     @Test
@@ -123,15 +124,15 @@ public class DisaggregationModelBuilderTest {
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)));
         DisaggregationModel model = builder.build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 2), 15)).build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 3), 14)).build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 3), 12)).build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 1), 12)).build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
     }
 
     @Test
@@ -142,14 +143,14 @@ public class DisaggregationModelBuilderTest {
                 .addX(Variable.variable("c", Constant.C))
                 .addX(Variable.variable("q", new UserVariable(null, Q)));
         DisaggregationModel model = builder.build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 2), 15)).build();
-        assertTrue(model.getHEDom().length() == 13);
+        assertEquals(13, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 3), 14)).build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 3), 12)).build();
-        assertTrue(model.getHEDom().length() == 9);
+        assertEquals(9, model.getHEDom().length());
         model = builder.disaggregationDomain(TsDomain.of(TsPeriod.quarterly(2000, 3), 11)).build();
-        assertTrue(model.getHEDom().length() == 5);
+        assertEquals(5, model.getHEDom().length());
     }
 }
