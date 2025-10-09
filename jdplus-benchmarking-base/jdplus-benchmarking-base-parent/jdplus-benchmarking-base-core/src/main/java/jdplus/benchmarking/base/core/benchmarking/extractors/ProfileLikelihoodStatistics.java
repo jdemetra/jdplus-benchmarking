@@ -5,7 +5,7 @@
  */
 package jdplus.benchmarking.base.core.benchmarking.extractors;
 
-import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
+import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
 
 /**
  *
@@ -13,62 +13,60 @@ import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
  */
 @lombok.Value
 @lombok.Builder(builderClassName = "Builder")
-public class MarginalLikelihoodStatistics {
-
+public class ProfileLikelihoodStatistics {
+    
     double logLikelihood, transformationAdjustment;
-
+    
     int observationsCount;
     int estimatedParametersCount;
     int diffuseCount;
 
     // decomposition of the likelihood
-    double ssqErr, logDeterminant, diffuseCorrection, marginalCorrection;
-
+    double ssqErr, logDeterminant;
+    
     public double getAdjustedLogLikelihood() {
         return logLikelihood + transformationAdjustment;
     }
-
+    
     public int getEffectiveObservationsCount() {
         return observationsCount - diffuseCount;
     }
-
+    
     public double aic() {
         return 2 * estimatedParametersCount - 2 * getAdjustedLogLikelihood();
     }
-
+    
     public double aicc() {
         double neff = getEffectiveObservationsCount();
         double nhp = estimatedParametersCount;
         return -2 * (getAdjustedLogLikelihood() - (nhp * neff) / (neff - nhp - 1));
     }
-
+    
     public double bic() {
         double neff = getEffectiveObservationsCount();
         double nhp = estimatedParametersCount;
         return -2 * getAdjustedLogLikelihood() + nhp * Math.log(neff);
     }
-
+    
     public double hannanQuinn() {
         double neff = getEffectiveObservationsCount();
         double nhp = estimatedParametersCount;
         return -2 * (getAdjustedLogLikelihood() - nhp * Math.log(Math.log(neff)));
     }
-
-    public static MarginalLikelihoodStatistics stats(MarginalLikelihood ml, double llcorrection, int nparams) {
+    
+    public static ProfileLikelihoodStatistics stats(ProfileLikelihood ml, double llcorrection, int nparams) {
         if (ml == null) {
             return null;
         }
-        return MarginalLikelihoodStatistics.builder()
+        return ProfileLikelihoodStatistics.builder()
                 .logLikelihood(ml.logLikelihood())
                 .transformationAdjustment(llcorrection)
                 .logDeterminant(ml.logDeterminant())
-                .diffuseCorrection(ml.getDiffuseCorrection())
-                .marginalCorrection(ml.getMarginalCorrection())
                 .observationsCount(ml.dim())
-                .diffuseCount(ml.getD())
+                .diffuseCount(ml.getDiffuseEffects().length())
                 .estimatedParametersCount(nparams)
                 .ssqErr(ml.ssq())
                 .build();
     }
-
+    
 }

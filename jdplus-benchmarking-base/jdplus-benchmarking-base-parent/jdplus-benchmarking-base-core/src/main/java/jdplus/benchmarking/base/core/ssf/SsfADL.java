@@ -98,7 +98,7 @@ public class SsfADL {
             }
             case SAME -> {
                 for (int i = 0; i < X.getColumnsCount(); ++i) {
-                    w0[c++] = row.get(i);
+                    w0[c++] = row.get(i) * q;
                 }
             }
         }
@@ -109,6 +109,9 @@ public class SsfADL {
         int nx = X.getColumnsCount();
         if (definition.getXar() == XAR.FREE) {
             nx += X.getColumnsCount();
+        }
+        if (definition.isMean()) {
+            ++nx;
         }
         if (definition.isTrend()) {
             ++nx;

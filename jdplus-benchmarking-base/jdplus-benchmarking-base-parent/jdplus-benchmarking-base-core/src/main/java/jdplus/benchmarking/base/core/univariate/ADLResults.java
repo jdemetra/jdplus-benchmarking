@@ -17,6 +17,7 @@
 package jdplus.benchmarking.base.core.univariate;
 
 import jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodStatistics;
+import jdplus.benchmarking.base.core.benchmarking.extractors.ProfileLikelihoodStatistics;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.information.GenericExplorable;
 import jdplus.toolkit.base.api.math.functions.ObjectiveFunctionPoint;
@@ -24,6 +25,7 @@ import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
+import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
 
 /**
  *
@@ -35,34 +37,39 @@ public class ADLResults implements GenericExplorable {
 
     @lombok.NonNull
     TsData originalSeries;
-    
+
     @lombok.NonNull
     TsDomain disaggregationDomain;
-    
+
     /**
      * Regression variables
      */
     private Variable[] indicators;
-    
+
     /**
      * Regression estimation. The order correspond to the order of the variables
-     * 
+     *
      */
     int hyperParametersCount;
-    
-    MarginalLikelihoodStatistics likelihood;
-    
+
+    MarginalLikelihoodStatistics marginalLikelihood;
+    ProfileLikelihoodStatistics profileLikelihood;
+
     DoubleSeq coefficients;
     Matrix coefficientsCovariance;
-    
+
     ObjectiveFunctionPoint maximum;
-    
+
     ResidualsDiagnostics residualsDiagnostics;
 
     @lombok.NonNull
     TsData disaggregatedSeries;
-    
+
     @lombok.NonNull
     TsData stdevDisaggregatedSeries;
-    
+
+    public double logLikelihood() {
+        return marginalLikelihood != null ? marginalLikelihood.getLogLikelihood() : profileLikelihood.getLogLikelihood();
+    }
+
 }

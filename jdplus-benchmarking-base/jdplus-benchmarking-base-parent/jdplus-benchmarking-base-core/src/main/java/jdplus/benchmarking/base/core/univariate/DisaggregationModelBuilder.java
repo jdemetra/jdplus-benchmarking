@@ -57,7 +57,7 @@ public class DisaggregationModelBuilder {
     // local information used in the building operation
     double[] hO, hY, hEY;
     FastMatrix hX, hXC;
-    FastMatrix hEX;
+    FastMatrix hEX, hEXC;
     TsDomain lEDom, hDom, hEDom;
     int frequencyRatio;
     double yfactor = 1;
@@ -115,6 +115,7 @@ public class DisaggregationModelBuilder {
         hX = null;
         hXC = null;
         hEX = null;
+        hEXC = null;
         hDom = null;
         hEDom = null;
         frequencyRatio = 0;
@@ -264,17 +265,20 @@ public class DisaggregationModelBuilder {
                 && aType != AggregationType.Sum) {
             hEX = hX.extract(pos, hEDom.length(), 0, hX.getColumnsCount());
             hXC = hX;
+            hEXC = hEX;
         } else {
             hXC = hX.deepClone();
             FastMatrix xc;
-            if (del != 0){
-                xc=hXC.dropTopLeft(del, 0);
+            if (del != 0) {
+                xc = hXC.dropTopLeft(del, 0);
                 hXC.top(del).get().set(Double.NaN);
-            }else
-                xc=hXC;
-            hEX = hX.extract(pos, hEDom.length(), 0, hX.getColumnsCount()).deepClone();
+            } else {
+                xc = hXC;
+            }
+            hEX = hX.extract(pos, hEDom.length(), 0, hX.getColumnsCount());
+            hEXC = hEX.deepClone();
             Cumulator cumul = new Cumulator(frequencyRatio);
-            DataBlockIterator cX = hEX.columnsIterator(), cXC=xc.columnsIterator();
+            DataBlockIterator cX = hEXC.columnsIterator(), cXC = xc.columnsIterator();
             while (cX.hasNext()) {
                 cumul.transform(cX.next());
                 cumul.transform(cXC.next());
@@ -345,9 +349,9 @@ public class DisaggregationModelBuilder {
             }
             if (aType == AggregationType.Average
                     || aType == AggregationType.Sum) {
-                // in the other cases, hEX is a sub-matrix of hX; so it is already
+                // in the other cases, hEXC is a sub-matrix of hX; so it is already
                 // scaled;
-                DataBlockIterator ecols = hEX.columnsIterator();
+                DataBlockIterator ecols = hEXC.columnsIterator();
                 i = 0;
                 while (ecols.hasNext()) {
                     ecols.next().mul(xfactor[i++]);

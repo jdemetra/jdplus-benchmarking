@@ -535,7 +535,7 @@ public class TransitionRegSsf {
                 init0.diffuseConstraints(b.extract(0, n, 0, nd));
             }
             b.row(0).drop(nd, 0).copy(w0);
-            b.extract(init0.getStateDim(), w0.length(), nd, w0.length()).diagonal().set(1);
+            b.extract(n, w0.length(), nd, w0.length()).diagonal().set(1);
         }
 
         @Override

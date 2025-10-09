@@ -74,7 +74,7 @@ public class ADLExtractor extends InformationMapping<ADLResults> {
             Matrix H = source.getMaximum().getHessian();
             return (H == null || H.isEmpty()) ? Double.NaN : Math.sqrt(1 / source.getMaximum().getHessian().get(0, 0));
         });
-        delegate(TemporalDisaggregationDictionaries.LIKELIHOOD, MarginalLikelihoodStatistics.class, source -> source.getLikelihood());
+        delegate(TemporalDisaggregationDictionaries.LIKELIHOOD, MarginalLikelihoodStatistics.class, source -> source.getMarginalLikelihood());
         delegate(TemporalDisaggregationDictionaries.RES, ResidualsDiagnostics.class, source -> source.getResidualsDiagnostics());
     }
 

@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodStatistics;
-import jdplus.benchmarking.base.core.ssf.SsfADL;
+import jdplus.benchmarking.base.core.benchmarking.extractors.ProfileLikelihoodStatistics;
+import jdplus.benchmarking.base.core.ssf.SsfADL2;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
@@ -31,9 +32,12 @@ import jdplus.toolkit.base.api.timeseries.regression.UserVariable;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.data.DataBlockIterator;
-import jdplus.toolkit.base.core.math.functions.FunctionMinimizer;
-import jdplus.toolkit.base.core.math.functions.bfgs.Bfgs;
+import jdplus.toolkit.base.core.math.functions.ssq.SsqFunctionMinimizer;
+import jdplus.toolkit.base.core.math.functions.levmar.LevenbergMarquardtMinimizer;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
+import jdplus.toolkit.base.core.ssf.ISsfLoading;
+import jdplus.toolkit.base.core.ssf.basic.Loading;
+import jdplus.toolkit.base.core.ssf.basic.RegSsf;
 import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
 import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
 import jdplus.toolkit.base.core.ssf.univariate.Ssf;
@@ -100,8 +104,8 @@ public class ADLProcessor {
 //                z.row(i).sub(z.row(i - 1));
 //            }
 //            z.row(0).set(0);
+//        // z contains now either the original x or dx
 //        }
-        // z contains now either the original x or dx
         double phi = definition.getPhi();
         FastMatrix W = FastMatrix.make(n, nx);
         int c = 0;
@@ -109,7 +113,7 @@ public class ADLProcessor {
             W.column(c++).set(1);
         }
         if (definition.isTrend()) {
-            W.column(c++).set(i -> i);
+            W.column(c++).set(i -> i + 1);
         }
         switch (definition.getXar()) {
             case NONE -> {
@@ -164,11 +168,13 @@ public class ADLProcessor {
                 .ratio(model.getFrequencyRatio())
                 .startPosition(model.getStart())
                 .limit(Math.max(-1, limit))
+                .marginal(spec.isDiffuseRegressors())
+                .log(false)
                 .build();
         ADLFunction.Point rslt = fn.evaluate(DoubleSeq.of(definition.getPhi()));
         if (spec.isParameterEstimation()) {
 
-            FunctionMinimizer fmin = Bfgs.builder()
+            SsqFunctionMinimizer fmin = LevenbergMarquardtMinimizer.builder()
                     .functionPrecision(spec.getEstimationPrecision())
                     .build();
             fmin.minimize(rslt);
@@ -180,21 +186,36 @@ public class ADLProcessor {
                 grad[i] = -grad[i];
             }
             FastMatrix hessian = rslt.derivatives().hessian();
-            ml = new ObjectiveFunctionPoint(rslt.likelihood().logLikelihood(),
+            ml = new ObjectiveFunctionPoint(rslt.logLikelihood(),
                     new double[]{phi}, grad, hessian);
         }
-        Ssf ssf = SsfADL.ssfRepresentation(definition, model.getHX(), model.getFrequencyRatio(), model.getStart());
-        DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, new SsfData(model.getHY()), true, true);
+        FastMatrix W = SsfADL2.regressionMatrix(definition, model.getHX());
+        Ssf ssf = SsfADL2.ssfRepresentation(W, definition.getPhi(), model.getFrequencyRatio(), model.getStart());
+        SsfData ssfData = new SsfData(model.getHY());
+        DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, ssfData, true, true);
+
+        ISsfLoading rloading = RegSsf.defaultLoading(1, Loading.fromPosition(0), W);
         DataBlock coeff = ss.a(0).drop(2, 0);
         FastMatrix cvar = ss.P(0).extract(2, coeff.length(), 2, coeff.length());
         int nparams = spec.isParameterEstimation() ? 1 : 0;
+        int nz = ssf.getStateDim() - 1;
+        double[] s = new double[ssfData.length()];
+        double[] es = new double[ssfData.length()];
+        for (int i = 0; i < s.length; ++i) {
+            s[i] = rloading.ZX(i, ss.a(i).drop(1, 0));
+            double v = rloading.ZVZ(i, ss.P(i).extract(1, nz, 1, nz));
+            if (v > 0) {
+                es[i] = Math.sqrt(v);
+            }
+        }
 
         return ADLResults.builder()
                 .originalSeries(model.getOriginalSeries())
-                .disaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), ss.getComponent(1)))
-                .stdevDisaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), ss.getComponentVariance(1).fn(z -> z < 0 ? 0 : Math.sqrt(z))))
+                .disaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), DoubleSeq.of(s)))
+                .stdevDisaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), DoubleSeq.of(es)))
                 .disaggregationDomain(model.getHDom())
-                .likelihood(MarginalLikelihoodStatistics.stats(rslt.likelihood(), 0, 1 + nparams)) // + scaling factor
+                .marginalLikelihood(MarginalLikelihoodStatistics.stats(rslt.marginalLikelihood(), 0, 1 + nparams)) // + scaling factor
+                .profileLikelihood(ProfileLikelihoodStatistics.stats(rslt.profileLikelihood(), 0, 1 + nparams))
                 .coefficients(DoubleSeq.of(coeff.toArray()))
                 .coefficientsCovariance(cvar.deepClone())
                 .maximum(ml)

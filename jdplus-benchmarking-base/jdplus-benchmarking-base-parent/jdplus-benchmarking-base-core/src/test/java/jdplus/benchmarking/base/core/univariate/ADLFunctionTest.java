@@ -17,7 +17,7 @@
 package jdplus.benchmarking.base.core.univariate;
 
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
-import jdplus.benchmarking.base.core.ssf.SsfADL;
+import jdplus.benchmarking.base.core.ssf.SsfADL2;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
