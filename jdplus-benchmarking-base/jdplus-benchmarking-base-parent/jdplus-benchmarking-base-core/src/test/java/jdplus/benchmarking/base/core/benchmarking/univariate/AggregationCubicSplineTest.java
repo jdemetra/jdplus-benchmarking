@@ -13,7 +13,7 @@ import java.util.Random;
 import jdplus.toolkit.base.core.math.functions.GenericCubicSpline;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *

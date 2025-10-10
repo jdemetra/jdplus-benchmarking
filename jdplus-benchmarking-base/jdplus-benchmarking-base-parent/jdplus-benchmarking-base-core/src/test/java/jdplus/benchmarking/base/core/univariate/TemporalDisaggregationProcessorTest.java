@@ -14,7 +14,9 @@ import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
+
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.TemporalInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
@@ -148,7 +150,7 @@ public class TemporalDisaggregationProcessorTest {
                 .estimationSpec(espec2)
                 .build();
         TemporalDisaggregationResults rslt4 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec4);
-        assertTrue(rslt4.getResidualsDiagnostics().getFullResiduals().length() == n);
+        assertEquals(rslt4.getResidualsDiagnostics().getFullResiduals().length(), n);
     }
 
     @Test
@@ -489,15 +491,15 @@ public class TemporalDisaggregationProcessorTest {
         TsData y1 = TsData.ofInternal(TsPeriod.yearly(1976), Data.PCRA);
         TsData q1 = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
         TemporalDisaggregationResults rslt1 = TemporalInterpolationProcessor.process(y1, new TsData[]{q1}, spec);
-        assertTrue(rslt1 != null);
+        assertNotSame(rslt1, null);
         TsData y2 = TsData.ofInternal(TsPeriod.yearly(1979), Data.PCRA);
         TsData q2 = TsData.ofInternal(TsPeriod.quarterly(1977, 3), Data.IND_PCR);
         TemporalDisaggregationResults rslt2 = TemporalInterpolationProcessor.process(y2, new TsData[]{q2}, spec);
-        assertTrue(rslt2 != null);
+        assertNotSame(rslt2, null);
         TsData y3 = TsData.ofInternal(TsPeriod.yearly(1979), Data.PCRA);
         TsData q3 = TsData.ofInternal(TsPeriod.quarterly(1977, 3), Data.IND_PCR).drop(0, 30);
         TemporalDisaggregationResults rslt3 = TemporalInterpolationProcessor.process(y3, new TsData[]{q3}, spec);
-        assertTrue(rslt3 != null);
+        assertNotSame(rslt3, null);
 //        System.out.println(rslt1.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt2.getDisaggregatedSeries().getValues());
 //        System.out.println(rslt3.getDisaggregatedSeries().getValues());

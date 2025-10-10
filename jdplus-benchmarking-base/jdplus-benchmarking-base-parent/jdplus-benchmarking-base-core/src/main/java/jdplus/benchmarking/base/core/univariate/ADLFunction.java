@@ -16,7 +16,7 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
-import jdplus.benchmarking.base.core.ssf.SsfADL2;
+import jdplus.benchmarking.base.core.ssf.SsfADL;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.functions.IFunction;
@@ -74,7 +74,7 @@ public class ADLFunction implements IFunction, ISsqFunction {
         public Point(ADLFunction fn, double phi) {
             this.fn = fn;
             this.phi = phi;
-            Ssf ssf = SsfADL2.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition());
+            Ssf ssf = SsfADL.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition());
             SsfData data = new SsfData(fn.getY());
             DoubleSeq e;
             if (fn.isMarginal()) {

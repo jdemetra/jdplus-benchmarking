@@ -16,7 +16,7 @@
 
     <properties>
         <!-- dependencies -->
-        <netbeans.version>RELEASE260</netbeans.version>
+        <netbeans.version>RELEASE270</netbeans.version>
     </properties>
 
     <modules>
@@ -30,7 +30,7 @@
                 <plugin>
                     <groupId>org.apache.netbeans.utilities</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>14.3</version>
+                    <version>14.4</version>
                 </plugin>
             </plugins>
         </pluginManagement>

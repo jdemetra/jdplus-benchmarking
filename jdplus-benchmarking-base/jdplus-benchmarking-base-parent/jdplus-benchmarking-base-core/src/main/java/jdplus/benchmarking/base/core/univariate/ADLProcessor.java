@@ -21,7 +21,7 @@ import java.util.List;
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodStatistics;
 import jdplus.benchmarking.base.core.benchmarking.extractors.ProfileLikelihoodStatistics;
-import jdplus.benchmarking.base.core.ssf.SsfADL2;
+import jdplus.benchmarking.base.core.ssf.SsfADL;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
@@ -189,8 +189,8 @@ public class ADLProcessor {
             ml = new ObjectiveFunctionPoint(rslt.logLikelihood(),
                     new double[]{phi}, grad, hessian);
         }
-        FastMatrix W = SsfADL2.regressionMatrix(definition, model.getHX());
-        Ssf ssf = SsfADL2.ssfRepresentation(W, definition.getPhi(), model.getFrequencyRatio(), model.getStart());
+        FastMatrix W = SsfADL.regressionMatrix(definition, model.getHX());
+        Ssf ssf = SsfADL.ssfRepresentation(W, definition.getPhi(), model.getFrequencyRatio(), model.getStart());
         SsfData ssfData = new SsfData(model.getHY());
         DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, ssfData, true, true);
 

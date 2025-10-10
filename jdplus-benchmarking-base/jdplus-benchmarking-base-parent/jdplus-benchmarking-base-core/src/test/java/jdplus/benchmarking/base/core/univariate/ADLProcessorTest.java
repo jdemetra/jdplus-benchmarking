@@ -51,8 +51,8 @@ public class ADLProcessorTest {
         ADLSpec aspec = ADLSpec.CHOWLIN.toBuilder()
                 .mean(true)
                 .trend(true)
- //               .phi(Parameter.fixed(0.3))
-                .estimationPrecision(1e-9)
+                .phi(Parameter.fixed(0.9))
+                //                .estimationPrecision(1e-9)
                 .diffuseRegressors(false)
                 .build();
         ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, aspec);
@@ -60,9 +60,8 @@ public class ADLProcessorTest {
 //        System.out.println(rslts.getDisaggregatedSeries());
 //        System.out.println(rslts.getStdevDisaggregatedSeries());
 //        System.out.println(rslts.logLikelihood());
-
         AlgorithmSpec aspec1 = AlgorithmSpec.builder()
-                .fast(false)
+                .fast(true)
                 .rescale(true)
                 .algorithm(SsfInitialization.Augmented_NoCollapsing)
                 .build();
@@ -71,7 +70,7 @@ public class ADLProcessorTest {
                 .constant(true)
                 .trend(true)
                 .diffuseRegressors(false)
-//                .parameter(Parameter.fixed(0.3))
+                .parameter(Parameter.fixed(0.9))
                 .build();
 
         TsEstimationSpec espec = TsEstimationSpec.builder()
@@ -100,7 +99,7 @@ public class ADLProcessorTest {
         ADLSpec aspec = ADLSpec.CHOWLIN.toBuilder()
                 .mean(true)
                 .trend(true)
- //               .phi(Parameter.fixed(0.3))
+                //               .phi(Parameter.fixed(0.3))
                 .estimationPrecision(1e-9)
                 .diffuseRegressors(false)
                 .build();
@@ -109,12 +108,11 @@ public class ADLProcessorTest {
 //        System.out.println(rslts.getDisaggregatedSeries());
 //        System.out.println(rslts.getStdevDisaggregatedSeries());
 //        System.out.println(rslts.logLikelihood());
-
         ADLSpec aspec2 = ADLSpec.CHOWLIN.toBuilder()
                 .mean(true)
                 .trend(true)
                 .xar(ADLSpec.XAR.FREE)
- //               .phi(Parameter.fixed(0.3))
+                //               .phi(Parameter.fixed(0.3))
                 .estimationPrecision(1e-9)
                 .diffuseRegressors(false)
                 .build();
@@ -178,13 +176,13 @@ public class ADLProcessorTest {
 
     public static void main(String[] args) {
         Random rnd = new Random(0);
-//        TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
-//        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
-        TsData y = TsData.of(TsPeriod.yearly(1977), DoubleSeq.onMapping(30, i -> rnd.nextDouble()).commit());
-        TsData q = TsData.of(TsPeriod.quarterly(1977, 1), DoubleSeq.onMapping(120, i -> rnd.nextDouble()).commit());
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
+//        TsData y = TsData.of(TsPeriod.yearly(1977), DoubleSeq.onMapping(30, i -> rnd.nextDouble()).commit());
+//        TsData q = TsData.of(TsPeriod.quarterly(1977, 1), DoubleSeq.onMapping(120, i -> rnd.nextDouble()).commit());
 
         AlgorithmSpec aspec1 = AlgorithmSpec.builder()
-                .fast(false)
+                .fast(true)
                 .rescale(true)
                 .algorithm(SsfInitialization.Augmented_NoCollapsing)
                 .build();
@@ -195,7 +193,7 @@ public class ADLProcessorTest {
 
         for (int i = 0; i < 100; ++i) {
             ADLSpec aspec = ADLSpec.CHOWLIN.toBuilder()
-                    .trend(false)
+                    .trend(true)
                     .phi(Parameter.fixed(0.01 * i))
                     .estimationPrecision(1e-9)
                     .diffuseRegressors(true)
@@ -204,6 +202,8 @@ public class ADLProcessorTest {
 
 //        System.out.println(rslts.getDisaggregatedSeries());
 //        System.out.println(rslts.getStdevDisaggregatedSeries());
+//            System.out.print(rslts.getProfileLikelihood().getLogLikelihood());
+//            System.out.print('\t');
             System.out.print(rslts.getMarginalLikelihood().getLogLikelihood());
             System.out.print('\t');
             System.out.print(rslts.getMarginalLikelihood().getDiffuseCorrection());
@@ -213,7 +213,7 @@ public class ADLProcessorTest {
             ModelSpec mspec = ModelSpec.builder()
                     .residualsModel(ResidualsModel.Ar1)
                     .constant(true)
-                    .trend(false)
+                    .trend(true)
                     .diffuseRegressors(true)
                     .parameter(Parameter.fixed(0.01 * i))
                     .build();
