@@ -91,6 +91,7 @@ public class SsfADL {
         }
         int n = X.getRowsCount();
         double phi = definition.getPhi();
+
         FastMatrix W = FastMatrix.make(n, nx);
         int c = 0;
         if (definition.isMean()) {
@@ -102,10 +103,10 @@ public class SsfADL {
             cumul(col, phi);
         }
         if (definition.isTrend()) {
-            DataBlock col = W.column(c++);
-            col.set(i -> i + 1);
+           DataBlock col = W.column(c++);
+            col.set(i -> i);
             if (phi != 1) {
-                col.set(0, (1 - 2 * phi) / ((1 - phi) * (1 - phi)));
+                col.set(0, - phi / ((1 - phi) * (1 - phi)));
             }
             cumul(col, phi);
         }

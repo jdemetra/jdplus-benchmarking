@@ -16,7 +16,9 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.core.ssf.SsfADL;
+import jdplus.benchmarking.base.core.ssf.SsfADL1;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.functions.IFunction;
@@ -26,7 +28,6 @@ import jdplus.toolkit.base.core.math.functions.ssq.ISsqFunctionPoint;
 import jdplus.toolkit.base.core.math.functions.IParametersDomain;
 import jdplus.toolkit.base.core.math.functions.ParamValidation;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
-import jdplus.toolkit.base.core.ssf.SsfException;
 import jdplus.toolkit.base.core.ssf.akf.AkfToolkit;
 import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
 import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
@@ -40,13 +41,15 @@ import jdplus.toolkit.base.core.ssf.univariate.SsfData;
 @lombok.Value
 @lombok.Builder(builderClassName = "Builder", toBuilder = true)
 public class ADLFunction implements IFunction, ISsqFunction {
-
+    
     private ADLDefinition definition;
     private DoubleSeq y;
     private FastMatrix X;
     private int ratio, startPosition;
     private double limit;
     private boolean marginal, log;
+    private ADLSpec.SsfType type;
+    
 
     @Override
     public Point evaluate(DoubleSeq ds) {
@@ -74,7 +77,8 @@ public class ADLFunction implements IFunction, ISsqFunction {
         public Point(ADLFunction fn, double phi) {
             this.fn = fn;
             this.phi = phi;
-            Ssf ssf = SsfADL.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition());
+            Ssf ssf = fn.getType() == ADLSpec.SsfType.TRANSITION ? SsfADL1.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition())
+                    : SsfADL.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition());
             SsfData data = new SsfData(fn.getY());
             DoubleSeq e;
             if (fn.isMarginal()) {

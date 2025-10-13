@@ -5,6 +5,7 @@
  */
 package jdplus.benchmarking.base.core.benchmarking.extractors;
 
+import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
 
 /**
@@ -23,6 +24,8 @@ public class MarginalLikelihoodStatistics {
 
     // decomposition of the likelihood
     double ssqErr, logDeterminant, diffuseCorrection, marginalCorrection;
+    
+    DoubleSeq residuals;
 
     public double getAdjustedLogLikelihood() {
         return logLikelihood + transformationAdjustment;
@@ -68,6 +71,7 @@ public class MarginalLikelihoodStatistics {
                 .diffuseCount(ml.getD())
                 .estimatedParametersCount(nparams)
                 .ssqErr(ml.ssq())
+                .residuals(ml.e())
                 .build();
     }
 

@@ -237,6 +237,7 @@ public class RawDisaggregationProcessor {
         double[] xfac = model.getXfactors();
 
         DiffuseConcentratedLikelihood dll = edm.getDll();
+        
         // full residuals are obtained by applying the filter on the series without the
         // regression effects
         Ssf ssf = Ssf.of(SsfCumulator.of(edm.getNoise(), edm.getLoading(), model.getRatio(), cstart),

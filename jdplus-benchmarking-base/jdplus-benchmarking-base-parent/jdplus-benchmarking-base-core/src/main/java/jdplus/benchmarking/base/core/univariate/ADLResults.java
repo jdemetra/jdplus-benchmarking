@@ -25,7 +25,6 @@ import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
-import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
 
 /**
  *

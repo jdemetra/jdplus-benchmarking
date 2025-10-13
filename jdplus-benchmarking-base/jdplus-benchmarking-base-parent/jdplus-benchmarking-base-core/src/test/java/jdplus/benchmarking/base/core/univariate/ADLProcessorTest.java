@@ -23,11 +23,14 @@ import jdplus.benchmarking.base.api.univariate.ModelSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
+import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
+import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
+import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import org.junit.jupiter.api.Test;
 import tck.demetra.data.Data;
 
@@ -43,17 +46,20 @@ public class ADLProcessorTest {
     @Test
     public void testChowLin() {
         Random rnd = new Random(100);
+
         TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
         TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
 //        TsData y = TsData.of(TsPeriod.yearly(1977), DoubleSeq.onMapping(30, i -> rnd.nextDouble()).commit());
 //        TsData q = TsData.of(TsPeriod.quarterly(1977, 1), DoubleSeq.onMapping(120, i -> rnd.nextDouble()).commit());
 
         ADLSpec aspec = ADLSpec.CHOWLIN.toBuilder()
+                .aggregationType(AggregationType.Sum)
                 .mean(true)
                 .trend(true)
-                .phi(Parameter.fixed(0.9))
-                //                .estimationPrecision(1e-9)
+                //                .phi(Parameter.fixed(0.999))
+                .estimationPrecision(1e-9)
                 .diffuseRegressors(false)
+                .ssfType(ADLSpec.SsfType.TRANSITION)
                 .build();
         ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, aspec);
 
@@ -62,7 +68,7 @@ public class ADLProcessorTest {
 //        System.out.println(rslts.logLikelihood());
         AlgorithmSpec aspec1 = AlgorithmSpec.builder()
                 .fast(true)
-                .rescale(true)
+                .rescale(false)
                 .algorithm(SsfInitialization.Augmented_NoCollapsing)
                 .build();
         ModelSpec mspec = ModelSpec.builder()
@@ -70,7 +76,7 @@ public class ADLProcessorTest {
                 .constant(true)
                 .trend(true)
                 .diffuseRegressors(false)
-                .parameter(Parameter.fixed(0.9))
+                //                .parameter(Parameter.fixed(0.999))
                 .build();
 
         TsEstimationSpec espec = TsEstimationSpec.builder()
@@ -79,6 +85,7 @@ public class ADLProcessorTest {
                 .build();
 
         TemporalDisaggregationSpec spec1 = TemporalDisaggregationSpec.builder()
+                .average(false)
                 .algorithmSpec(aspec1)
                 .modelSpec(mspec)
                 .estimationSpec(espec)
@@ -86,6 +93,7 @@ public class ADLProcessorTest {
         TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec1);
 //        System.out.println(rslt1.getDisaggregatedSeries());
 //        System.out.println(rslt1.getStdevDisaggregatedSeries());
+//        Matrix cov = rslt1.getCoefficientsCovariance();
     }
 
     @Test
@@ -102,6 +110,7 @@ public class ADLProcessorTest {
                 //               .phi(Parameter.fixed(0.3))
                 .estimationPrecision(1e-9)
                 .diffuseRegressors(false)
+                .ssfType(ADLSpec.SsfType.CUMUL)
                 .build();
         ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, aspec);
 
@@ -115,6 +124,7 @@ public class ADLProcessorTest {
                 //               .phi(Parameter.fixed(0.3))
                 .estimationPrecision(1e-9)
                 .diffuseRegressors(false)
+                .ssfType(ADLSpec.SsfType.CUMUL)
                 .build();
         ADLResults rslts2 = ADLProcessor.process(y, new TsData[]{q}, aspec2);
 
@@ -170,8 +180,8 @@ public class ADLProcessorTest {
         TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
         TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
         ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, ADLSpec.ADL_11);
-        System.out.print(rslts.getDisaggregatedSeries());
-        System.out.print(rslts.getStdevDisaggregatedSeries());
+//        System.out.print(rslts.getDisaggregatedSeries());
+//        System.out.print(rslts.getStdevDisaggregatedSeries());
     }
 
     public static void main(String[] args) {

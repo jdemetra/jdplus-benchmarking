@@ -39,6 +39,11 @@ import jdplus.toolkit.base.api.util.Validatable;
 @lombok.Builder(toBuilder = true, buildMethodName = "buildWithoutValidation")
 public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
 
+    public static enum SsfType {
+        TRANSITION,
+        CUMUL
+    }
+
     public static final String VERSION = "1.0.0";
 
     public static final String FAMILY = "temporaldisaggregation";
@@ -118,6 +123,7 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
 
     private double estimationPrecision;
     private SsfInitialization algorithm;
+    private SsfType ssfType;
     private boolean rescale;
 
     public boolean isParameterEstimation() {

@@ -5,6 +5,7 @@
  */
 package jdplus.benchmarking.base.core.benchmarking.extractors;
 
+import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
 
 /**
@@ -23,6 +24,8 @@ public class ProfileLikelihoodStatistics {
 
     // decomposition of the likelihood
     double ssqErr, logDeterminant;
+    
+    DoubleSeq residuals;
     
     public double getAdjustedLogLikelihood() {
         return logLikelihood + transformationAdjustment;
@@ -54,18 +57,19 @@ public class ProfileLikelihoodStatistics {
         return -2 * (getAdjustedLogLikelihood() - nhp * Math.log(Math.log(neff)));
     }
     
-    public static ProfileLikelihoodStatistics stats(ProfileLikelihood ml, double llcorrection, int nparams) {
-        if (ml == null) {
+    public static ProfileLikelihoodStatistics stats(ProfileLikelihood pl, double llcorrection, int nparams) {
+        if (pl == null) {
             return null;
         }
         return ProfileLikelihoodStatistics.builder()
-                .logLikelihood(ml.logLikelihood())
+                .logLikelihood(pl.logLikelihood())
                 .transformationAdjustment(llcorrection)
-                .logDeterminant(ml.logDeterminant())
-                .observationsCount(ml.dim())
-                .diffuseCount(ml.getDiffuseEffects().length())
+                .logDeterminant(pl.logDeterminant())
+                .observationsCount(pl.dim())
+                .diffuseCount(pl.getDiffuseEffects().length())
                 .estimatedParametersCount(nparams)
-                .ssqErr(ml.ssq())
+                .ssqErr(pl.ssq())
+                .residuals(pl.e())
                 .build();
     }
     

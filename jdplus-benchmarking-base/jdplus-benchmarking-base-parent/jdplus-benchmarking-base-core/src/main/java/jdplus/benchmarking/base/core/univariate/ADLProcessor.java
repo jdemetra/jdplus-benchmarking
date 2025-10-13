@@ -22,6 +22,7 @@ import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.core.benchmarking.extractors.MarginalLikelihoodStatistics;
 import jdplus.benchmarking.base.core.benchmarking.extractors.ProfileLikelihoodStatistics;
 import jdplus.benchmarking.base.core.ssf.SsfADL;
+import jdplus.benchmarking.base.core.ssf.SsfADL1;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
@@ -31,7 +32,6 @@ import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.regression.UserVariable;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import jdplus.toolkit.base.core.data.DataBlock;
-import jdplus.toolkit.base.core.data.DataBlockIterator;
 import jdplus.toolkit.base.core.math.functions.ssq.SsqFunctionMinimizer;
 import jdplus.toolkit.base.core.math.functions.levmar.LevenbergMarquardtMinimizer;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
@@ -39,6 +39,8 @@ import jdplus.toolkit.base.core.ssf.ISsfLoading;
 import jdplus.toolkit.base.core.ssf.basic.Loading;
 import jdplus.toolkit.base.core.ssf.basic.RegSsf;
 import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
+import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
+import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
 import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
 import jdplus.toolkit.base.core.ssf.univariate.Ssf;
 import jdplus.toolkit.base.core.ssf.univariate.SsfData;
@@ -85,67 +87,6 @@ public class ADLProcessor {
                 .build();
     }
 
-    public FastMatrix regressionMatrix(ADLDefinition definition, FastMatrix X) {
-        int nx = X.getColumnsCount();
-        if (definition.getXar() == ADLSpec.XAR.FREE) {
-            nx += X.getColumnsCount();
-        }
-        if (definition.isMean()) {
-            ++nx;
-        }
-        if (definition.isTrend()) {
-            ++nx;
-        }
-        FastMatrix z = X;
-        int n = z.getRowsCount();
-//        if (definition.isXunitRoot()) {
-//            z = X.deepClone();
-//            for (int i = n - 1; i > 0; --i) {
-//                z.row(i).sub(z.row(i - 1));
-//            }
-//            z.row(0).set(0);
-//        // z contains now either the original x or dx
-//        }
-        double phi = definition.getPhi();
-        FastMatrix W = FastMatrix.make(n, nx);
-        int c = 0;
-        if (definition.isMean()) {
-            W.column(c++).set(1);
-        }
-        if (definition.isTrend()) {
-            W.column(c++).set(i -> i + 1);
-        }
-        switch (definition.getXar()) {
-            case NONE -> {
-                DataBlockIterator cols = z.columnsIterator();
-                while (cols.hasNext()) {
-                    W.column(c++).copy(cols.next());
-                }
-            }
-            case FREE -> {
-                DataBlockIterator cols = z.columnsIterator();
-                while (cols.hasNext()) {
-                    DataBlock cur = cols.next();
-                    DataBlock column = W.column(c++);
-                    column.drop(0, 1).copy(cur.drop(1, 0));
-                    column.set(n - 1, cur.get(n - 1));
-                    W.column(c).copy(cur);
-                }
-            }
-            case SAME -> {
-                DataBlockIterator cols = z.columnsIterator();
-                while (cols.hasNext()) {
-                    DataBlock cur = cols.next();
-                    DataBlock column = W.column(c++);
-                    column.drop(0, 1).copy(cur.drop(1, 0));
-                    column.set(n - 1, cur.get(n - 1));
-                    column.addAY(-phi, cur);
-                }
-            }
-        }
-        return W;
-    }
-
     private ADLResults compute(DisaggregationModel model, ADLSpec spec) {
         return switch (spec.getAggregationType()) {
             case Sum, Average ->
@@ -170,6 +111,7 @@ public class ADLProcessor {
                 .limit(Math.max(-1, limit))
                 .marginal(spec.isDiffuseRegressors())
                 .log(false)
+                .type(spec.getSsfType())
                 .build();
         ADLFunction.Point rslt = fn.evaluate(DoubleSeq.of(definition.getPhi()));
         if (spec.isParameterEstimation()) {
@@ -189,35 +131,63 @@ public class ADLProcessor {
             ml = new ObjectiveFunctionPoint(rslt.logLikelihood(),
                     new double[]{phi}, grad, hessian);
         }
-        FastMatrix W = SsfADL.regressionMatrix(definition, model.getHX());
-        Ssf ssf = SsfADL.ssfRepresentation(W, definition.getPhi(), model.getFrequencyRatio(), model.getStart());
         SsfData ssfData = new SsfData(model.getHY());
+        Ssf ssf;
+        ISsfLoading rloading;
+        if (spec.getSsfType() == ADLSpec.SsfType.CUMUL) {
+            FastMatrix W = SsfADL.regressionMatrix(definition, model.getHX());
+            ssf = SsfADL.ssfRepresentation(W, definition.getPhi(), model.getFrequencyRatio(), model.getStart());
+            rloading = RegSsf.defaultLoading(1, Loading.fromPosition(0), W);
+        } else {
+            ssf = SsfADL1.ssfRepresentation(definition, model.getHX(), model.getFrequencyRatio(), model.getStart());
+            rloading = Loading.fromPosition(0);
+        }
         DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, ssfData, true, true);
 
-        ISsfLoading rloading = RegSsf.defaultLoading(1, Loading.fromPosition(0), W);
         DataBlock coeff = ss.a(0).drop(2, 0);
         FastMatrix cvar = ss.P(0).extract(2, coeff.length(), 2, coeff.length());
         int nparams = spec.isParameterEstimation() ? 1 : 0;
         int nz = ssf.getStateDim() - 1;
+
+        double yfactor = model.getYfactor();
+        if (spec.getAggregationType() == AggregationType.Average) {
+            yfactor /= model.getFrequencyRatio();
+        }
+
         double[] s = new double[ssfData.length()];
         double[] es = new double[ssfData.length()];
         for (int i = 0; i < s.length; ++i) {
-            s[i] = rloading.ZX(i, ss.a(i).drop(1, 0));
+            s[i] = rloading.ZX(i, ss.a(i).drop(1, 0)) / yfactor;
             double v = rloading.ZVZ(i, ss.P(i).extract(1, nz, 1, nz));
             if (v > 0) {
-                es[i] = Math.sqrt(v);
+                es[i] = Math.sqrt(v) / yfactor;
             }
         }
+        MarginalLikelihood mll = rslt.marginalLikelihood();
+        if (mll != null) {
+            mll = mll.rescale(yfactor);
+        }
 
+        ProfileLikelihood pll = rslt.profileLikelihood();
+        if (pll != null) {
+            pll.rescale(yfactor);
+        }
+
+        double[] pcoeff = coeff.toArray();
+        for (int i = 0; i < pcoeff.length; ++i) {
+            pcoeff[i] /= yfactor;
+        }
+        FastMatrix pcvar = cvar.deepClone();
+        pcvar.div(yfactor * yfactor);
         return ADLResults.builder()
                 .originalSeries(model.getOriginalSeries())
-                .disaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), DoubleSeq.of(s)))
-                .stdevDisaggregatedSeries(TsData.of(model.getHDom().getStartPeriod(), DoubleSeq.of(es)))
+                .disaggregatedSeries(TsData.ofInternal(model.getHDom().getStartPeriod(), s))
+                .stdevDisaggregatedSeries(TsData.ofInternal(model.getHDom().getStartPeriod(), es))
                 .disaggregationDomain(model.getHDom())
-                .marginalLikelihood(MarginalLikelihoodStatistics.stats(rslt.marginalLikelihood(), 0, 1 + nparams)) // + scaling factor
-                .profileLikelihood(ProfileLikelihoodStatistics.stats(rslt.profileLikelihood(), 0, 1 + nparams))
-                .coefficients(DoubleSeq.of(coeff.toArray()))
-                .coefficientsCovariance(cvar.deepClone())
+                .marginalLikelihood(MarginalLikelihoodStatistics.stats(mll, 0, 1 + nparams)) // + scaling factor
+                .profileLikelihood(ProfileLikelihoodStatistics.stats(pll, 0, 1 + nparams))
+                .coefficients(DoubleSeq.of(pcoeff))
+                .coefficientsCovariance(pcvar)
                 .maximum(ml)
                 .build();
     }
