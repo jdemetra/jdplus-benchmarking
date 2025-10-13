@@ -16,16 +16,21 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.core.ssf.SsfADL;
+import jdplus.benchmarking.base.core.ssf.SsfADL1;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.functions.IFunction;
 import jdplus.toolkit.base.core.math.functions.IFunctionPoint;
+import jdplus.toolkit.base.core.math.functions.ssq.ISsqFunction;
+import jdplus.toolkit.base.core.math.functions.ssq.ISsqFunctionPoint;
 import jdplus.toolkit.base.core.math.functions.IParametersDomain;
 import jdplus.toolkit.base.core.math.functions.ParamValidation;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
-import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
+import jdplus.toolkit.base.core.ssf.akf.AkfToolkit;
 import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
+import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
 import jdplus.toolkit.base.core.ssf.univariate.Ssf;
 import jdplus.toolkit.base.core.ssf.univariate.SsfData;
 
@@ -34,17 +39,25 @@ import jdplus.toolkit.base.core.ssf.univariate.SsfData;
  * @author palatej
  */
 @lombok.Value
-@lombok.Builder(builderClassName ="Builder", toBuilder=true)
-public class ADLFunction implements IFunction {
-
+@lombok.Builder(builderClassName = "Builder", toBuilder = true)
+public class ADLFunction implements IFunction, ISsqFunction {
+    
     private ADLDefinition definition;
     private DoubleSeq y;
     private FastMatrix X;
     private int ratio, startPosition;
     private double limit;
+    private boolean marginal, log;
+    private ADLSpec.SsfType type;
+    
 
     @Override
     public Point evaluate(DoubleSeq ds) {
+        return new Point(this, ds.get(0));
+    }
+
+    @Override
+    public Point ssqEvaluate(DoubleSeq ds) {
         return new Point(this, ds.get(0));
     }
 
@@ -53,18 +66,31 @@ public class ADLFunction implements IFunction {
         return new Domain(limit);
     }
 
-    public static class Point implements IFunctionPoint {
+    public static class Point implements IFunctionPoint, ISsqFunctionPoint {
 
         private final ADLFunction fn;
         private final double phi;
-        private final MarginalLikelihood ll;
+        private final MarginalLikelihood mll;
+        private final ProfileLikelihood pll;
+        private final DoubleSeq E;
 
         public Point(ADLFunction fn, double phi) {
-            this.fn=fn;
+            this.fn = fn;
             this.phi = phi;
-            Ssf ssf = SsfADL.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition());
+            Ssf ssf = fn.getType() == ADLSpec.SsfType.TRANSITION ? SsfADL1.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition())
+                    : SsfADL.ssfRepresentation(fn.getDefinition().withPhi(phi), fn.getX(), fn.getRatio(), fn.getStartPosition());
             SsfData data = new SsfData(fn.getY());
-            ll = DkToolkit.marginalLikelihood(ssf, data, true, true);
+            DoubleSeq e;
+            if (fn.isMarginal()) {
+                mll = AkfToolkit.marginalLikelihoodComputer(true, true).compute(ssf, data);
+                pll = null;
+                e = mll.deviances();
+            } else {
+                mll = null;
+                pll = AkfToolkit.profileLikelihoodComputer().compute(ssf, data);
+                e = pll.deviances();
+            }
+            E = e;
         }
 
         @Override
@@ -73,28 +99,61 @@ public class ADLFunction implements IFunction {
         }
 
         @Override
+        public ISsqFunction getSsqFunction() {
+            return fn;
+        }
+
+        @Override
         public double getValue() {
-            return -ll.logLikelihood();
+            if (fn.isLog()) {
+                return mll != null ? -mll.logLikelihood() : -pll.logLikelihood();
+            } else {
+                return mll != null ? mll.ssq() * mll.factor() : pll.ssq() * pll.factor();
+            }
         }
 
         @Override
         public DoubleSeq getParameters() {
             return DoubleSeq.of(phi);
         }
-        
-        public MarginalLikelihood likelihood(){
-            return ll;
+
+        public MarginalLikelihood marginalLikelihood() {
+            return mll;
+        }
+
+        public ProfileLikelihood profileLikelihood() {
+            return pll;
+        }
+
+        public double logLikelihood() {
+            return mll != null ? mll.logLikelihood() : pll.logLikelihood();
+        }
+
+        @Override
+        public DoubleSeq getE() {
+            return E;
+        }
+
+        @Override
+        public double getSsqE() {
+            if (mll != null) {
+                return mll.ssq() * mll.factor();
+            } else if (pll != null) {
+                return pll.ssq() * pll.factor();
+            } else {
+                return Double.NaN;
+            }
         }
     }
 
     public static class Domain implements IParametersDomain {
 
-        private static final double BOUNDARY = .9999999, EPS = 1e-8;
-        
+        private static final double BOUNDARY = .999999, EPS = 1e-8;
+
         private final double limit;
-        
-        Domain(double limit){
-            this.limit=limit;
+
+        Domain(double limit) {
+            this.limit = limit;
         }
 
         @Override
@@ -129,7 +188,7 @@ public class ADLFunction implements IFunction {
         public ParamValidation validate(DataBlock ioparams) {
             double p = ioparams.get(0);
             if (p < limit) {
-                p =  limit;
+                p = limit;
                 ioparams.set(p);
                 return ParamValidation.Changed;
             } else if (p > BOUNDARY) {

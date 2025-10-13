@@ -39,16 +39,21 @@ import jdplus.toolkit.base.api.util.Validatable;
 @lombok.Builder(toBuilder = true, buildMethodName = "buildWithoutValidation")
 public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
 
+    public static enum SsfType {
+        TRANSITION,
+        CUMUL
+    }
+
     public static final String VERSION = "1.0.0";
 
     public static final String FAMILY = "temporaldisaggregation";
     public static final String METHOD = "adl";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
-    public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
-    public static final boolean DEF_FAST = true, DEF_RESCALE = true, DEF_LOG = false, DEF_DIFFUSE = false;
+    public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.Augmented_NoCollapsing;
+    public static final boolean DEF_FAST = true, DEF_RESCALE = true, DEF_LOG = false, DEF_DIFFUSE = true;
 
-    public static final double DEF_EPS = 1e-5;
+    public static final double DEF_EPS = 1e-9;
 
     public static final AggregationType DEF_AGGREGATION = AggregationType.Sum;
 
@@ -81,6 +86,7 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
             .estimationPrecision(DEF_EPS)
             .rescale(DEF_RESCALE)
             .algorithm(DEF_ALGORITHM)
+            .diffuseRegressors(false)
             .build();
 
     public static final ADLSpec FERNANDEZ = builder()
@@ -89,10 +95,12 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
             .mean(false)
             .trend(false)
             .xar(XAR.SAME)
+            .phi(Parameter.fixed(1))
             .rescale(DEF_RESCALE)
+            .diffuseRegressors(false)
             .algorithm(DEF_ALGORITHM)
             .build();
-    
+
     public static final ADLSpec ADL_11 = builder().build();
 
     @Override
@@ -115,6 +123,7 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
 
     private double estimationPrecision;
     private SsfInitialization algorithm;
+    private SsfType ssfType;
     private boolean rescale;
 
     public boolean isParameterEstimation() {
@@ -133,6 +142,7 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
                 .estimationSpan(TimeSelector.all())
                 .algorithm(DEF_ALGORITHM)
                 .rescale(DEF_RESCALE)
+                .diffuseRegressors(DEF_DIFFUSE)
                 .truncation(0.0)
                 .phi(Parameter.undefined())
                 .estimationPrecision(DEF_EPS);
