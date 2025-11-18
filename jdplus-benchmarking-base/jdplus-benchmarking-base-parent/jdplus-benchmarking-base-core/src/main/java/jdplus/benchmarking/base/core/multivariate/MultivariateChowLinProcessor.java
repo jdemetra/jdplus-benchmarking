@@ -21,6 +21,7 @@ import java.util.Map;
 
 import jdplus.benchmarking.base.api.multivariate.ModelData;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLin;
+import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import nbbrd.service.ServiceProvider;
@@ -32,7 +33,7 @@ import nbbrd.service.ServiceProvider;
 @ServiceProvider(MultivariateChowLin.Processor.class)
 public class MultivariateChowLinProcessor implements MultivariateChowLin.Processor {  
     @Override
-    public Map<String, TsData> process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
+    public MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
         MultivariateChowLinEngine engine=new MultivariateChowLinEngine();
         return engine.process(mData, constraints, spec);
     }

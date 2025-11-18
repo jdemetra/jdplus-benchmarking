@@ -16,6 +16,7 @@ module jdplus.benchmarking.base.api {
     requires static org.jspecify;
 
     requires jdplus.toolkit.base.api;
+    requires jdplus.toolkit.base.core;
 
     exports jdplus.benchmarking.base.api.benchmarking;
     exports jdplus.benchmarking.base.api.benchmarking.multivariate;

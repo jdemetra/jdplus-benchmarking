@@ -17,22 +17,17 @@
 package jdplus.benchmarking.base.core.multivariate;
 
 import internal.ssf.FastStateSmoother2;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
+
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
+import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
 import jdplus.benchmarking.base.api.multivariate.ModelData;
-import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
-import jdplus.benchmarking.base.api.univariate.ModelSpec;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
-import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
+import jdplus.benchmarking.base.api.univariate.*;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.benchmarking.base.core.ssf.MultivariateSsfChowLin;
-import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationProcessor;
-import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
+import jdplus.benchmarking.base.core.univariate.*;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
@@ -47,11 +42,13 @@ import jdplus.toolkit.base.core.data.DataBlockIterator;
 import jdplus.toolkit.base.core.data.DataBlockStorage;
 import jdplus.toolkit.base.core.data.transformation.Cumulator;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
+import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
 import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
 import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
 import jdplus.toolkit.base.core.ssf.multivariate.SsfMatrix;
-import jdplus.toolkit.base.core.ssf.univariate.ISsf;
-import jdplus.toolkit.base.core.ssf.univariate.ISsfData;
+import jdplus.toolkit.base.core.ssf.univariate.*;
+import jdplus.toolkit.base.core.stats.DescriptiveStatistics;
+import jdplus.toolkit.base.core.timeseries.simplets.TsDataToolkit;
 
 /**
  *
@@ -59,17 +56,21 @@ import jdplus.toolkit.base.core.ssf.univariate.ISsfData;
  */
 public class MultivariateChowLinEngine {
 
-    /* model data: temporal aggregation constraints data and indicators */
+    /* model input temporal aggregation constraints and indicators */
     private LinkedHashMap<String, ModelData> mData = new LinkedHashMap<>();
 
-    /* contemporaneous constraints data */
+    /* contemporaneous constraints input */
     private Map<String, TsData> ccData = new HashMap<>();
-
-    /* original regressors */
-    private final LinkedHashMap<Integer, FastMatrix> Xo = new LinkedHashMap<>();
 
     /* rescaled regressors -> TO DO */
     // private final LinkedHashMap<Integer, FastMatrix> X = new LinkedHashMap<>();
+
+    /* temporal constraints data */
+    private double[][] Yo;
+    //private final LinkedHashMap<Integer, TsData> Yo = new LinkedHashMap<>();
+
+    /* regressors */
+    private final LinkedHashMap<Integer, FastMatrix> Xo = new LinkedHashMap<>();
 
     /* cumulated regressors */
     private final LinkedHashMap<Integer, FastMatrix> Xc = new LinkedHashMap<>();
@@ -78,7 +79,7 @@ public class MultivariateChowLinEngine {
     private final List<ContemporaneousConstraint> contemporaneousConstraints = new ArrayList<>();
     private Constraint[] cs;
 
-    /* original contemporaneous constraints data */
+    /* contemporaneous constraints data */
     private double[][] Zo;
 
     /* cumulated contemporaneous constraints data */
@@ -86,22 +87,24 @@ public class MultivariateChowLinEngine {
 
     /* m: number of series, q: number of contemporaneous constraints */
     private int m, q;
-
     private double[] rhos;
     private boolean[] isConstant, isTrend;
-
-    private int lfreq, hfreq, ratio;
+    /* errors variance matrix */
+    private FastMatrix var;
+    private int ratio;
     private TsDomain lDomain, hDomain;
-    private TsUnit aggUnit;
+    /* full residuals from univariate estimations */
+    private double[][] resUnivariate = null;
 
-    public Map<String, TsData> process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> ccData, MultivariateChowLinSpec spec)  {
+    public MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> ccData, MultivariateChowLinSpec spec)  {
 
         // TO DO
-        // - Change output -> not only disaggregated series but an object of class MultivariateChowLinResults incl. stdev, model, etc.
-        // - Rescaling
-        // - Checks that the name of the constraints data matches with the name of variable in the parsed description of the contemporaneous constraint
-        // - Fit to domain before processing
-        // - Change variance of innovations -> cfr email Jean from 2025-08-08
+        // - Implement the return of an object MultivariateChowLinResults when no cc
+        // - Correct the stdv of the disaggregated series in MultivariateChowLinResults which is not correct
+        // - Remove comment in multivairateSsfChowLin when you're sure it's ok
+        // - Rescaling?
+        // - Write R part + try in R all the output
+        // - Allow for covariance in errors variance matrix?
 
         Map<String, TsData> rslts = new LinkedHashMap<>();
 
@@ -109,60 +112,47 @@ public class MultivariateChowLinEngine {
         this.m = mData.size();
         this.ccData = ccData;
         this.q = ccData.size();
-        this.rhos = spec.getRhos();
-        if(rhos.length != m){
-            throw new IllegalArgumentException("Mismatch between the number of series and the number of declared rho's");
-        }
-        this.isConstant = spec.getConstant();
-        if(isConstant.length != m){
-            throw new IllegalArgumentException("Mismatch between the number of series and the length of the constant vector");
-        }
-        this.isTrend = spec.getTrend();
-        if(isTrend.length != m){
-            throw new IllegalArgumentException("Mismatch between the number of series and the length of the trend vector");
-        }
+        this.rhos = getOrDefault(spec.getRhos(), m, 1, "Mismatch between the number of series and the number of declared rho's");
+        this.isConstant = getOrDefault(spec.getConstant(), m, false, "Mismatch between the number of series and the length of the constant vector");
+        this.isTrend = getOrDefault(spec.getTrend(), m, false, "Mismatch between the number of series and the length of the trend vector");
+        this.resUnivariate = new double[m][];
 
         buildDomains(spec.getDefaultPeriod());
+        buildTemporalConstraints();
         buildRegressors();
 
-        if (ccData.isEmpty()) {
+        if (spec.getVarMethod() == MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate || ccData.isEmpty()) {
             processIndependentConstraints(rslts);
-            return rslts;
-        } else{
-            buildContemporaneousConstraints(spec.getContemporaneousConstraints());
-        }
-
-        compute(rslts);
-
-        return rslts;
-    }
-
-    private void buildDomains(int defFreq) {
-
-        lDomain = TsDomain.DEFAULT_EMPTY;
-        for (String s : mData.keySet()) {
-            TsDomain d = mData.get(s).getY().getDomain();
-            if (lDomain.isEmpty()) {
-                lDomain = d;
-            } else if (!lDomain.getTsUnit().equals(d.getTsUnit())) {
-                throw new TsException(TsException.INCOMPATIBLE_FREQ);
-            } else {
-                lDomain = lDomain.intersection(d);
-                if (lDomain.isEmpty()) {
-                    throw new TsException(TsException.DOMAIN_EMPTY);
-                }
+            if (ccData.isEmpty()) {
+                // yet to do! -> return an object MultivariateChowLinResults filled with univariate results
+                return null;
             }
         }
 
+        this.var = buildVarMatrix(spec.getVarMethod(), FastMatrix.of(spec.getVar()), m);
+
+        buildContemporaneousConstraints(spec.getContemporaneousConstraints());
+
+        computeDisagg(rslts);
+
+        // to implemnt!
+        return compute();
+
+//        return rslts;
+    }
+
+
+    private void buildDomains(int defFreq) {
+
         hDomain = TsDomain.DEFAULT_EMPTY;
-        for (String s : mData.keySet()) {
-            TsData[] xs = mData.get(s).getX();
-            if (!(xs == null)){
-                for (TsData xsk : xs) {
+        for (String sName : mData.keySet()) {
+            TsData[] x = mData.get(sName).getX();
+            if (!(x == null)){
+                for (TsData s : x) {
                     if (hDomain.isEmpty()) {
-                        hDomain = xsk.getDomain();
+                        hDomain = s.getDomain();
                     } else {
-                        hDomain = hDomain.intersection(xsk.getDomain());
+                        hDomain = hDomain.intersection(s.getDomain());
                     }
                 }
             }
@@ -170,11 +160,11 @@ public class MultivariateChowLinEngine {
 
         if (!ccData.isEmpty()) {
             for (int i = 0; i < q; ++i) {
-                for (String s : ccData.keySet()) {
+                for (String sName : ccData.keySet()) {
                     if (hDomain.isEmpty()) {
-                        hDomain = ccData.get(s).getDomain();
+                        hDomain = ccData.get(sName).getDomain();
                     } else{
-                        hDomain = hDomain.intersection(ccData.get(s).getDomain());
+                        hDomain = hDomain.intersection(ccData.get(sName).getDomain());
                     }
                 }
             }
@@ -186,70 +176,89 @@ public class MultivariateChowLinEngine {
             hDomain = TsDomain.of(start, len);
         }
 
-        this.lfreq = lDomain.getAnnualFrequency();
-        this.hfreq = hDomain.getAnnualFrequency();    
+        lDomain = TsDomain.DEFAULT_EMPTY;
+        for (String sName : mData.keySet()) {
+            TsDomain d = mData.get(sName).getY().getDomain();
+            if (lDomain.isEmpty()) {
+                lDomain = d;
+            } else if (!lDomain.getTsUnit().equals(d.getTsUnit())) {
+                throw new TsException(TsException.INCOMPATIBLE_FREQ);
+            } else {
+                lDomain = lDomain.intersection(d);
+                if (lDomain.isEmpty()) {
+                    throw new TsException(TsException.DOMAIN_EMPTY);
+                }
+            }
+        }
+        lDomain = lDomain.intersection(hDomain.aggregate(lDomain.getTsUnit(),true));
+        if (lDomain.isEmpty()) {
+            throw new TsException(TsException.DOMAIN_EMPTY);
+        }
+
+        int lfreq = lDomain.getAnnualFrequency();
+        int hfreq = hDomain.getAnnualFrequency();
         if (lfreq >= hfreq || hfreq % lfreq != 0) {
             throw new TsException(TsException.INCOMPATIBLE_FREQ);
         }
         this.ratio = hfreq / lfreq;
     }
 
+    private void buildTemporalConstraints() {
+        Yo = new double[m][];
+        int k = 0;
+        for (String sName : mData.keySet()) {
+            TsData s = mData.get(sName).getY();
+            TsData sDom = TsDataToolkit.fitToDomain(s, lDomain);
+            Yo[k] = sDom.getValues().toArray();
+            k++;
+        }
+    }
+
     private void buildRegressors() {
-
-        int counter = 0;
-        for (String s : mData.keySet()) {
-            TsData[] indic = mData.get(s).getX();
-
-            int nx = indic == null ? 0 : indic.length;
-            int n = nx;
-            if (isConstant[counter]) {
-                ++n;
+        int k = 0;
+        for (String sName : mData.keySet()) {
+            TsData[] xp = mData.get(sName).getX();
+            int nxp = xp == null ? 0 : xp.length;
+            int nx = nxp;
+            if (isConstant[k]) {
+                ++nx;
             }
-            if (isTrend[counter]) {
-                ++n;
+            if (isTrend[k]) {
+                ++nx;
             }
 
-            if (n > 0) {
-                FastMatrix xs = FastMatrix.make(hDomain.getLength(), n);
-                FastMatrix xsC = FastMatrix.make(hDomain.getLength(), n);
-
-                // xs
-                DataBlockIterator xcols = xs.columnsIterator();
-                if (isConstant[counter]) {
-                    xcols.next().set(1);
+            if (nx > 0) {
+                FastMatrix xm = FastMatrix.make(hDomain.getLength(), nx);
+                DataBlockIterator xmCols = xm.columnsIterator();
+                if (isConstant[k]) {
+                    xmCols.next().set(1);
                 }
-                if (isTrend[counter]) {
-                    xcols.next().set(a -> a);
+                if (isTrend[k]) {
+                    xmCols.next().set(a -> a);
                 }
-                if (nx > 0) {
-                    for (TsData xk : indic) {
-                        if (xk == null) {
+                if (nxp > 0) {
+                    for (TsData s : xp) {
+                        if (s == null) {
                             throw new IllegalArgumentException("Indicator data not found: " + s);
                         }
-                        if (aggUnit == null) {
-                            aggUnit = xk.getTsUnit();
-                        } else if (!aggUnit.equals(xk.getTsUnit())) {
-                            throw new TsException(TsException.INCOMPATIBLE_FREQ);
-                        }
-                        xcols.next().copy(xk.getValues());
+                        TsData sDom = TsDataToolkit.fitToDomain(s, hDomain);
+                        xmCols.next().copy(sDom.getValues());
                     }
                 }
-                Xo.put(counter, xs);
+                Xo.put(k, xm);
 
-                // xs cumulated
-                xsC = xs.deepClone();
+                FastMatrix xmC = xm.deepClone();
                 Cumulator cumul = new Cumulator(ratio);
-                DataBlockIterator cXc = xsC.columnsIterator();
-                while (cXc.hasNext()) {
-                    cumul.transform(cXc.next());
+                DataBlockIterator xmCCols = xmC.columnsIterator();
+                while (xmCCols.hasNext()) {
+                    cumul.transform(xmCCols.next());
                 }
-                Xc.put(counter, xsC);
-
+                Xc.put(k, xmC);
             } else {
-                Xo.put(counter, FastMatrix.EMPTY);
-                Xc.put(counter, FastMatrix.EMPTY);
+                Xo.put(k, FastMatrix.EMPTY);
+                Xc.put(k, FastMatrix.EMPTY);
             }
-            counter++;
+            k++;
         }
     }
 
@@ -261,45 +270,46 @@ public class MultivariateChowLinEngine {
                 .algorithm(SsfInitialization.SqrtDiffuse)
                 .build();
 
-        TsEstimationSpec espec = TsEstimationSpec.builder()
+        EstimationSpec espec = EstimationSpec.builder()
                 .estimationPrecision(1e-9)
                 .build();
 
-        TemporalDisaggregationSpec spec;
-
-        int counter = 0;
-        for (String s : mData.keySet()) {
-            if(rhos[counter] == 1){
-                spec = TemporalDisaggregationSpec.FERNANDEZ.toBuilder()
+        RawDisaggregationSpec spec;
+        int k = 0;
+        for (String sName : mData.keySet()) {
+            if (rhos[k] == 1) {
+                spec = RawDisaggregationSpec.fernandez(this.ratio).toBuilder()
                         .algorithmSpec(aspec)
                         .estimationSpec(espec)
                         .build();
-            }else{
+            } else {
                 ModelSpec mspec = ModelSpec.builder()
-                        .parameter(Parameter.fixed(rhos[counter]))
-                        .constant(isConstant[counter])
-                        .trend(isTrend[counter])
+                        .parameter(Parameter.fixed(rhos[k]))
+                        .constant(isConstant[k])
+                        .trend(isTrend[k])
                         .build();
 
-                spec = TemporalDisaggregationSpec.CHOWLIN.toBuilder()
+                spec = RawDisaggregationSpec.chowLin(this.ratio).toBuilder()
                         .algorithmSpec(aspec)
                         .estimationSpec(espec)
                         .modelSpec(mspec)
                         .build();
             }
-            TsData ys = mData.get(s).getY();
-            TsData[] xs = mData.get(s).getX();
+            double[] Y = Yo[k];
+            FastMatrix x = Xo.get(k);
 
-            TemporalDisaggregationResults r;
-            if(xs.length == 0){
-                r = TemporalDisaggregationProcessor.process(ys, 0, 0, spec);
-            }else {
-                r = TemporalDisaggregationProcessor.process(ys, xs, spec);
+            RawTemporalDisaggregationResults r;
+            if (x.isEmpty()) {
+                r = RawDisaggregationProcessor.process(DoubleSeq.of(Y), 0, 0, spec);
+            } else {
+                r = RawDisaggregationProcessor.process(DoubleSeq.of(Y), x, 0, spec);
             }
             if (r != null) {
-                rslts.put(s, r.getDisaggregatedSeries());
+                DoubleSeq d = r.getDisaggregatedSeries();
+                rslts.put(sName, TsData.ofInternal(hDomain.getStartPeriod(), d.toArray()));
+                this.resUnivariate[k] = r.getResidualsDiagnostics().getFullResiduals().toArray();
             }
-            counter++;
+            k++;
         }
     }
 
@@ -315,7 +325,10 @@ public class MultivariateChowLinEngine {
                 if (cnt.getConstraint().contains(wc.getItem())) {
                     throw new IllegalArgumentException("Component definition cannot be a constraint: " + wc.getItem());
                 }
-            }   
+                if (!mData.containsKey(wc.getItem())) {
+                    throw new IllegalArgumentException("This component of the contemporaneous constraint not found in the data: " + wc.getItem());
+                }
+            }
         }
 
         // we create the actual constraints
@@ -336,31 +349,32 @@ public class MultivariateChowLinEngine {
         Zc = new double[q][];
         for (int i = 0; i < q; ++i) {
             ContemporaneousConstraint desc = contemporaneousConstraints.get(i);
-            double[] Zi;
+            double[] z;
             if (desc.getConstraint() != null) {
-                TsData s = ccData.get(desc.getConstraint());
-                Zi = s.getValues().toArray();   
+                TsData s = TsDataToolkit.fitToDomain(ccData.get(desc.getConstraint()), hDomain);
+                z = s.getValues().toArray();
             } else {
-                Zi = new double[]{desc.getConstant()};
+                z = new double[]{desc.getConstant()};
             }
-            Zo[i] = Zi;
+            Zo[i] = z;
 
-            double[] ZiC = Zi.clone();
+            double[] zc = z.clone();
             Cumulator cumul = new Cumulator(ratio);
-            cumul.transform(DataBlock.of(ZiC));
-            Zc[i] = ZiC;
+            cumul.transform(DataBlock.of(zc));
+            Zc[i] = zc;
         }
     }
-    
-    private void compute(Map<String, TsData> rslts) {
+
+    private void computeDisagg(Map<String, TsData> rslts) {
 
         List<String> seriesNames = new ArrayList<>(mData.keySet());
-        int c = hfreq;
+        int c = ratio;
         int len = hDomain.getLength();
 
         IMultivariateSsf ssf = MultivariateSsfChowLin.builder(m)
                 .conversion(c)
                 .rho(rhos)
+                .errV(var)
                 .xc(Xc)
                 .constraints(cs)
                 .build();
@@ -370,12 +384,9 @@ public class MultivariateChowLinEngine {
         M.set(Double.NaN);
 
         // fill the matrix: first rows with temporal constraints, last rows with contemporaneous constraint(s)
-        int counter = 0;
-        for (String s : mData.keySet()) {
-            TsData a = mData.get(s).getY();
-            DataBlock b = M.column(counter).extract(c - 1, a.length(), c);
-            b.copy(a.getValues());
-            counter++;
+        for (int i = 0; i < m; ++i) {
+            DataBlock b = M.column(i).extract(c - 1, Yo[i].length, c);
+            b.copy(DoubleSeq.of(Yo[i]));
         }
 
         for (int i = 0; i < q; ++i) {
@@ -406,6 +417,173 @@ public class MultivariateChowLinEngine {
             }
             nxc += nx;
             rslts.put(seriesNames.get(i), TsData.ofInternal(hDomain.getStartPeriod(), r));
-        }           
+        }
+    }
+
+    private MultivariateChowLinResults compute() {
+
+        Map<String, TsData> disagg = new LinkedHashMap<>();
+        Map<String, TsData> edisagg = new LinkedHashMap<>();
+        Map<String, TsData> regeffect = new LinkedHashMap<>();
+        Map<String, FastMatrix> regressors = new LinkedHashMap<>();
+        Map<String, DoubleSeq> regCoef = new LinkedHashMap<>();
+        Map<String, DoubleSeq> vregCoef = new LinkedHashMap<>();
+
+        List<String> seriesNames = new ArrayList<>(mData.keySet());
+        int c = ratio;
+        int len = hDomain.getLength();
+
+        IMultivariateSsf ssf = MultivariateSsfChowLin.builder(m)
+                .conversion(c)
+                .rho(rhos)
+                .errV(var)
+                .xc(Xc)
+                .constraints(cs)
+                .build();
+
+        // build the observations
+        FastMatrix M = FastMatrix.make(len, m + q);
+        M.set(Double.NaN);
+
+        // fill the matrix: first rows with temporal constraints, last rows with contemporaneous constraint(s)
+        for (int i = 0; i < m; ++i) {
+            DataBlock b = M.column(i).extract(c - 1, Yo[i].length, c);
+            b.copy(DoubleSeq.of(Yo[i]));
+        }
+
+        for (int i = 0; i < q; ++i) {
+            DataBlock row = M.column(i + m);
+            row.copyFrom(Zc[i], 0);
+        }
+
+        ISsf adapter = M2uAdapter.of(ssf);
+        ISsfData data = M2uAdapter.of(new SsfMatrix(M));
+
+        DefaultSmoothingResults srslts = DkToolkit.sqrtSmooth(adapter, data, true, false);
+
+        int no = len * (m + q);
+        double[] oh = new double[no];
+        double[] voh = new double[no];
+        for (int i = 0; i < no; ++i) {
+            oh[i] = adapter.loading().ZX(i, srslts.a(i));
+            voh[i] = adapter.loading().ZVZ(i, srslts.P(i));
+        }
+
+        for (int i = 0; i < m; ++i) {
+            double[] yhC = DoubleSeq.of(oh).extract(i, len,m+q).toArray();
+            double[] vyhC = DoubleSeq.of(voh).extract(i, len,m+q).toArray();
+            double[] yh = new double[len];
+            double[] vyh = new double[len];
+
+            for (int k = 0; k < len; ++k) {
+                if (k % (m + q) == 0) {
+                    yh[k] = yhC[k];
+                    vyh[k] = vyhC[k];
+                } else {
+                    yh[k] = yhC[k] - yhC[k - 1];
+                    vyh[k] = vyhC[k] - vyhC[k - 1];
+                }
+            }
+
+            disagg.put(seriesNames.get(i), TsData.ofInternal(hDomain.getStartPeriod(), yh));
+            edisagg.put(seriesNames.get(i), TsData.ofInternal(hDomain.getStartPeriod(), DoubleSeq.of(vyh).sqrt().toArray()));
+        }
+
+        int nxc = 0;
+        for (int i = 0; i < m; ++i) {
+            double[] rh = new double[len];
+            int nx = Xo.get(i).getColumnsCount();
+            if (nx == 0) {
+                Arrays.fill(rh, 0);
+                regCoef.put(seriesNames.get(i), null);
+                vregCoef.put(seriesNames.get(i), null);
+            } else {
+                int ip = 2 * i + nxc;
+                double[] b = new double[nx];
+                double[] vb = new double[nx];
+                for (int k = 0; k < nx; ++k) {
+                    b[k] = srslts.item(ip + 2 + k).get(0);
+                    vb[k] = srslts.P(ip + 2 + k).get(0, 0);
+                }
+                regCoef.put(seriesNames.get(i), DoubleSeq.of(b));
+                vregCoef.put(seriesNames.get(i), DoubleSeq.of(vb));
+
+                for (int j = 0; j < len; ++j) {
+                    for (int k = 0; k < nx; ++k) {
+                        rh[j] += b[k] * Xo.get(i).get(j, k);
+                    }
+                }
+                nxc += nx;
+            }
+            regeffect.put(seriesNames.get(i), TsData.ofInternal(hDomain.getStartPeriod(), rh));
+            regressors.put(seriesNames.get(i), Xo.get(i));
+        }
+
+        return MultivariateChowLinResults.builder()
+                .disaggregatedSeries(disagg)
+                .stdevDisaggregatedSeries(edisagg)
+                .regressionEffects(regeffect)
+                .regressors(regressors)
+                .coefficients(regCoef)
+                .coefficientsVariance(vregCoef)
+                .disaggregationDomain(this.hDomain)
+                .disaggregationRatio(this.ratio)
+                .build();
+    }
+
+
+
+    private double[] getOrDefault(double[] input, int length, double defaultValue, String mismatchErrorMessage) {
+        if (input == null) {
+            double[] defaults = new double[length];
+            Arrays.fill(defaults, defaultValue);
+            return defaults;
+        }
+        if (input.length != length) {
+            throw new IllegalArgumentException(mismatchErrorMessage);
+        }
+        return input;
+    }
+
+    private boolean[] getOrDefault(boolean[] input, int length, boolean defaultValue, String mismatchErrorMessage) {
+        if (input == null) {
+            boolean[] defaults = new boolean[length];
+            Arrays.fill(defaults, defaultValue);
+            return defaults;
+        }
+        if (input.length != length) {
+            throw new IllegalArgumentException(mismatchErrorMessage);
+        }
+        return input;
+    }
+
+    private FastMatrix buildVarMatrix(MultivariateChowLinSpec.errorsVarianceMethod method, FastMatrix var, int length) {
+        double[] v = new double[length];
+        switch (method) {
+            case fromUnivariate:
+                for (int i = 0; i < length; ++i) {
+                    v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVar();
+                }
+                double vSum = Arrays.stream(v).sum();
+                if (vSum != 0) {
+                    for (int i = 0; i < length; ++i) {
+                        v[i] = v[i] * length / vSum;
+                    }
+                }
+                return FastMatrix.diagonal(DoubleSeq.of(v));
+            case allEquals:
+                Arrays.fill(v, 1);
+                return FastMatrix.diagonal(DoubleSeq.of(v));
+            case userDefined:
+                if (var == null) {
+                    throw new IllegalArgumentException("Errors Variance unspecified even though userDefined method has been selected");
+                }
+                if (!var.isSquare() || var.getColumnsCount() != length) {
+                    throw new IllegalArgumentException("Errors Variance misspecified. The dimension should be " + length);
+                }
+                return var;
+            default:
+                throw new IllegalArgumentException("Unknown errors variance method: " + method);
+        }
     }
 }

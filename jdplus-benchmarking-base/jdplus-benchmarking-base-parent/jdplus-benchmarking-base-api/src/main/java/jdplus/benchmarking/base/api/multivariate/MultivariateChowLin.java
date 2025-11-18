@@ -30,7 +30,7 @@ public class MultivariateChowLin {
         return PROCESSOR.get();
     }
     
-    public Map<String, TsData> process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
+    public MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
         return PROCESSOR.get().process(mData, constraints, spec);
     }
     
@@ -38,7 +38,7 @@ public class MultivariateChowLin {
     @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
     public static interface Processor {
 
-        Map<String, TsData> process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec);
+        MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec);
 
     }
 }

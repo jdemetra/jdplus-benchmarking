@@ -27,6 +27,8 @@ import jdplus.toolkit.base.api.data.Doubles;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.data.ParameterType;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
+import jdplus.toolkit.base.api.timeseries.TsData;
+import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.functions.IParametricMapping;
 import jdplus.toolkit.base.core.math.functions.ParamValidation;
@@ -117,7 +119,49 @@ public class RawDisaggregationProcessorTest {
 //        System.out.println(rslt2.getConcentratedLikelihood().e());
 //        System.out.println(rslt2.getConcentratedLikelihood().logLikelihood());
     }
-    
+
+    @Test
+    public void testChowLinTmp() {
+        double[] Y1Arr = {30.0,30.6,31.2};
+//        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
+        double[] Y2Arr = {80.0,81.2,81.8};
+//        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
+        double[] Y3Arr = {8.0,8.1,8.3};
+//        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
+
+        double[] x11Arr = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4,8.6,8.9,9.0,9.2};
+        double[] x12Arr = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0,18.8,19.5,20.0,20.3};
+//        TsData[] x1 = {TsData.ofInternal(TsPeriod.quarterly(2021, 1), x11Arr),
+//                TsData.ofInternal(TsPeriod.quarterly(2021, 1), x12Arr)};
+//        TsData[] x2 = null;
+        double[] x31Arr = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0,2.1,2.3,2.4,2.5};
+//        TsData[] x3 = {TsData.ofInternal(TsPeriod.quarterly(2021, 1), x31Arr)};
+
+        DoubleSeq y1 = DoubleSeq.of(Y1Arr);
+        DoubleSeq x11 = DoubleSeq.of(x11Arr);
+        DoubleSeq x12 = DoubleSeq.of(x12Arr);
+
+        AlgorithmSpec aspec1 = AlgorithmSpec.builder()
+                .fast(true)
+                .rescale(true)
+                .algorithm(SsfInitialization.SqrtDiffuse)
+                .build();
+
+        EstimationSpec espec1 = EstimationSpec.builder()
+                .estimationPrecision(1e-9)
+                .build();
+
+        RawDisaggregationSpec spec1 = RawDisaggregationSpec.fernandez(4)
+                .toBuilder()
+                .algorithmSpec(aspec1)
+                .estimationSpec(espec1)
+                .build();
+        FastMatrix X = FastMatrix.make(x11.length(), 2);
+        X.column(0).copy(x11);
+        X.column(1).copy(x12);
+        RawTemporalDisaggregationResults rslt1 = RawDisaggregationProcessor.process(y1, X, 0, spec1);
+    }
+
    @Test
     public void testAR1() {
         DoubleSeq y=DoubleSeq.of(Data.PCRA);

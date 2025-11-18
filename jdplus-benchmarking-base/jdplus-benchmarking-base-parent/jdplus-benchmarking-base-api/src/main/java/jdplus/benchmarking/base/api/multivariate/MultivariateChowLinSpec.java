@@ -18,6 +18,8 @@ package jdplus.benchmarking.base.api.multivariate;
 
 import java.util.List;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
+import jdplus.benchmarking.base.api.benchmarking.univariate.CholetteSpec;
+import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
@@ -35,6 +37,11 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
 
     public static final AlgorithmDescriptor ALGORITHM = new AlgorithmDescriptor("temporaldisaggregation", "multivariatechowlin", null);
 
+    public static enum errorsVarianceMethod {
+        fromUnivariate, allEquals, userDefined
+    };
+
+    public static MultivariateChowLinSpec.errorsVarianceMethod DEF_VAR_METHOD = MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate;
     public static final boolean DEF_AVERAGE = false, DEF_FIXEDRHOS = true, DEF_DIFFUSE = false, DEF_ZERO = false;
     public static final int DEF_PERIOD = 4, DEF_TRUNCATEDRHOS = -1;
     public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
@@ -43,24 +50,17 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
     private boolean average;
     private boolean[] constant, trend;
     private double[] rhos;
+    private errorsVarianceMethod varMethod;
+    private Matrix var;
     private boolean fixedRhos;
     private double truncatedRhos;
     private SsfInitialization algorithm;
     private boolean diffuseRegressors;
     private boolean zeroInitialization;
     
-//    @lombok.NonNull
-//    @lombok.Singular
-//    private List<TemporalConstraint> temporalConstraints;
-//    
-//    @lombok.NonNull
-//    @lombok.Singular
-//    private List<ModelComposition> modelCompositions;
-    
     @lombok.NonNull
     @lombok.Singular
     private List<ContemporaneousConstraint> contemporaneousConstraints;
-    
 
     @Override
     public AlgorithmDescriptor getAlgorithmDescriptor() {
@@ -88,6 +88,8 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
                 .rhos(null)
                 .constant(null)
                 .trend(null)
+                .varMethod(DEF_VAR_METHOD)
+                .var(null)
                 .fixedRhos(DEF_FIXEDRHOS)
                 .truncatedRhos(DEF_TRUNCATEDRHOS)
                 .zeroInitialization(DEF_ZERO)
