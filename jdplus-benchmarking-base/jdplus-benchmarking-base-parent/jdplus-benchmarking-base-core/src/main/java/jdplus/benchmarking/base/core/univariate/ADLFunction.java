@@ -41,7 +41,7 @@ import jdplus.toolkit.base.core.ssf.univariate.SsfData;
 @lombok.Value
 @lombok.Builder(builderClassName = "Builder", toBuilder = true)
 public class ADLFunction implements IFunction, ISsqFunction {
-    
+
     private ADLDefinition definition;
     private DoubleSeq y;
     private FastMatrix X;
@@ -49,7 +49,6 @@ public class ADLFunction implements IFunction, ISsqFunction {
     private double limit;
     private boolean marginal, log;
     private ADLSpec.SsfType type;
-    
 
     @Override
     public Point evaluate(DoubleSeq ds) {
@@ -148,7 +147,7 @@ public class ADLFunction implements IFunction, ISsqFunction {
 
     public static class Domain implements IParametersDomain {
 
-        private static final double BOUNDARY = .999999, EPS = 1e-8;
+        private static final double BOUNDARY = .99999, EPS = 1e-8;
 
         private final double limit;
 
@@ -191,11 +190,13 @@ public class ADLFunction implements IFunction, ISsqFunction {
                 p = limit;
                 ioparams.set(p);
                 return ParamValidation.Changed;
-            } else if (p > BOUNDARY) {
-                p = 1 / p;
-                if (p > BOUNDARY) {
-                    p = 1 - 1e-6;
-                }
+            } else if (p > 1 / BOUNDARY) {
+                p = Math.max(limit, 1 / p);
+            }
+            // p is in [limit, 1/boundary]
+            if (p > BOUNDARY) {
+                // p is in [boundary, 1/boundary]
+                p = 2 * BOUNDARY - p;
                 ioparams.set(p);
                 return ParamValidation.Changed;
             } else {
