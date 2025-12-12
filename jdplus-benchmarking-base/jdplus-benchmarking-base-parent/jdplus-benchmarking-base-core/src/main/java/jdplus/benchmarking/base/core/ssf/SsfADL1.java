@@ -147,14 +147,6 @@ public class SsfADL1 {
             ++nx;
         }
         int n = X.getRowsCount();
-//        if (definition.isXunitRoot()) {
-//            z = X.deepClone();
-//            for (int i = n - 1; i > 0; --i) {
-//                z.row(i).sub(z.row(i - 1));
-//            }
-//            z.row(0).set(0);
-//        // z contains now either the original x or dx
-//        }
         double phi = definition.getPhi();
         FastMatrix W = FastMatrix.make(n, nx);
         int c = 0;
