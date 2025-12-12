@@ -121,7 +121,7 @@ public class TransitionRegSsf {
 //            }
 //        }
 //
-////        @Override
+    ////        @Override
 ////        public void TM(int pos, FastMatrix m) {
 ////            dyn.TM(pos, m.extract(0, this.m, 0, m.getColumnsCount()));
 ////        }
@@ -529,8 +529,9 @@ public class TransitionRegSsf {
             int nd = init0.getDiffuseDim();
             if (nd > 0) {
                 init0.diffuseConstraints(b.extract(0, n, 0, nd));
+            } else {
+                b.row(0).copy(w0);
             }
-            b.row(0).drop(nd, 0).copy(w0);
             b.extract(n, w0.length(), nd, w0.length()).diagonal().set(1);
         }
 

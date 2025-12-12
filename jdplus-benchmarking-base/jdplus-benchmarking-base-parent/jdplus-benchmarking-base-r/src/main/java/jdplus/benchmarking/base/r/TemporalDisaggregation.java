@@ -547,7 +547,7 @@ public class TemporalDisaggregation {
     }
 
     public ADLResults processADL(TsData y, boolean constant, boolean trend, TsData[] indicators,
-            String aggregation, double phi, boolean fixedphi, double truncatedPhi, String xar, String ssfType) {
+            String aggregation, double phi, boolean fixedphi, double truncatedPhi, String xar, String ssfType, boolean diffuse) {
         if (indicators == null) {
             return null;
         }
@@ -561,6 +561,7 @@ public class TemporalDisaggregation {
                 .phi(fixedphi ? Parameter.fixed(phi) : (Double.isFinite(phi) ? Parameter.initial(phi) : Parameter.undefined()))
                 .truncation(truncatedPhi <= -1 ? null : truncatedPhi)
                 .estimationPrecision(DEF_EPS)
+                .diffuseRegressors(diffuse)
                 .rescale(DEF_RESCALE)
                 //                .algorithm(SsfInitialization.valueOf(algorithm))
                 .build();

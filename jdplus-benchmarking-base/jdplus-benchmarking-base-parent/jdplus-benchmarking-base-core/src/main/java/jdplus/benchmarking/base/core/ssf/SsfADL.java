@@ -124,10 +124,10 @@ public class SsfADL {
                 while (cols.hasNext()) {
                     DataBlock cur = cols.next();
                     DataBlock col0 = W.column(c++);
-                    col0.drop(1, 0).copy(cur.drop(0, 1));
-                    col0.set(0, cur.get(0));
                     DataBlock col1 = W.column(c);
-                    col1.copy(cur);
+                    col0.copy(cur);
+                    col1.drop(1, 0).copy(cur.drop(0, 1));
+                    col1.set(0, cur.get(0));
                     if (phi != 1) {
                         col0.mul(0, 1 / (1 - phi));
                         col1.mul(0, 1 / (1 - phi));

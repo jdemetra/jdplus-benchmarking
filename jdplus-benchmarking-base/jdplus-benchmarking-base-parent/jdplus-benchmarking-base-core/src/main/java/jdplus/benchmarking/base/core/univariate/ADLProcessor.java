@@ -36,6 +36,8 @@ import jdplus.toolkit.base.core.math.functions.ssq.SsqFunctionMinimizer;
 import jdplus.toolkit.base.core.math.functions.levmar.LevenbergMarquardtMinimizer;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.ssf.ISsfLoading;
+import jdplus.toolkit.base.core.ssf.akf.AkfToolkit;
+import jdplus.toolkit.base.core.ssf.akf.SmoothingOutput;
 import jdplus.toolkit.base.core.ssf.basic.Loading;
 import jdplus.toolkit.base.core.ssf.basic.RegSsf;
 import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
@@ -100,7 +102,7 @@ public class ADLProcessor {
 
     private ADLResults disaggregate(DisaggregationModel model, ADLSpec spec) {
         ADLDefinition definition = definitionOf(spec);
-        double limit = spec.getTruncation() == null ? -1 : spec.getTruncation() == null ? -1 : spec.getTruncation();
+        double limit = spec.getTruncation() == null ? -1 : spec.getTruncation();
         ObjectiveFunctionPoint ml = null;
         ADLFunction fn = ADLFunction.builder()
                 .definition(definition)
@@ -108,7 +110,7 @@ public class ADLProcessor {
                 .X(model.getHEX())
                 .ratio(model.getFrequencyRatio())
                 .startPosition(model.getStart())
-                .limit(Math.max(-1, limit))
+                .limit(Math.max(-.999999, limit))
                 .marginal(spec.isDiffuseRegressors())
                 .log(false)
                 .type(spec.getSsfType())
@@ -142,8 +144,11 @@ public class ADLProcessor {
             ssf = SsfADL1.ssfRepresentation(definition, model.getHX(), model.getFrequencyRatio(), model.getStart());
             rloading = Loading.fromPosition(0);
         }
-        DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, ssfData, true, true);
+        DefaultSmoothingResults ss = AkfToolkit.smooth(ssf, ssfData, true, true, false);
+//        DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, ssfData, true, true);
 
+//        DataBlock coeff = ss.getSmoothing().a(0).drop(2, 0);
+//        FastMatrix cvar = ss.getSmoothing().P(0).extract(2, coeff.length(), 2, coeff.length());
         DataBlock coeff = ss.a(0).drop(2, 0);
         FastMatrix cvar = ss.P(0).extract(2, coeff.length(), 2, coeff.length());
         int nparams = spec.isParameterEstimation() ? 1 : 0;
@@ -157,6 +162,8 @@ public class ADLProcessor {
         double[] s = new double[ssfData.length()];
         double[] es = new double[ssfData.length()];
         for (int i = 0; i < s.length; ++i) {
+//            s[i] = rloading.ZX(i, ss.getFiltering().a(i).drop(1, 0)) / yfactor;
+//            double v = rloading.ZVZ(i, ss.getSmoothing().P(i).extract(1, nz, 1, nz));
             s[i] = rloading.ZX(i, ss.a(i).drop(1, 0)) / yfactor;
             double v = rloading.ZVZ(i, ss.P(i).extract(1, nz, 1, nz));
             if (v > 0) {

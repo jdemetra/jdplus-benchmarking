@@ -16,6 +16,8 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
@@ -30,8 +32,10 @@ import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
 //import static jdplus.benchmarking.base.api.univariate.ADLSpec.builder;
 import jdplus.toolkit.base.api.timeseries.TsData;
+import jdplus.toolkit.base.api.timeseries.TsDataTable;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import tck.demetra.data.Data;
 
@@ -201,6 +205,50 @@ public class ADLProcessorTest {
         ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, ADLSpec.ADL_11);
 //        System.out.print(rslts.getDisaggregatedSeries());
 //        System.out.print(rslts.getStdevDisaggregatedSeries());
+    }
+
+    @Test
+    public void testADL11_3() {
+
+        double[] Y1Arr = {84.2, 87.5, 90.6, 94.2, 97.4, 100.7, 104.7, 108.4, 108.5, 104.0, 102.6, 102.4, 98.8, 96.9, 98.5, 102.2, 104.7, 107.3, 110.0, 112.0, 100.0, 106.5, 111.8, 114.4};
+        TsData y = TsData.ofInternal(TsPeriod.yearly(2000), Y1Arr);
+
+        double[] qArr = {100.3, 100.4, 100.6, 100.2, 100.8, 100.8, 100.7, 101.6, 102.0, 102.1, 102.5, 102.5, 103.0, 103.7, 104.2, 104.0, 104.1, 104.1, 104.4, 104.6, 105.0, 105.4, 105.0, 105.0, 105.5, 105.7, 105.9, 106.1, 106.3, 106.1, 106.1, 106.3, 105.5, 103.9, 102.9, 100.9, 99.4, 98.8, 98.7, 98.4, 98.1, 98.1, 96.8, 96.7, 96.2, 95.5, 94.8, 94.7, 94.2, 92.9, 92.1, 91.2, 90.8, 91.0, 90.9, 90.9, 91.2, 91.4, 91.7, 91.6, 92.0, 92.3, 92.8, 92.6, 92.8, 92.9, 93.3, 93.2, 93.5, 93.9, 93.9, 94.1, 94.1, 94.1, 94.2, 94.6, 95.3, 95.2, 95.1, 95.5, 93.4, 83.5, 90.4, 90.6, 90.6, 91.7, 94.6, 95.0, 94.6, 95.4, 95.5, 95.5, 95.3, 95.2, 95.5, 95.4};
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(2000, 1), qArr).normalize();
+//        TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
+//        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
+//        Random rnd = new Random(0);
+//        TsData y = TsData.of(TsPeriod.yearly(1977), DoubleSeq.onMapping(30, i -> rnd.nextDouble()).commit());
+//        TsData q = TsData.of(TsPeriod.quarterly(1977, 1), DoubleSeq.onMapping(120, i -> rnd.nextDouble()).commit());
+        double rho = 1;
+        ADLSpec spec = ADLSpec.builder()
+                .aggregationType(AggregationType.Sum)
+                .algorithm(SsfInitialization.SqrtDiffuse)
+                .ssfType(ADLSpec.SsfType.TRANSITION)
+                .xar(ADLSpec.XAR.FREE)
+//                .phi(Parameter.fixed(rho))
+                .diffuseRegressors(false)
+                .build();
+
+        ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, spec);
+        ADLSpec spec2 = ADLSpec.builder()
+                .aggregationType(AggregationType.Sum)
+                .algorithm(SsfInitialization.Augmented_Robust)
+                .ssfType(ADLSpec.SsfType.CUMUL)
+                .xar(ADLSpec.XAR.FREE)
+//                .phi(Parameter.fixed(rho))
+                .diffuseRegressors(false)
+                .build();
+
+        ADLResults rslts2 = ADLProcessor.process(y, new TsData[]{q}, spec2);
+        assertTrue(rslts2.getDisaggregatedSeries().distance(rslts.getDisaggregatedSeries())<1e-6);
+        List<TsData> s = new ArrayList<>();
+        s.add(rslts.getDisaggregatedSeries());
+        s.add(rslts2.getDisaggregatedSeries());
+        s.add(rslts.getStdevDisaggregatedSeries());
+        s.add(rslts2.getStdevDisaggregatedSeries());
+        TsDataTable table = TsDataTable.of(s);
+//        System.out.print(table);
     }
 
     public static void main(String[] args) {
