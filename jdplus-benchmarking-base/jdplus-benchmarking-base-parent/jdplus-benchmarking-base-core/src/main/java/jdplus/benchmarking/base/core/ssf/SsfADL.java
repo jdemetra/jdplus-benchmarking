@@ -116,6 +116,9 @@ public class SsfADL {
                 while (cols.hasNext()) {
                     DataBlock col = W.column(c++);
                     col.copy(cols.next());
+                    if (phi != 1) {
+                        col.mul(0, 1 / (1 - phi));
+                    }
                     cumul(col, phi);
                 }
             }

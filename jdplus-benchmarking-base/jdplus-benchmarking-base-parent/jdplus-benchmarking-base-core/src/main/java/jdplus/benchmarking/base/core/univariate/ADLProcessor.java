@@ -161,7 +161,11 @@ public class ADLProcessor {
         }
         ProfileLikelihood pll = rslt.profileLikelihood();
         if (pll != null) {
-            sig2 = pll.sigma2();
+            // dim of the profile likelihood = number of obs - number of regs - number of diffuse elements, considered as regression variable. 
+            int ldim=pll.dim();
+            if (spec.getPhi().getValue() == 1)
+                --ldim;
+            sig2 = pll.ssq()/ldim;
             pll.rescale(yfactor);
         }
         // workaround to solve a bug in tstoolkit
