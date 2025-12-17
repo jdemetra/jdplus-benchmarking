@@ -16,8 +16,6 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
@@ -26,14 +24,10 @@ import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 import jdplus.toolkit.base.api.data.AggregationType;
-import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
-import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.timeseries.TsData;
-import jdplus.toolkit.base.api.timeseries.TsDataTable;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
-import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import tck.demetra.data.Data;
@@ -244,12 +238,32 @@ public class ADLProcessorTest {
         test(y, q, .9, true, false);
         test(y, q, .9, false, true);
         test(y, q, .9, true, true);
+        test(y, q, 1, false, false);
+        test(y, q, 1, true, false);
+        test(y, q, 1, false, true);
+        test(y, q, 1, true, true);
+        test2(y, q, .5, false, false, false);
+        test2(y, q, .5, true, false, false);
+        test2(y, q, .5, false, true, false);
+        test2(y, q, .5, true, true, false);
+        test2(y, q, .5, false, false, true);
+        test2(y, q, .5, true, false, true);
+        test2(y, q, .5, false, true, true);
+        test2(y, q, .5, true, true, true);
+        test2(y, q, 1, false, false, false);
+        test2(y, q, 1, true, false, false);
+        test2(y, q, 1, false, true, false);
+        test2(y, q, 1, true, true, false);
+        test2(y, q, 1, false, false, true);
+        test2(y, q, 1, true, false, true);
+        test2(y, q, 1, false, true, true);
+        test2(y, q, 1, true, true, true);
     }
 
     private void test(TsData y, TsData q, double rho, boolean average, boolean trend) {
 
         ADLSpec spec = ADLSpec.builder()
-                .aggregationType(AggregationType.Average)
+                .aggregationType(average ? AggregationType.Average : AggregationType.Sum)
                 .ssfType(ADLSpec.SsfType.TRANSITION)
                 .xar(ADLSpec.XAR.SAME)
                 .phi(Parameter.fixed(rho))
@@ -284,7 +298,7 @@ public class ADLProcessorTest {
         TemporalDisaggregationSpec specFe = TemporalDisaggregationSpec.CHOWLIN.toBuilder()
                 .algorithmSpec(aspec)
                 .estimationSpec(espec)
-                .average(true)
+                .average(average)
                 .modelSpec(mspec)
                 .build();
         TemporalDisaggregationResults rsltsFe = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, specFe);
@@ -307,6 +321,51 @@ public class ADLProcessorTest {
 //        System.out.println();
     }
 
+    private void test2(TsData y, TsData q, double rho, boolean average, boolean trend, boolean free) {
+
+        ADLSpec spec1 = ADLSpec.builder()
+                .aggregationType(average ? AggregationType.Average : AggregationType.Sum)
+                .ssfType(ADLSpec.SsfType.TRANSITION)
+                .xar(free ? ADLSpec.XAR.FREE : ADLSpec.XAR.NONE)
+                .phi(Parameter.fixed(rho))
+                .mean(rho == 1 ? trend : true)
+                .trend(rho == 1 ? false : trend)
+                .diffuseRegressors(false)
+                .rescale(true)
+                .build();
+
+         ADLSpec spec2 = ADLSpec.builder()
+                .aggregationType(average ? AggregationType.Average : AggregationType.Sum)
+                .ssfType(ADLSpec.SsfType.CUMUL)
+                .xar(free ? ADLSpec.XAR.FREE : ADLSpec.XAR.NONE)
+                .phi(Parameter.fixed(rho))
+                .mean(rho == 1 ? trend : true)
+                .trend(rho == 1 ? false : trend)
+                .diffuseRegressors(false)
+                .rescale(true)
+                .build();
+
+        ADLResults rsltsADL1 = ADLProcessor.process(y, new TsData[]{q}, spec1);
+        ADLResults rsltsADL2 = ADLProcessor.process(y, new TsData[]{q}, spec2);
+
+
+        assertTrue(rsltsADL1.getDisaggregatedSeries().distance(rsltsADL2.getDisaggregatedSeries()) < 1e-6); //->ok
+        assertTrue(rsltsADL1.getStdevDisaggregatedSeries().distance(rsltsADL2.getStdevDisaggregatedSeries()) < 1e-3); //->ok
+//        List<TsData> s = new ArrayList<>();
+//        s.add(rsltsADL1.getDisaggregatedSeries());
+//        s.add(rsltsADL2.getDisaggregatedSeries());
+//        s.add(rsltsADL1.getStdevDisaggregatedSeries());
+//        s.add(rsltsADL2.getStdevDisaggregatedSeries());
+//        TsDataTable table = TsDataTable.of(s);
+//        System.out.print(table);
+//        System.out.print('\n');
+//        System.out.println(rsltsADL.getCoefficients());
+//        System.out.println(rsltsFe.getCoefficients());
+//        System.out.println();
+//        System.out.println(rsltsADL.getCoefficientsCovariance());
+//        System.out.println(rsltsFe.getCoefficientsCovariance());
+//        System.out.println();
+    }
     public static void main(String[] args) {
         Random rnd = new Random(0);
         TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
