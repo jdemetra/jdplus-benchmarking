@@ -20,7 +20,7 @@ import nbbrd.design.Development;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import lombok.NonNull;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 
 /**
@@ -67,10 +67,15 @@ public class DisaggregationModel {
      */
     FastMatrix hXC;
     /**
+     * Regression variables transformed to match the aggregation mode,
+     * defined on the high level domain. No cumul.
+     */
+    FastMatrix hEX;
+  /**
      * Regression variables transformed to match the aggregation mode
      * (cumulative variables). Defined on the high level domain.
      */
-    FastMatrix hEX;
+    FastMatrix hEXC;
     /**
      * low-frequency domain. Domain of y
      */
@@ -114,6 +119,7 @@ public class DisaggregationModel {
         this.hX=builder.hX;
         this.hXC=builder.hXC;
         this.hEX=builder.hEX;
+        this.hEXC=builder.hEXC;
         this.lDom=builder.y.getDomain();
         this.lEDom=builder.lEDom;
         this.hDom=builder.hDom;

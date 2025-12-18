@@ -54,7 +54,7 @@ import jdplus.toolkit.base.core.ssf.univariate.SsfRegressionModel;
 import jdplus.toolkit.base.core.stats.likelihood.DiffuseConcentratedLikelihood;
 import jdplus.toolkit.base.core.stats.tests.NiidTests;
 import lombok.NonNull;
-import org.checkerframework.checker.index.qual.NonNegative;
+import nbbrd.design.NonNegative;
 
 /**
  *

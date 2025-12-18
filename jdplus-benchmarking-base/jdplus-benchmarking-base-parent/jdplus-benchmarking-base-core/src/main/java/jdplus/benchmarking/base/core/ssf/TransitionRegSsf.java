@@ -17,11 +17,8 @@
 package jdplus.benchmarking.base.core.ssf;
 
 import jdplus.toolkit.base.api.data.DoubleSeq;
-import jdplus.toolkit.base.api.data.DoubleSeqCursor;
 import jdplus.toolkit.base.core.data.DataBlock;
-import jdplus.toolkit.base.core.data.DataBlockIterator;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
-import jdplus.toolkit.base.core.math.matrices.MatrixStorage;
 import jdplus.toolkit.base.core.ssf.ISsfDynamics;
 import jdplus.toolkit.base.core.ssf.ISsfInitialization;
 import jdplus.toolkit.base.core.ssf.ISsfLoading;
@@ -56,126 +53,126 @@ public class TransitionRegSsf {
 //        return new StateComponent(new Xinitializer(model.initialization(), nx),
 //                new Xdynamics(mdim, model.dynamics(), X));
 //    }
-    static class Xdynamics implements ISsfDynamics {
-
-        private final int m, n;
-        private final ISsfDynamics dyn;
-        private final MatrixStorage s;
-
-        /**
-         *
-         * @param m size of the state without the regression variables
-         * @param dyn dynamics without the regression variables
-         * @param x regression variables
-         */
-        Xdynamics(int m, ISsfDynamics dyn, MatrixStorage x) {
-            this.dyn = dyn;
-            this.m = m;
-            this.s = x;
-            this.n = x.getMatrixColumnsCount() + m;
-        }
-
-        @Override
-        public int getInnovationsDim() {
-            return dyn.getInnovationsDim();
-        }
-
-        @Override
-        public void V(int pos, FastMatrix qm) {
-            dyn.V(pos, qm.extract(0, m, 0, m));
-        }
-
-        @Override
-        public void S(int pos, FastMatrix cm) {
-            dyn.S(pos, cm.extract(0, m, 0, cm.getColumnsCount()));
-        }
-
-        @Override
-        public boolean hasInnovations(int pos) {
-            return dyn.hasInnovations(pos);
-        }
-
-        @Override
-        public boolean areInnovationsTimeInvariant() {
-            return dyn.areInnovationsTimeInvariant();
-        }
-
-        @Override
-        public void T(int pos, FastMatrix tr) {
-            dyn.T(pos, tr.extract(0, m, 0, m));
-            FastMatrix xcur = s.matrix(pos);
-            tr.extract(0, xcur.getRowsCount(), m, xcur.getColumnsCount())
-                    .copy(xcur);
-            tr.diagonal().drop(m, 0).set(1);
-        }
-
-        @Override
-        public void TX(int pos, DataBlock x) {
-            DataBlock a0 = x.range(0, m);
-            DataBlock a1 = x.range(m, n);
-            // a0=T*a0
-            dyn.TX(pos, a0);
-            // a0+=X*a1
-            FastMatrix xcur = s.matrix(pos);
-            DoubleSeqCursor.OnMutable cursor = a0.cursor();
-            DataBlockIterator rows = xcur.rowsIterator();
-            while (rows.hasNext()) {
-                cursor.setAndNext(rows.next().dot(a1));
-            }
-        }
-
-//        @Override
-//        public void TM(int pos, FastMatrix m) {
-//            dyn.TM(pos, m.extract(0, this.m, 0, m.getColumnsCount()));
+//    static class Xdynamics implements ISsfDynamics {
+//
+//        private final int m, n;
+//        private final ISsfDynamics dyn;
+//        private final MatrixStorage s;
+//
+//        /**
+//         *
+//         * @param m size of the state without the regression variables
+//         * @param dyn dynamics without the regression variables
+//         * @param x regression variables
+//         */
+//        Xdynamics(int m, ISsfDynamics dyn, MatrixStorage x) {
+//            this.dyn = dyn;
+//            this.m = m;
+//            this.s = x;
+//            this.n = x.getMatrixColumnsCount() + m;
 //        }
 //
 //        @Override
-//        public void TVT(int pos, FastMatrix m) {
-//            FastMatrix dz = m.extract(0, this.m, 0, this.m);
-//            dyn.TVT(pos, dz);
-//            FastMatrix hz = m.extract(0, this.m, this.m, nx);
-//            dyn.TM(pos, hz);
-//            FastMatrix cz = m.extract(this.m, nx, 0, this.m);
-//            cz.copyTranspose(hz);
+//        public int getInnovationsDim() {
+//            return dyn.getInnovationsDim();
 //        }
-        @Override
-        public void XS(int pos, DataBlock x, DataBlock xs) {
-            DataBlock a0 = x.range(0, m);
-            dyn.XS(pos, a0, xs);
-        }
-
-        @Override
-        public void addSU(int pos, DataBlock x, DataBlock u) {
-            DataBlock a0 = x.range(0, m);
-            dyn.addSU(pos, a0, u);
-        }
-
-        @Override
-        public void XT(int pos, DataBlock x) {
-            DataBlock a0 = x.range(0, m);
-            DataBlock a1 = x.range(m, n);
-            // a1=a0*X+a1  
-            FastMatrix xcur = s.matrix(pos);
-            DoubleSeqCursor.OnMutable cursor = a1.cursor();
-            DataBlockIterator cols = xcur.columnsIterator();
-            while (cols.hasNext()) {
-                cursor.setAndNext(cols.next().dot(a0));
-            }
-            // a0=a0*T
-            dyn.XT(pos, a0);
-        }
-
-        @Override
-        public void addV(int pos, FastMatrix p) {
-            dyn.addV(pos, p.extract(0, m, 0, m));
-        }
-
-        @Override
-        public boolean isTimeInvariant() {
-            return dyn.isTimeInvariant();
-        }
-
-    }
+//
+//        @Override
+//        public void V(int pos, FastMatrix qm) {
+//            dyn.V(pos, qm.extract(0, m, 0, m));
+//        }
+//
+//        @Override
+//        public void S(int pos, FastMatrix cm) {
+//            dyn.S(pos, cm.extract(0, m, 0, cm.getColumnsCount()));
+//        }
+//
+//        @Override
+//        public boolean hasInnovations(int pos) {
+//            return dyn.hasInnovations(pos);
+//        }
+//
+//        @Override
+//        public boolean areInnovationsTimeInvariant() {
+//            return dyn.areInnovationsTimeInvariant();
+//        }
+//
+//        @Override
+//        public void T(int pos, FastMatrix tr) {
+//            dyn.T(pos, tr.extract(0, m, 0, m));
+//            FastMatrix xcur = s.matrix(pos);
+//            tr.extract(0, xcur.getRowsCount(), m, xcur.getColumnsCount())
+//                    .copy(xcur);
+//            tr.diagonal().drop(m, 0).set(1);
+//        }
+//
+//        @Override
+//        public void TX(int pos, DataBlock x) {
+//            DataBlock a0 = x.range(0, m);
+//            DataBlock a1 = x.range(m, n);
+//            // a0=T*a0
+//            dyn.TX(pos, a0);
+//            // a0+=X*a1
+//            FastMatrix xcur = s.matrix(pos);
+//            DoubleSeqCursor.OnMutable cursor = a0.cursor();
+//            DataBlockIterator rows = xcur.rowsIterator();
+//            while (rows.hasNext()) {
+//                cursor.setAndNext(rows.next().dot(a1));
+//            }
+//        }
+//
+    ////        @Override
+////        public void TM(int pos, FastMatrix m) {
+////            dyn.TM(pos, m.extract(0, this.m, 0, m.getColumnsCount()));
+////        }
+////
+////        @Override
+////        public void TVT(int pos, FastMatrix m) {
+////            FastMatrix dz = m.extract(0, this.m, 0, this.m);
+////            dyn.TVT(pos, dz);
+////            FastMatrix hz = m.extract(0, this.m, this.m, nx);
+////            dyn.TM(pos, hz);
+////            FastMatrix cz = m.extract(this.m, nx, 0, this.m);
+////            cz.copyTranspose(hz);
+////        }
+//        @Override
+//        public void XS(int pos, DataBlock x, DataBlock xs) {
+//            DataBlock a0 = x.range(0, m);
+//            dyn.XS(pos, a0, xs);
+//        }
+//
+//        @Override
+//        public void addSU(int pos, DataBlock x, DataBlock u) {
+//            DataBlock a0 = x.range(0, m);
+//            dyn.addSU(pos, a0, u);
+//        }
+//
+//        @Override
+//        public void XT(int pos, DataBlock x) {
+//            DataBlock a0 = x.range(0, m);
+//            DataBlock a1 = x.range(m, n);
+//            // a1=a0*X+a1  
+//            FastMatrix xcur = s.matrix(pos);
+//            DoubleSeqCursor.OnMutable cursor = a1.cursor();
+//            DataBlockIterator cols = xcur.columnsIterator();
+//            while (cols.hasNext()) {
+//                cursor.setAndNext(cols.next().dot(a0));
+//            }
+//            // a0=a0*T
+//            dyn.XT(pos, a0);
+//        }
+//
+//        @Override
+//        public void addV(int pos, FastMatrix p) {
+//            dyn.addV(pos, p.extract(0, m, 0, m));
+//        }
+//
+//        @Override
+//        public boolean isTimeInvariant() {
+//            return dyn.isTimeInvariant();
+//        }
+//
+//    }
 
     static class Xdynamics1 implements ISsfDynamics {
 
@@ -188,7 +185,6 @@ public class TransitionRegSsf {
          * @param m size of the state without the regression variables
          * @param dyn dynamics without the regression variables
          * @param x regression variables
-         * @param q item of the state to modify with the regression variables
          */
         Xdynamics1(int m, ISsfDynamics dyn, FastMatrix x) {
             this.dyn = dyn;
@@ -268,7 +264,7 @@ public class TransitionRegSsf {
 
         @Override
         public boolean isTimeInvariant() {
-            return dyn.isTimeInvariant();
+            return false;
         }
 
     }
@@ -333,7 +329,7 @@ public class TransitionRegSsf {
 //            x.add(0, a1.dot(s.row(pos)));
 //        }
 //
-////        @Override
+    ////        @Override
 ////        public void TM(int pos, FastMatrix m) {
 ////            dyn.TM(pos, m.extract(0, this.m, 0, m.getColumnsCount()));
 ////        }
@@ -533,9 +529,10 @@ public class TransitionRegSsf {
             int nd = init0.getDiffuseDim();
             if (nd > 0) {
                 init0.diffuseConstraints(b.extract(0, n, 0, nd));
+            } else {
+                b.row(0).copy(w0);
             }
-            b.row(0).drop(nd, 0).copy(w0);
-            b.extract(init0.getStateDim(), w0.length(), nd, w0.length()).diagonal().set(1);
+            b.extract(n, w0.length(), nd, w0.length()).diagonal().set(1);
         }
 
         @Override

@@ -16,11 +16,10 @@
  */
 package jdplus.benchmarking.base.core.ssf;
 
-import jdplus.benchmarking.base.api.univariate.ADLSpec.XAR;
+import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import jdplus.benchmarking.base.core.univariate.ADLDefinition;
-import jdplus.benchmarking.base.core.univariate.ADLProcessor;
-import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.data.DataBlock;
+import jdplus.toolkit.base.core.data.DataBlockIterator;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.ssf.ISsfLoading;
 import jdplus.toolkit.base.core.ssf.StateComponent;
@@ -28,6 +27,7 @@ import jdplus.toolkit.base.core.ssf.benchmarking.SsfCumulator;
 import jdplus.toolkit.base.core.ssf.univariate.Ssf;
 import jdplus.toolkit.base.core.ssf.arima.Rw;
 import jdplus.toolkit.base.core.ssf.arima.AR1;
+import jdplus.toolkit.base.core.ssf.basic.RegSsf;
 
 /**
  *
@@ -38,32 +38,49 @@ public class SsfADL {
 
     public Ssf ssfRepresentation(ADLDefinition definition, FastMatrix X, int ratio, int startPosition) {
 
-        FastMatrix W = ADLProcessor.regressionMatrix(definition, X);
         StateComponent ncmp;
-        ISsfLoading nloading;
         StateComponent rcmp;
-
+        ISsfLoading rloading;
+        FastMatrix W = regressionMatrix(definition, X);
         double phi = definition.getPhi();
         if (phi == 1) {
             ncmp = Rw.DEFAULT;
-            nloading = Rw.defaultLoading();
-            rcmp = TransitionRegSsf.of(ncmp, W, w0_fernandez(definition, X));
+            rloading = RegSsf.defaultLoading(1, Rw.defaultLoading(), W);
+            rcmp = RegSsf.of(ncmp, W);
         } else {
             ncmp = AR1.of(phi);
-            nloading = AR1.defaultLoading();
-            rcmp = TransitionRegSsf.of(ncmp, W, w0_chowlin(definition, X));
+            rloading = RegSsf.defaultLoading(1, AR1.defaultLoading(), W);
+            rcmp = RegSsf.of(ncmp, W);
         }
 
-        ISsfLoading rloading = TransitionRegSsf.defaultLoading(ncmp.dim(), nloading);
         Ssf ssf = Ssf.of(SsfCumulator.of(rcmp, rloading, ratio, startPosition),
                 SsfCumulator.defaultLoading(rloading, ratio, startPosition));
         return ssf;
     }
 
-    // w0 expresses the contraints that we put on the diffuse coefficients for the initialization of the filter
-    private DoubleSeq w0_chowlin(ADLDefinition definition, FastMatrix X) {
+    public Ssf ssfRepresentation(FastMatrix W, double phi, int ratio, int startPosition) {
+
+        StateComponent ncmp;
+        StateComponent rcmp;
+        ISsfLoading rloading;
+        if (phi == 1) {
+            ncmp = Rw.DEFAULT;
+            rloading = RegSsf.defaultLoading(1, Rw.defaultLoading(), W);
+            rcmp = RegSsf.of(ncmp, W);
+        } else {
+            ncmp = AR1.of(phi);
+            rloading = RegSsf.defaultLoading(1, AR1.defaultLoading(), W);
+            rcmp = RegSsf.of(ncmp, W);
+        }
+
+        Ssf ssf = Ssf.of(SsfCumulator.of(rcmp, rloading, ratio, startPosition),
+                SsfCumulator.defaultLoading(rloading, ratio, startPosition));
+        return ssf;
+    }
+
+    public FastMatrix regressionMatrix(ADLDefinition definition, FastMatrix X) {
         int nx = X.getColumnsCount();
-        if (definition.getXar() == XAR.FREE) {
+        if (definition.getXar() == ADLSpec.XAR.FREE) {
             nx += X.getColumnsCount();
         }
         if (definition.isMean()) {
@@ -72,47 +89,73 @@ public class SsfADL {
         if (definition.isTrend()) {
             ++nx;
         }
-        double[] w0 = new double[nx];
+        int n = X.getRowsCount();
         double phi = definition.getPhi();
-        double q = 1 / (1 - phi);
+
+        FastMatrix W = FastMatrix.make(n, nx);
         int c = 0;
         if (definition.isMean()) {
-            w0[c++] = q;
+            DataBlock col = W.column(c++);
+            col.set(1);
+            if (phi != 1) {
+                col.set(0, 1 / (1 - phi));
+            }
+            cumul(col, phi);
         }
         if (definition.isTrend()) {
-            w0[c++] = (1 - 2 * phi) * q * q;
+           DataBlock col = W.column(c++);
+            col.set(i -> i);
+            if (phi != 1) {
+                col.set(0, - phi / ((1 - phi) * (1 - phi)));
+            }
+            cumul(col, phi);
         }
-        DataBlock row = X.row(0);
         switch (definition.getXar()) {
             case NONE -> {
-                for (int i = 0; i < X.getColumnsCount(); ++i) {
-                    w0[c++] = q * row.get(i);
+                DataBlockIterator cols = X.columnsIterator();
+                while (cols.hasNext()) {
+                    DataBlock col = W.column(c++);
+                    col.copy(cols.next());
+                    if (phi != 1) {
+                        col.mul(0, 1 / (1 - phi));
+                    }
+                    cumul(col, phi);
                 }
             }
             case FREE -> {
-                for (int i = 0; i < X.getColumnsCount(); ++i) {
-                    double w = q * row.get(i);
-                    w0[c++] = w;
-                    w0[c++] = w;
+                DataBlockIterator cols = X.columnsIterator();
+                while (cols.hasNext()) {
+                    DataBlock cur = cols.next();
+                    DataBlock col0 = W.column(c++);
+                    DataBlock col1 = W.column(c);
+                    col0.copy(cur);
+                    col1.drop(1, 0).copy(cur.drop(0, 1));
+                    col1.set(0, cur.get(0));
+                    if (phi != 1) {
+                        col0.mul(0, 1 / (1 - phi));
+                        col1.mul(0, 1 / (1 - phi));
+                    }
+                    cumul(col0, phi);
+                    cumul(col1, phi);
                 }
             }
             case SAME -> {
-                for (int i = 0; i < X.getColumnsCount(); ++i) {
-                    w0[c++] = row.get(i);
+                DataBlockIterator cols = X.columnsIterator();
+                while (cols.hasNext()) {
+                    DataBlock col = W.column(c++);
+                    col.copy(cols.next());
                 }
             }
         }
-        return DoubleSeq.of(w0);
+        return W;
     }
 
-    private DoubleSeq w0_fernandez(ADLDefinition definition, FastMatrix X) {
-        int nx = X.getColumnsCount();
-        if (definition.getXar() == XAR.FREE) {
-            nx += X.getColumnsCount();
+    private void cumul(DataBlock C, double phi) {
+        if (phi == 1) {
+            C.cumul();
+        } else {
+            C.applyRecursively(1, (a, b) -> phi * a + b);
         }
-        if (definition.isTrend()) {
-            ++nx;
-        }
-        return DoubleSeq.onMapping(nx, i -> 0);
+
     }
 }

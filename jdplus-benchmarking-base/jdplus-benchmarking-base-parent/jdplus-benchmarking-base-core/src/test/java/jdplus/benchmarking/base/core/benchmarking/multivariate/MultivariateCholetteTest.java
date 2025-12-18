@@ -23,6 +23,8 @@ import jdplus.benchmarking.base.api.benchmarking.multivariate.TemporalConstraint
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import static jdplus.toolkit.base.core.timeseries.simplets.TsDataToolkit.distance;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import ec.benchmarking.simplets.TsMultiBenchmarking;
 import java.util.HashMap;
 import java.util.Map;
@@ -216,7 +218,7 @@ public class MultivariateCholetteTest {
                 .build();
         
         Map<String, TsData> rslt1 = MultivariateCholette.benchmark(input, spec1);
-        assertTrue(rslt1.size() == 4);
+        assertEquals(4, rslt1.size());
 
 //        System.out.println(s11.values());
 //        System.out.println(s12.values());
@@ -231,7 +233,7 @@ public class MultivariateCholetteTest {
 //        System.out.println(rslt1.get("s21").values());
 //        System.out.println(rslt1.get("s22").values());
         Map<String, TsData> rslt2 = MultivariateCholette.benchmark(input, spec2);
-        assertTrue(rslt2.size() == 4);
+        assertEquals(4, rslt2.size());
         
         assertTrue(distance(s_1, TsData.add(rslt1.get("s11"), rslt1.get("s21"))) < 1e-9);
         assertTrue(distance(s_2, TsData.add(rslt1.get("s12"), rslt1.get("s22"))) < 1e-9);

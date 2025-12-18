@@ -24,7 +24,7 @@ import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
@@ -51,7 +51,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cholette(s, t, .5, .5, "None", "First", 0);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 0);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -59,7 +59,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cholette(s, t, .5, .5, "None", "Last", 0);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 11);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -67,7 +67,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cholette(s, t, .5, .5, "None", "UserDefined", 3);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 2);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -75,7 +75,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cholette(s, t, .5, .5, "None", "Sum", 0);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -83,7 +83,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cholette(s, t, .5, .5, "None", "Average", 0);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Average, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
     }
@@ -103,7 +103,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.denton(s, t, 1, true, true, "First", 0);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 0);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -111,7 +111,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.denton(s, t, 1, true, true, "Last", 0);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 11);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -119,7 +119,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.denton(s, t, 1,true, true, "UserDefined", 3);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 2);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -127,7 +127,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.denton(s, t, 1, true, true, "Sum", 0);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -135,7 +135,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.denton(s, t, 1, true, true, "Average", 0);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Average, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
     }
@@ -223,7 +223,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.grp(s, t, "Forward", "First", 1, 1e-15, 100, true);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 0);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -231,7 +231,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.grp(s, t, "Forward", "Last", 1, 1e-15, 100, true);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 11);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -239,7 +239,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.grp(s, t, "Forward", "UserDefined", 3, 1e-15, 100, true);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 2);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -247,7 +247,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.grp(s, t, "Forward", "Sum", 0, 1e-15, 100, true);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -255,7 +255,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.grp(s, t, "Forward", "Average", 0, 1e-15, 100, true);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Average, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
     }
@@ -275,7 +275,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cubicSpline(s, t, "First", 1);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 0);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -283,7 +283,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cubicSpline(s, t, "Last", 1);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 11);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -291,7 +291,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cubicSpline(s, t, "UserDefined", 3);
             TsData ta=qs.aggregateByPosition(TsUnit.YEAR, 2);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -299,7 +299,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cubicSpline(s, t, "Sum", 0);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
         q = TsPeriod.monthly(1979, 1);
@@ -307,7 +307,7 @@ public class BenchmarkingTest {
             TsData s = TsData.of(q, Doubles.of(x));
             TsData qs = Benchmarking.cubicSpline(s, t, "Average", 0);
             TsData ta=qs.aggregate(TsUnit.YEAR, AggregationType.Average, true);
-            assertEquals(TsData.subtract(t, ta).getValues().norm2(), 0, 1e-6);
+            assertEquals(0, TsData.subtract(t, ta).getValues().norm2(), 1e-6);
             q = q.plus(1);
         }
     }

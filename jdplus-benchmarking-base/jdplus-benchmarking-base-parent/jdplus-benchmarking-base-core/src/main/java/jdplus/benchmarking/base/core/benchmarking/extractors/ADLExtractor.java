@@ -32,6 +32,8 @@ import nbbrd.service.ServiceProvider;
  */
 @ServiceProvider(InformationExtractor.class)
 public class ADLExtractor extends InformationMapping<ADLResults> {
+    
+    public static String MLIKELIHOOD = "mlikelihood", PLIKELIHOOD = "plikelihood";
 
     public ADLExtractor() {
         set(TemporalDisaggregationDictionaries.DISAGG, TsData.class,
@@ -74,7 +76,8 @@ public class ADLExtractor extends InformationMapping<ADLResults> {
             Matrix H = source.getMaximum().getHessian();
             return (H == null || H.isEmpty()) ? Double.NaN : Math.sqrt(1 / source.getMaximum().getHessian().get(0, 0));
         });
-        delegate(TemporalDisaggregationDictionaries.LIKELIHOOD, MarginalLikelihoodStatistics.class, source -> source.getLikelihood());
+        delegate(MLIKELIHOOD, MarginalLikelihoodStatistics.class, source -> source.getMarginalLikelihood());
+        delegate(PLIKELIHOOD, ProfileLikelihoodStatistics.class, source -> source.getProfileLikelihood());
         delegate(TemporalDisaggregationDictionaries.RES, ResidualsDiagnostics.class, source -> source.getResidualsDiagnostics());
     }
 
