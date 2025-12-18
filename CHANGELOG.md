@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+This is a minor release of benchmarking extensions for JDemetra+ v3.  
+[JDemetra+ v3.6.0 or later](https://github.com/jdemetra/jdplus-main) version is required to run it.
+
+### Fixed
+
+- ![STAT] Correction in ADL
+
 ### Changed
 
 - ![OTHER] Migrate OSSRH to Central Portal
