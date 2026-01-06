@@ -16,6 +16,7 @@
  */
 package jdplus.benchmarking.base.r;
 
+import jdplus.benchmarking.base.core.univariate.ADLResults;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonResults;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import tck.demetra.data.Data;
@@ -45,6 +46,14 @@ public class TemporalDisaggregationTest {
     }
 
     @Test
+    public void testADL() {
+        TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
+        TsData q = TsData.of(TsPeriod.quarterly(1977, 1), Doubles.of(Data.IND_PCR));
+        ADLResults rslt = TemporalDisaggregation.processADL(y, true, false, new TsData[]{q}, "Sum", 0, false, 0, "FREE", "TRANSITION", false);
+//        System.out.println(rslt.getData("disagg", TsData.class));
+    }
+
+    @Test
     public void testLitterman() {
         TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
         TsData q = TsData.of(TsPeriod.quarterly(1977, 1), Doubles.of(Data.IND_PCR));
@@ -65,7 +74,7 @@ public class TemporalDisaggregationTest {
     }
 
     @Test
-    public void testLiiterman2() {
+    public void testLitterman2() {
         TsData y = TsData.of(TsPeriod.yearly(1977), Doubles.of(Data.PCRA));
         TemporalDisaggregationResults rslt = TemporalDisaggregation.process(y, false, false, null, "RwAr1", 4, 0, "Sum", 0, 0, false, 0, false, "Augmented", false);
     }

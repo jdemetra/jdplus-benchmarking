@@ -50,7 +50,6 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
     public static final String METHOD = "adl";
     public static final AlgorithmDescriptor DESCRIPTOR = new AlgorithmDescriptor(FAMILY, METHOD, VERSION);
 
-    public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.Augmented_NoCollapsing;
     public static final boolean DEF_FAST = true, DEF_RESCALE = true, DEF_LOG = false, DEF_DIFFUSE = true;
 
     public static final double DEF_EPS = 1e-9;
@@ -85,7 +84,6 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
             .truncation(0.0)
             .estimationPrecision(DEF_EPS)
             .rescale(DEF_RESCALE)
-            .algorithm(DEF_ALGORITHM)
             .diffuseRegressors(false)
             .build();
 
@@ -98,7 +96,6 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
             .phi(Parameter.fixed(1))
             .rescale(DEF_RESCALE)
             .diffuseRegressors(false)
-            .algorithm(DEF_ALGORITHM)
             .build();
 
     public static final ADLSpec ADL_11 = builder().build();
@@ -122,7 +119,6 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
     private Double truncation;
 
     private double estimationPrecision;
-    private SsfInitialization algorithm;
     private SsfType ssfType;
     private boolean rescale;
 
@@ -140,7 +136,6 @@ public final class ADLSpec implements ProcSpecification, Validatable<ADLSpec> {
                 .trend(false)
                 .xar(XAR.FREE)
                 .estimationSpan(TimeSelector.all())
-                .algorithm(DEF_ALGORITHM)
                 .rescale(DEF_RESCALE)
                 .diffuseRegressors(DEF_DIFFUSE)
                 .truncation(0.0)

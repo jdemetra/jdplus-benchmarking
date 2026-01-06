@@ -37,10 +37,8 @@ import jdplus.toolkit.base.core.math.functions.levmar.LevenbergMarquardtMinimize
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.ssf.ISsfLoading;
 import jdplus.toolkit.base.core.ssf.akf.AkfToolkit;
-import jdplus.toolkit.base.core.ssf.akf.SmoothingOutput;
 import jdplus.toolkit.base.core.ssf.basic.Loading;
 import jdplus.toolkit.base.core.ssf.basic.RegSsf;
-import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
 import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
 import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
 import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
@@ -54,7 +52,7 @@ import jdplus.toolkit.base.core.ssf.univariate.SsfData;
 @lombok.experimental.UtilityClass
 public class ADLProcessor {
 
-    public DisaggregationModel createModel(TsData aggregatedSeries, TsData[] indicators, ADLDefinition spec) {
+    public DisaggregationModel createModel(TsData aggregatedSeries, TsData[] indicators, ADLSpec spec) {
         TsDomain hdomain = indicators[0].getDomain();
         for (int i = 1; i < indicators.length; ++i) {
             hdomain = hdomain.intersection(indicators[i].getDomain());
@@ -68,13 +66,13 @@ public class ADLProcessor {
                 .disaggregationDomain(hdomain)
                 .aggregationType(AggregationType.Sum)
                 .addX(vars)
-                .rescale(false)
+                .rescale(spec.isRescale())
                 .build();
     }
 
     public ADLResults process(TsData aggregatedSeries, TsData[] indicators, ADLSpec spec) {
         aggregatedSeries = aggregatedSeries.select(spec.getEstimationSpan());
-        DisaggregationModel model = createModel(aggregatedSeries, indicators, definitionOf(spec));
+        DisaggregationModel model = createModel(aggregatedSeries, indicators, spec);
         return compute(model, spec);
     }
 
@@ -144,13 +142,10 @@ public class ADLProcessor {
             ssf = SsfADL1.ssfRepresentation(definition, model.getHX(), model.getFrequencyRatio(), model.getStart());
             rloading = Loading.fromPosition(0);
         }
-        DefaultSmoothingResults ss = AkfToolkit.smooth(ssf, ssfData, true, true, false);
-//        DefaultSmoothingResults ss = DkToolkit.sqrtSmooth(ssf, ssfData, true, true);
-
-//        DataBlock coeff = ss.getSmoothing().a(0).drop(2, 0);
-//        FastMatrix cvar = ss.getSmoothing().P(0).extract(2, coeff.length(), 2, coeff.length());
-        DataBlock coeff = ss.a(0).drop(2, 0);
-        FastMatrix cvar = ss.P(0).extract(2, coeff.length(), 2, coeff.length());
+        DefaultSmoothingResults ss = AkfToolkit.smooth(ssf, ssfData, true, false, false);
+        int n = ssfData.length();
+        DataBlock coeff = ss.a(n - 1).drop(2, 0);
+        FastMatrix cvar = ss.P(n - 1).extract(2, coeff.length(), 2, coeff.length());
         int nparams = spec.isParameterEstimation() ? 1 : 0;
         int nz = ssf.getStateDim() - 1;
 
@@ -158,26 +153,31 @@ public class ADLProcessor {
         if (spec.getAggregationType() == AggregationType.Average) {
             yfactor /= model.getFrequencyRatio();
         }
-
-        double[] s = new double[ssfData.length()];
-        double[] es = new double[ssfData.length()];
+        MarginalLikelihood mll = rslt.marginalLikelihood();
+        double sig2 = 0;
+        if (mll != null) {
+            sig2 = mll.sigma2();
+            mll = mll.rescale(yfactor);
+        }
+        ProfileLikelihood pll = rslt.profileLikelihood();
+        if (pll != null) {
+            // dim of the profile likelihood = number of obs - number of regs - number of diffuse elements, considered as regression variable. 
+            int ldim=pll.dim();
+            if (spec.getPhi().getValue() == 1)
+                --ldim;
+            sig2 = pll.ssq()/ldim;
+            pll.rescale(yfactor);
+        }
+        // workaround to solve a bug in tstoolkit
+        double sigma = Math.sqrt(sig2) / yfactor;
+        double[] s = new double[n];
+        double[] es = new double[n];
         for (int i = 0; i < s.length; ++i) {
-//            s[i] = rloading.ZX(i, ss.getFiltering().a(i).drop(1, 0)) / yfactor;
-//            double v = rloading.ZVZ(i, ss.getSmoothing().P(i).extract(1, nz, 1, nz));
             s[i] = rloading.ZX(i, ss.a(i).drop(1, 0)) / yfactor;
             double v = rloading.ZVZ(i, ss.P(i).extract(1, nz, 1, nz));
             if (v > 0) {
-                es[i] = Math.sqrt(v) / yfactor;
+                es[i] = Math.sqrt(v) * sigma;
             }
-        }
-        MarginalLikelihood mll = rslt.marginalLikelihood();
-        if (mll != null) {
-            mll = mll.rescale(yfactor);
-        }
-
-        ProfileLikelihood pll = rslt.profileLikelihood();
-        if (pll != null) {
-            pll.rescale(yfactor);
         }
 
         double[] pcoeff = coeff.toArray();
@@ -185,7 +185,33 @@ public class ADLProcessor {
             pcoeff[i] /= yfactor;
         }
         FastMatrix pcvar = cvar.deepClone();
-        pcvar.div(yfactor * yfactor);
+        pcvar.mul(sig2 / (yfactor * yfactor));
+        if (spec.isRescale()) {
+            double[] xfactor = model.getXfactor();
+            // only the variables are rescaled (nor the constant, nor the trend)
+            int start = spec.isMean() ? 1 : 0;
+            if (spec.isTrend()) {
+                start += 1;
+            }
+            if (spec.getXar() == ADLSpec.XAR.FREE) {
+                // 2 times each variable
+                for (int i = start, k = 0; i < pcoeff.length; i += 2) {
+                    double xf = xfactor[k++];
+                    for (int l = 0; l < 2; ++l) {
+                        pcoeff[i + l] *= xf;
+                        pcvar.row(i + l).mul(xf);
+                        pcvar.column(i + l).mul(xf);
+                    }
+                }
+            } else {
+                for (int i = start, k = 0; i < pcoeff.length; ++i) {
+                    double xf = xfactor[k++];
+                    pcoeff[i] *= xf;
+                    pcvar.row(i).mul(xf);
+                    pcvar.column(i).mul(xf);
+                }
+            }
+        }
         return ADLResults.builder()
                 .originalSeries(model.getOriginalSeries())
                 .disaggregatedSeries(TsData.ofInternal(model.getHDom().getStartPeriod(), s))
