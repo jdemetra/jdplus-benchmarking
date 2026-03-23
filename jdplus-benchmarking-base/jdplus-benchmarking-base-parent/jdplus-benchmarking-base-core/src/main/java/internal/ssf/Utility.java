@@ -15,10 +15,15 @@
  */
 package internal.ssf;
 
+import jdplus.toolkit.base.core.ssf.StateInfo;
+import jdplus.toolkit.base.core.ssf.StateStorage;
 import jdplus.toolkit.base.core.ssf.akf.AugmentedFilter;
 import jdplus.toolkit.base.core.ssf.akf.AugmentedSmoother;
 import jdplus.toolkit.base.core.ssf.akf.DefaultAugmentedFilteringResults;
 import jdplus.toolkit.base.core.ssf.akf.QAugmentation;
+import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
+import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsfData;
+import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
 import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
 import jdplus.toolkit.base.core.ssf.univariate.ISsf;
 import jdplus.toolkit.base.core.ssf.univariate.ISsfData;
@@ -77,4 +82,23 @@ public class Utility {
         }
     }
     
+    public StateStorage smooth(IMultivariateSsf ssf, IMultivariateSsfData data, boolean all, boolean rescaleVariance, QAugmentation.QType type) {
+        ISsf ussf = M2uAdapter.of(ssf);
+        ISsfData udata = M2uAdapter.of(data);
+        StateStorage sr = smooth(ussf, udata, all, rescaleVariance, type);
+        StateStorage ss = all ? StateStorage.full(StateInfo.Smoothed) : StateStorage.light(StateInfo.Smoothed);
+        int m = data.getVarsCount(), n = data.getObsCount();
+        ss.prepare(ussf.getStateDim(), 0, n);
+        if (all) {
+            for (int i = 0; i < n; ++i) {
+                ss.save(i, sr.a(i * m), sr.P(i * m));
+            }
+        } else {
+            for (int i = 0; i < n; ++i) {
+                ss.save(i, sr.a(i * m), null);
+            }
+        }
+        return ss;
+    }
+
 }
