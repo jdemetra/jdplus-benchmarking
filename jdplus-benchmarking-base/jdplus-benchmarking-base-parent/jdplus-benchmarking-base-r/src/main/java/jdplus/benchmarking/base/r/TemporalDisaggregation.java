@@ -16,6 +16,12 @@
  */
 package jdplus.benchmarking.base.r;
 
+import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
+import jdplus.benchmarking.base.api.multivariate.ModelData;
+import jdplus.benchmarking.base.api.multivariate.MultivariateChowLin;
+import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
+import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
+import jdplus.benchmarking.base.core.multivariate.MultivariateChowLinProcessor;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
@@ -25,6 +31,11 @@ import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationISpec;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_EPS;
 import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_RESCALE;
@@ -53,6 +64,7 @@ import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TimeSelector;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
+import jdplus.toolkit.base.r.util.Dictionary;
 
 /**
  *
@@ -570,5 +582,47 @@ public class TemporalDisaggregation {
         }
         return ADLProcessor.process(y, indicators, spec);
 
+    }
+
+    public MultivariateChowLinResults multiChowLin(Dictionary series,
+                                                   boolean[] constant,
+                                                   boolean[] trend,
+                                                   arrDictionary indicators,
+                                                   Dictionary ccseries,
+                                                   String[] ccdefinition,
+                                                   int frequency,
+                                                   double[] rhos,
+                                                   String varMethod,
+                                                   Matrix var) {
+
+        Map<String, TsData> y = series.data();
+        Map<String, TsData[]> x = indicators.data();
+        LinkedHashMap<String, ModelData> yx = new LinkedHashMap<>();
+        for (String sName : y.keySet()) {
+            yx.put(sName, new ModelData(y.get(sName), x.get(sName)));
+        }
+
+        Map<String, TsData> z = ccseries.data();
+
+        List<ContemporaneousConstraint> ccAll = List.of();
+        if (ccdefinition != null) {
+            for (int i = 0; i < ccdefinition.length; ++i) {
+                if (ccdefinition[i].length() > 0) {
+                    ccAll.add(ContemporaneousConstraint.parse(ccdefinition[i]));
+                }
+            }
+        }
+
+        MultivariateChowLinSpec spec = MultivariateChowLinSpec.builder()
+                .rhos(rhos)
+                .constant(constant)
+                .trend(trend)
+                .contemporaneousConstraints(ccAll)
+                .defaultPeriod(frequency)
+                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.valueOf(varMethod))
+                .var(var)
+                .build();
+
+        return MultivariateChowLin.process(yx, z, spec);
     }
 }

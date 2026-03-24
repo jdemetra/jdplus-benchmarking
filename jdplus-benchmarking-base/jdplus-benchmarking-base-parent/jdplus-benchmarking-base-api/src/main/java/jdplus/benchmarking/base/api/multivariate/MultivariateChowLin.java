@@ -7,6 +7,7 @@ package jdplus.benchmarking.base.api.multivariate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import jdplus.toolkit.base.api.design.Algorithm;
+import jdplus.toolkit.base.api.processing.ProcResults;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import nbbrd.design.Development;
 import nbbrd.service.Mutability;
@@ -36,7 +37,7 @@ public class MultivariateChowLin {
     
     @Algorithm
     @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
-    public static interface Processor {
+    public interface Processor {
 
         MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec);
 

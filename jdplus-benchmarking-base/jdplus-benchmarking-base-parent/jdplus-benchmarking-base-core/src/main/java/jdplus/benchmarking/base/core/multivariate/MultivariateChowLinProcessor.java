@@ -31,7 +31,7 @@ import nbbrd.service.ServiceProvider;
  * @author LEMASSO
  */
 @ServiceProvider(MultivariateChowLin.Processor.class)
-public class MultivariateChowLinProcessor implements MultivariateChowLin.Processor {  
+public class MultivariateChowLinProcessor implements MultivariateChowLin.Processor {
     @Override
     public MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec) {
         MultivariateChowLinEngine engine=new MultivariateChowLinEngine();

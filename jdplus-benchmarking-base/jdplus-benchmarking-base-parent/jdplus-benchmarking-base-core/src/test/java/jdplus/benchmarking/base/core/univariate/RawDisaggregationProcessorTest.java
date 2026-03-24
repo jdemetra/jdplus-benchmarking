@@ -159,7 +159,35 @@ public class RawDisaggregationProcessorTest {
         FastMatrix X = FastMatrix.make(x11.length(), 2);
         X.column(0).copy(x11);
         X.column(1).copy(x12);
-        RawTemporalDisaggregationResults rslt1 = RawDisaggregationProcessor.process(y1, X, 0, spec1);
+        RawTemporalDisaggregationResults rslt2 = RawDisaggregationProcessor.process(y1, X, 0, spec1);
+    }
+
+    @Test
+    public void testTmp2() {
+        double[] Y1Arr = {30.0,30.6,31.2};
+        DoubleSeq y1 = DoubleSeq.of(Y1Arr);
+
+        double[] x1Arr = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4,8.6,8.9,9.0,9.2};
+        DoubleSeq x1 = DoubleSeq.of(x1Arr);
+
+        AlgorithmSpec aspec1 = AlgorithmSpec.builder()
+                .fast(true)
+                .rescale(false)
+                .algorithm(SsfInitialization.SqrtDiffuse)
+                .build();
+
+        EstimationSpec espec1 = EstimationSpec.builder()
+                .estimationPrecision(1e-9)
+                .build();
+
+        RawDisaggregationSpec spec1 = RawDisaggregationSpec.fernandez(4)
+                .toBuilder()
+                .algorithmSpec(aspec1)
+                .estimationSpec(espec1)
+                .build();
+        FastMatrix X = FastMatrix.make(x1.length(), 1);
+        X.column(0).copy(x1);
+        RawTemporalDisaggregationResults rslt2 = RawDisaggregationProcessor.process(y1, X, 0, spec1);
     }
 
    @Test

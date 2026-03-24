@@ -32,10 +32,11 @@ module jdplus.benchmarking.base.core {
     exports jdplus.benchmarking.base.core.benchmarking.univariate;
     exports jdplus.benchmarking.base.core.calendarization;
     exports jdplus.benchmarking.base.core.univariate;
+    exports jdplus.benchmarking.base.core.multivariate;
 
     provides MultivariateCholette.Processor with
             MultivariateCholetteProcessor;
-    
+
     provides MultivariateChowLin.Processor with
             MultivariateChowLinProcessor;
     

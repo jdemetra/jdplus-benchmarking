@@ -408,7 +408,6 @@ public class MultivariateSsfChowLin {
         public void Z(int pos, DataBlock z) {
             if (v < info.nvars) {
                 int iv = 2 * v + info.nxcc[v];
-//                if ((pos + 1) % info.c == 0) {
                 if (pos % info.c != 0) {
                     z.set(iv, 1);
                 }
@@ -423,12 +422,12 @@ public class MultivariateSsfChowLin {
                 Constraint cnt = info.constraints[k];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int l = cnt.getIndex()[i];
-                    int il = 2 * l + info.nxcc[i];
+                    int il = 2 * l + info.nxcc[l];
                     z.set(il, cnt.getWeights()[i]);
                     z.set(il + 1, cnt.getWeights()[i]);
-                    if (info.nxc[i] > 0){
-                        for (int p = 0; p < info.nxc[i]; ++p) {
-                            z.set(il + 2 + p, info.mxc(pos, i, p, cnt.getWeights()[i]));
+                    if (info.nxc[l] > 0){
+                        for (int p = 0; p < info.nxc[l]; ++p) {
+                            z.set(il + 2 + p, info.mxc(pos, l, p, cnt.getWeights()[i]));
                         }
                     }
                 }
@@ -439,7 +438,6 @@ public class MultivariateSsfChowLin {
         public double ZX(int pos, DataBlock x) {
             if (v < info.nvars) {
                 int iv = 2 * v + info.nxcc[v];
-//                double r = ((pos + 1) % info.c != 0) ? 0 : x.get(iv);
                 double r = (pos % info.c == 0) ? 0 : x.get(iv);
                 r += x.get(iv + 1);
                 if (info.nxc[v] > 0){
@@ -454,12 +452,12 @@ public class MultivariateSsfChowLin {
                 double sum = 0;
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int l = cnt.getIndex()[i];
-                    int il = 2 * l + info.nxcc[i];
+                    int il = 2 * l + info.nxcc[l];
                     sum += cnt.getWeights()[i] * x.get(il);
                     sum += cnt.getWeights()[i] * x.get(il + 1);
-                    if (info.nxc[i] > 0){
-                        for (int p = 0; p < info.nxc[i]; ++p) {
-                            sum += info.mxc(pos, i, p, cnt.getWeights()[i]) * x.get(il + 2 + p);
+                    if (info.nxc[l] > 0){
+                        for (int p = 0; p < info.nxc[l]; ++p) {
+                            sum += info.mxc(pos, l, p, cnt.getWeights()[i]) * x.get(il + 2 + p);
                         }
                     }
                 }
@@ -471,7 +469,6 @@ public class MultivariateSsfChowLin {
         public void ZM(int pos, FastMatrix m, DataBlock x) {
             if (v < info.nvars) {
                 int iv = 2 * v + info.nxcc[v];
-//                if ((pos + 1) % info.c == 0) {
                 if (pos % info.c != 0) {
                     x.copy(m.row(iv));
                 }
@@ -487,12 +484,12 @@ public class MultivariateSsfChowLin {
                 Constraint cnt = info.constraints[k];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int l = cnt.getIndex()[i];
-                    int il = 2 * l + info.nxcc[i];
+                    int il = 2 * l + info.nxcc[l];
                     x.addAY(cnt.getWeights()[i], m.row(il));
                     x.addAY(cnt.getWeights()[i], m.row(il + 1));
-                    if (info.nxc[i] > 0){
-                        for (int p = 0; p < info.nxc[i]; ++p) {
-                            x.addAY(info.mxc(pos, i, p, cnt.getWeights()[i]), m.row(il + 2 + p));
+                    if (info.nxc[l] > 0){
+                        for (int p = 0; p < info.nxc[l]; ++p) {
+                            x.addAY(info.mxc(pos, l, p, cnt.getWeights()[i]), m.row(il + 2 + p));
                         }
                     }
                 }
@@ -505,7 +502,6 @@ public class MultivariateSsfChowLin {
                 int iv = 2 * v + info.nxcc[v];
                 double s = vm.get(iv + 1, iv + 1);
                 if (pos % info.c != 0) {
-//                if ((pos + 1) % info.c == 0) {
                     s += vm.get(iv, iv);
                     s += vm.get(iv, iv + 1);
                     s += vm.get(iv + 1, iv);
@@ -516,7 +512,6 @@ public class MultivariateSsfChowLin {
                             s += info.xc(pos, v, i) * vm.get(iv + 2 + i, iv + 2 + j) * info.xc(pos, v, j);
                         }
                         s += info.xc(pos, v, i) * (vm.get(iv + 2 + i, iv + 1) + vm.get(iv + 1, iv + 2 + i));
-//                        if ((pos + 1) % info.c == 0) {
                         if (pos % info.c != 0) {
                             s += info.xc(pos, v, i) * (vm.get(iv + 2 + i, iv) + vm.get(iv, iv + 2 + i));
                         }
@@ -533,9 +528,9 @@ public class MultivariateSsfChowLin {
                     int ik = 2 * k + info.nxcc[k];
                     z[ik] = cnt.getWeights()[i];
                     z[ik + 1] = cnt.getWeights()[i];
-                    if (info.nxc[i] > 0){
-                        for (int p = 0; p < info.nxc[i]; ++p) {
-                            z[ik + 2 + p] = info.mxc(pos, i, p, cnt.getWeights()[i]);
+                    if (info.nxc[k] > 0){
+                        for (int p = 0; p < info.nxc[k]; ++p) {
+                            z[ik + 2 + p] = info.mxc(pos, k, p, cnt.getWeights()[i]);
                         }
                     }
                 }
@@ -554,7 +549,6 @@ public class MultivariateSsfChowLin {
             if (v < info.nvars) {
                 int iv = 2 * v + info.nxcc[v];
                 vm.add(iv + 1, iv + 1, d);
-//                if ((pos + 1) % info.c == 0) {
                 if (pos % info.c != 0) {
                     vm.add(iv, iv, d);
                     vm.add(iv + 1, iv, d);
@@ -567,7 +561,6 @@ public class MultivariateSsfChowLin {
                         }
                         vm.add(iv + 2 + i, iv + 1, d * info.xc(pos, v, i));
                         vm.add(iv + 1, iv + 2 + i, d * info.xc(pos, v, i));
-//                        if ((pos + 1) % info.c == 0) {
                         if (pos % info.c != 0) {
                             vm.add(iv + 2 + i, iv, d * info.xc(pos, v, i));
                             vm.add(iv, iv + 2 + i, d * info.xc(pos, v, i));
@@ -584,9 +577,9 @@ public class MultivariateSsfChowLin {
                     int ik = 2 * k + info.nxcc[k];
                     z[ik] = cnt.getWeights()[i];
                     z[ik + 1] = cnt.getWeights()[i];
-                    if (info.nxc[i] > 0){
-                        for (int p = 0; p < info.nxc[i]; ++p) {
-                            z[ik + 2 + p] = info.mxc(pos, i, p, cnt.getWeights()[i]);
+                    if (info.nxc[k] > 0){
+                        for (int p = 0; p < info.nxc[k]; ++p) {
+                            z[ik + 2 + p] = info.mxc(pos, k, p, cnt.getWeights()[i]);
                         }
                     }
                 }
@@ -605,7 +598,6 @@ public class MultivariateSsfChowLin {
         public void XpZd(int pos, DataBlock x, double d) {
             if (v < info.nvars) {
                 int iv = 2 * v + info.nxcc[v];
-//                if ((pos + 1) % info.c == 0) {
                 if (pos % info.c != 0) {
                     x.add(iv, d);
                 }
@@ -625,7 +617,7 @@ public class MultivariateSsfChowLin {
                     x.add(ik + 1, cnt.getWeights()[i] * d);
                     if (info.nxc[k] > 0){
                         for (int p = 0; p < info.nxc[k]; ++p) {
-                            x.add(ik + 2 + p, info.mxc(pos, i, p, cnt.getWeights()[i]) * d);
+                            x.add(ik + 2 + p, info.mxc(pos, k, p, cnt.getWeights()[i]) * d);
                         }
                     }
                 }

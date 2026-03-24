@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ec.benchmarking.simplets.TsMultiBenchmarking;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import jdplus.benchmarking.base.core.ssf.ContemporaneousSsfCholette;
@@ -182,8 +183,59 @@ public class MultivariateCholetteTest {
         
         Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
     }
-    
-    
+
+    @Test
+    public void testTableFictiveData2CC() {
+
+        Map<String, TsData> input = new HashMap<>();
+
+        double[] s1 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s1", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1));
+
+        double[] s2 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s2", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2));
+
+        double[] s3 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
+
+        double[] s4 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s4", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s4));
+
+        double[] a = {32.55,35.25,35.35,36.65,34.925,33.425,36.425,37.225,35.075,35.575,35.875,37.075};
+        input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
+
+        double[] y1 = {29.8,30.2,30.6};
+        input.put("y1", TsData.ofInternal(TsPeriod.yearly(2021), y1));
+
+        double[] y2 = {80.2,81.6,82.4};
+        input.put("y2", TsData.ofInternal(TsPeriod.yearly(2021), y2));
+
+        double[] y3 = {8.0,8.1,8.3};
+        input.put("y3", TsData.ofInternal(TsPeriod.yearly(2021), y3));
+
+        double[] y4 = {21.8,22.1,22.3};
+        input.put("y4", TsData.ofInternal(TsPeriod.yearly(2021), y4));
+
+        ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("a=s1+s2+s3+s4");
+        ContemporaneousConstraint cc2 = ContemporaneousConstraint.parse("0=s3+s4-s1");
+        List<ContemporaneousConstraint> ccAll = List.of(cc1, cc2);
+
+        TemporalConstraint tc1 = TemporalConstraint.parse("y1=sum(s1)");
+        TemporalConstraint tc2 = TemporalConstraint.parse("y2=sum(s2)");
+        TemporalConstraint tc3 = TemporalConstraint.parse("y3=sum(s3)");
+        TemporalConstraint tc4 = TemporalConstraint.parse("y4=sum(s4)");
+        List<TemporalConstraint> tcAll = List.of(tc1, tc2, tc3, tc4);
+
+        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
+                .lambda(1)
+                .rho(1)
+                .contemporaneousConstraints(ccAll)
+                .temporalConstraints(tcAll)
+                .build();
+
+        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
+    }
+
     @Test
     public void testTable() {
         

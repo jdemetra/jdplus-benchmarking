@@ -8,6 +8,7 @@ import internal.ssf.FastStateSmoother2;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
 import jdplus.benchmarking.base.api.multivariate.ModelData;
@@ -101,24 +102,24 @@ public class MultivariateChowLinTest {
     }
 
     @Test
-    public void testMultivariateChowLin2() {
+    public void testMultivariateChowLinNoCC() {
 
         LinkedHashMap<String, ModelData> yx = new LinkedHashMap<>();
         Map<String, TsData> z = new HashMap<>();
 
-        double[] Y1Arr = {30.0,30.6,31.2};
+        double[] Y1Arr = {30.0,30.6,31.2,31.6};
         TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
-        double[] Y2Arr = {80.0,81.2,81.8};
+        double[] Y2Arr = {80.0,81.2,82.5,82.6};
         TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
-        double[] Y3Arr = {8.0,8.1,8.3};
+        double[] Y3Arr = {8.0,8.1,8.2,8.2};
         TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
 
-        double[] x11Arr = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4,8.6,8.9,9.0,9.2};
-        double[] x12Arr = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0,18.8,19.5,20.0,20.3};
+        double[] x11Arr = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4,8.6,7.8,8.0,8.3,8.7,7.9,8.0,8.6};
+        double[] x12Arr = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0,18.6,19.5,20.4,20.1,18.7,19.1,20.4,20.8};
         TsData[] x1 = {TsData.ofInternal(TsPeriod.quarterly(2021, 1), x11Arr),
                 TsData.ofInternal(TsPeriod.quarterly(2021, 1), x12Arr)};
         TsData[] x2 = null;
-        double[] x31Arr = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0,2.1,2.3,2.4,2.5};
+        double[] x31Arr = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.1,2.1,1.6,1.6,2.2,2.3,1.7,1.9,2.3};
         TsData[] x3 = {TsData.ofInternal(TsPeriod.quarterly(2021, 1), x31Arr)};
 
         ModelData i1 = new ModelData(Y1, x1);
@@ -128,9 +129,9 @@ public class MultivariateChowLinTest {
         ModelData i3 = new ModelData(Y3, x3);
         yx.put("y3", i3);
 
-        double[] z1Arr = {27.1,29.8,29.9,31.2,29.4,27.9,30.9,31.7,29.5,30.0,30.3,31.5};
-        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
-        z.put("z1", z1);
+//        double[] z1Arr = {27.1,29.8,29.9,31.2,29.4,27.9,30.9,31.7};
+//        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
+//        z.put("z1", z1);
 
         double[] rhos = {0.85,1.0,0.9};
 //        double[] rhos = {1.0,1.0,0.9};
@@ -144,23 +145,86 @@ public class MultivariateChowLinTest {
         errVariance.row(1).add(DoubleSeq.of(errVarianceR2));
         errVariance.row(2).add(DoubleSeq.of(errVarianceR3));
 
-        ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("z1=y1+y2+y3");
+//        ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("z1=y1+y2+y3");
 
         MultivariateChowLinSpec spec = MultivariateChowLinSpec.builder()
                 .rhos(rhos)
                 .constant(csts)
                 .trend(trends)
-                .contemporaneousConstraint(cc1)
-                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
-//                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
+//                .contemporaneousConstraint(cc1)
+//                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
+                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
                 .build();
 
-        MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
+        MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, null, spec);
         System.out.println(rslts.getDisaggregatedSeries().get("y1"));
         System.out.println(rslts.getDisaggregatedSeries().get("y2"));
         System.out.println(rslts.getDisaggregatedSeries().get("y3"));
     }
+
+
+//     @Test
+//    public void testMultivariateChowLin2() {
+//
+//        LinkedHashMap<String, ModelData> yx = new LinkedHashMap<>();
+//        Map<String, TsData> z = new HashMap<>();
+//
+//        double[] Y1Arr = {30.0,30.6,31.2};
+//        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
+//        double[] Y2Arr = {80.0,81.2,81.8};
+//        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
+//        double[] Y3Arr = {8.0,8.1,8.3};
+//        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
+//
+//        double[] x11Arr = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4,8.6,8.9,9.0,9.2};
+//        double[] x12Arr = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0,18.8,19.5,20.0,20.3};
+//        TsData[] x1 = {TsData.ofInternal(TsPeriod.quarterly(2021, 1), x11Arr),
+//                TsData.ofInternal(TsPeriod.quarterly(2021, 1), x12Arr)};
+//        TsData[] x2 = null;
+//        double[] x31Arr = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0,2.1,2.3,2.4,2.5};
+//        TsData[] x3 = {TsData.ofInternal(TsPeriod.quarterly(2021, 1), x31Arr)};
+//
+//        ModelData i1 = new ModelData(Y1, x1);
+//        yx.put("y1", i1);
+//        ModelData i2 = new ModelData(Y2, x2);
+//        yx.put("y2", i2);
+//        ModelData i3 = new ModelData(Y3, x3);
+//        yx.put("y3", i3);
+//
+//        double[] z1Arr = {27.1,29.8,29.9,31.2,29.4,27.9,30.9,31.7,29.5,30.0,30.3,31.5};
+//        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
+//        z.put("z1", z1);
+//
+//        double[] rhos = {0.85,1.0,0.9};
+////        double[] rhos = {1.0,1.0,0.9};
+//        boolean[] csts = {false, false, true};
+//        boolean[] trends = {false, false, false};
+//        double[] errVarianceR1 = {7.0,0.0,0.0};
+//        double[] errVarianceR2 = {0.0,18.0,0.0};
+//        double[] errVarianceR3 = {0.0,0.0,1.5};
+//        FastMatrix errVariance = FastMatrix.square(3);
+//        errVariance.row(0).add(DoubleSeq.of(errVarianceR1));
+//        errVariance.row(1).add(DoubleSeq.of(errVarianceR2));
+//        errVariance.row(2).add(DoubleSeq.of(errVarianceR3));
+//
+//        ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("z1=y1+y2+y3");
+//
+//        MultivariateChowLinSpec spec = MultivariateChowLinSpec.builder()
+//                .rhos(rhos)
+//                .constant(csts)
+//                .trend(trends)
+//                .contemporaneousConstraint(cc1)
+//                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
+////                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
+//                .var(errVariance)
+//                .build();
+//
+//        MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
+//        System.out.println(rslts.getDisaggregatedSeries().get("y1"));
+//        System.out.println(rslts.getDisaggregatedSeries().get("y2"));
+//        System.out.println(rslts.getDisaggregatedSeries().get("y3"));
+//    }
 
     @Test
     public void testMultivariateChowLin3() {
@@ -206,7 +270,126 @@ public class MultivariateChowLinTest {
         System.out.println(rslts.getDisaggregatedSeries().get("y2"));
         System.out.println(rslts.getDisaggregatedSeries().get("y3"));
     }
-    
+
+    @Test
+    public void testMultivariateChowLin2CC() {
+
+        LinkedHashMap<String, ModelData> yx = new LinkedHashMap<>();
+        Map<String, TsData> z = new HashMap<>();
+
+        double[] Y1Arr = {29.8,30.2,30.6};
+        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
+        double[] Y2Arr = {80.2,81.6,82.4};
+        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
+        double[] Y3Arr = {8.0,8.1,8.3};
+        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
+        double[] Y4Arr = {21.8,22.1,22.3};
+        TsData Y4 = TsData.ofInternal(TsPeriod.yearly(2021), Y4Arr);
+
+        ModelData i1 = new ModelData(Y1, null);
+        yx.put("y1", i1);
+        ModelData i2 = new ModelData(Y2, null);
+        yx.put("y2", i2);
+        ModelData i3 = new ModelData(Y3, null);
+        yx.put("y3", i3);
+        ModelData i4 = new ModelData(Y4, null);
+        yx.put("y4", i4);
+
+        double[] z1Arr = {32.55,35.25,35.35,36.65,34.925,33.425,36.425,37.225,35.075,35.575,35.875,37.075};
+        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
+        z.put("z1", z1);
+
+        double[] rhos = {0.85,1.0,0.9,1.0};
+//        double[] rhos = {1.0,1.0,0.9};
+        boolean[] csts = {true, false, true, false};
+        boolean[] trends = {false, false, false, false};
+
+        ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("z1=y1+y2+y3+y4");
+        ContemporaneousConstraint cc2 = ContemporaneousConstraint.parse("0=y3+y4-y1");
+        List<ContemporaneousConstraint> ccAll = List.of(cc1, cc2);
+
+        MultivariateChowLinSpec spec = MultivariateChowLinSpec.builder()
+                .rhos(rhos)
+                .constant(csts)
+                .trend(trends)
+                .contemporaneousConstraints(ccAll)
+                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
+                .build();
+
+        MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
+        System.out.println(rslts.getDisaggregatedSeries().get("y1"));
+        System.out.println(rslts.getDisaggregatedSeries().get("y2"));
+        System.out.println(rslts.getDisaggregatedSeries().get("y3"));
+    }
+
+    @Test
+    public void testMultivariateChowLin2CC_2() {
+
+        LinkedHashMap<String, ModelData> yx = new LinkedHashMap<>();
+        Map<String, TsData> z = new HashMap<>();
+
+//        double[] Y1Arr = {25.8,26.2,26.6};
+//        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
+//        double[] Y2Arr = {84.2,85.6,86.4};
+//        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
+//        double[] Y3Arr = {8.0,8.1,8.3};
+//        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
+//        double[] Y4Arr = {21.8,22.1,22.3};
+//        TsData Y4 = TsData.ofInternal(TsPeriod.yearly(2021), Y4Arr);
+
+        double[] Y1Arr = {29.8,30.2,30.6};
+        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
+        double[] Y2Arr = {80.2,81.6,82.4};
+        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
+        double[] Y3Arr = {8.0,8.1,8.3};
+        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
+        double[] Y4Arr = {21.8,22.1,22.3};
+        TsData Y4 = TsData.ofInternal(TsPeriod.yearly(2021), Y4Arr);
+
+        ModelData i1 = new ModelData(Y1, null);
+        yx.put("y1", i1);
+        ModelData i2 = new ModelData(Y2, null);
+        yx.put("y2", i2);
+        ModelData i3 = new ModelData(Y3, null);
+        yx.put("y3", i3);
+        ModelData i4 = new ModelData(Y4, null);
+        yx.put("y4", i4);
+
+        double[] z1Arr = {32.55,35.25,35.35,36.65,34.925,33.425,36.425,37.225,35.075,35.575,35.875,37.075};
+        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
+        z.put("z1", z1);
+//        double[] z2Arr = {1,1,1,1,1,1,1,1,1,1,1,1};
+//        TsData z2 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z2Arr);
+//        z.put("z2", z2);
+        double[] z2Arr = {0,0,0,0,0,0,0,0,0,0,0,0};
+        TsData z2 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z2Arr);
+        z.put("z2", z2);
+
+        double[] rhos = {0.85,1.0,0.9,1.0};
+//        double[] rhos = {1.0,1.0,0.9};
+        boolean[] csts = {true, false, true, false};
+        boolean[] trends = {false, false, false, false};
+
+        ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("z1=y1+y2+y3+y4");
+        ContemporaneousConstraint cc2 = ContemporaneousConstraint.parse("z2=y3+y4-y1");
+        List<ContemporaneousConstraint> ccAll = List.of(cc1, cc2);
+
+        MultivariateChowLinSpec spec = MultivariateChowLinSpec.builder()
+                .rhos(rhos)
+                .constant(csts)
+                .trend(trends)
+                .contemporaneousConstraints(ccAll)
+                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
+                .build();
+
+        MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
+        System.out.println(rslts.getDisaggregatedSeries().get("y1"));
+        System.out.println(rslts.getDisaggregatedSeries().get("y2"));
+        System.out.println(rslts.getDisaggregatedSeries().get("y3"));
+        System.out.println(rslts.getDisaggregatedSeries().get("y4"));
+    }
+
+
     @Test
     public void testSsf() {     
         int nvars = 3;
@@ -277,18 +460,18 @@ public class MultivariateChowLinTest {
         // Test SSF
 
        // P0.inv()
-//        ssf.loading(3).Z(2, DataBlock.of(test0));
+//        ssf.loading(2).Z(3, DataBlock.of(test0));
 //        double rslt = ssf.loading(0).ZX(2, DataBlock.of(test1));
 //        double rslt = ssf.loading(3).ZX(2, DataBlock.of(test1));
 //        ssf.loading(3).ZM(2, P, DataBlock.of(test0));
-//        ssf.loading(3).ZVZ(2, P);
+//        ssf.loading(0).ZVZ(0, P);
 //        ssf.loading(3).VpZdZ(2, P, 2.0);
 //        ssf.loading(2).XpZd(2, DataBlock.of(test1), 2.0);
 //        ssf.dynamics().V(2, P0);
 //        ssf.dynamics().S(2, P);
 //        ssf.dynamics().T(3, P0);
 //        ssf.dynamics().TX(2, DataBlock.of(test1));
-          ssf.dynamics().addSU(2, DataBlock.of(test1), DataBlock.of(u));
+//          ssf.dynamics().addSU(2, DataBlock.of(test1), DataBlock.of(u));
 //         ssf.dynamics().addV(2, P0);
 //        ssf.dynamics().XT(3, DataBlock.of(test1));
 //          ssf.dynamics().XS(2, DataBlock.of(test1), DataBlock.of(u));
