@@ -16,13 +16,14 @@
  */
 package jdplus.benchmarking.base.api.benchmarking.univariate;
 
-import jdplus.toolkit.base.api.timeseries.TsUnit;
-import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.design.Algorithm;
+import jdplus.toolkit.base.api.timeseries.TsData;
+import jdplus.toolkit.base.api.timeseries.TsUnit;
 import nbbrd.design.Development;
-import nbbrd.service.Mutability;
 import nbbrd.service.Quantifier;
 import nbbrd.service.ServiceDefinition;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -32,7 +33,7 @@ import nbbrd.service.ServiceDefinition;
 @lombok.experimental.UtilityClass
 public class Denton {
 
-    private final DentonLoader.Processor PROCESSOR = new DentonLoader.Processor();
+    private final AtomicReference<Denton.Processor> PROCESSOR = new AtomicReference<>(DentonLoader.Processor.load());
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -51,7 +52,8 @@ public class Denton {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     public interface Processor {
 
         TsData benchmark(TsData highFreqSeries, TsData aggregationConstraint, DentonSpec spec);
