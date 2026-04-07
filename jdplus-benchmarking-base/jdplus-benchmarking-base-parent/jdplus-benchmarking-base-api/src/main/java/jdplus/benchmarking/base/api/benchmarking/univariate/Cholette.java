@@ -19,9 +19,10 @@ package jdplus.benchmarking.base.api.benchmarking.univariate;
 import jdplus.toolkit.base.api.design.Algorithm;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import nbbrd.design.Development;
-import nbbrd.service.Mutability;
 import nbbrd.service.Quantifier;
 import nbbrd.service.ServiceDefinition;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -31,7 +32,7 @@ import nbbrd.service.ServiceDefinition;
 @lombok.experimental.UtilityClass
 public class Cholette {
 
-    private final CholetteLoader.Processor PROCESSOR = new CholetteLoader.Processor();
+    private final AtomicReference<Cholette.Processor> PROCESSOR = new AtomicReference<>(CholetteLoader.Processor.load());
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -46,7 +47,8 @@ public class Cholette {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     @FunctionalInterface
     public static interface Processor {
 
