@@ -21,7 +21,7 @@ import jdplus.benchmarking.base.api.multivariate.ModelData;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLin;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
-import jdplus.benchmarking.base.core.multivariate.MultivariateChowLinProcessor;
+import jdplus.benchmarking.base.r.util.DictionaryGroups;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
@@ -31,10 +31,7 @@ import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationISpec;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
 import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_EPS;
@@ -587,7 +584,7 @@ public class TemporalDisaggregation {
     public MultivariateChowLinResults multiChowLin(Dictionary series,
                                                    boolean[] constant,
                                                    boolean[] trend,
-                                                   arrDictionary indicators,
+                                                   DictionaryGroups indicators,
                                                    Dictionary ccseries,
                                                    String[] ccdefinition,
                                                    int frequency,
@@ -604,7 +601,7 @@ public class TemporalDisaggregation {
 
         Map<String, TsData> z = ccseries.data();
 
-        List<ContemporaneousConstraint> ccAll = List.of();
+        List<ContemporaneousConstraint> ccAll = new ArrayList<>();
         if (ccdefinition != null) {
             for (int i = 0; i < ccdefinition.length; ++i) {
                 if (ccdefinition[i].length() > 0) {

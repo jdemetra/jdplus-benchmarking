@@ -51,7 +51,8 @@ module jdplus.benchmarking.base.core {
             jdplus.benchmarking.base.core.benchmarking.extractors.BenchmarkingResultsExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.CalendarizationExtractor,
             jdplus.benchmarking.base.core.benchmarking.extractors.ResidualsDiagnosticsExtractor,
-            jdplus.benchmarking.base.core.benchmarking.extractors.RawResidualsDiagnosticsExtractor;
+            jdplus.benchmarking.base.core.benchmarking.extractors.RawResidualsDiagnosticsExtractor,
+            jdplus.benchmarking.base.core.benchmarking.extractors.MultivariateChowLinExtractor;
 
     provides Calendarization.Processor with
             CalendarizationProcessor;

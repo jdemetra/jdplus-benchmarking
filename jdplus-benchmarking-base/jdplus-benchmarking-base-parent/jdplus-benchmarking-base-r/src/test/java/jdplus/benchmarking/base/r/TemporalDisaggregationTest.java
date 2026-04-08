@@ -16,9 +16,12 @@
  */
 package jdplus.benchmarking.base.r;
 
+import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.core.univariate.ADLResults;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonResults;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
+import jdplus.benchmarking.base.r.util.DictionaryGroups;
+import jdplus.toolkit.base.r.util.Dictionary;
 import tck.demetra.data.Data;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
 import jdplus.toolkit.base.api.data.DoubleSeq;
@@ -126,5 +129,52 @@ public class TemporalDisaggregationTest {
 //        System.out.println(rslt.getRegressionEffects().toString());
 //        System.out.println(rslt2.getRegressionEffects().toString());
 //        System.out.println(rslt.getDisaggregatedSeries().toString());
+    }
+
+    @Test
+    public void testmultivariateChowLin() {
+
+        double[] Y1Arr = {30.0,30.6,31.2,31.6};
+        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
+        double[] Y2Arr = {80.0,81.2,82.5,82.6};
+        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
+        double[] Y3Arr = {8.0,8.1,8.2,8.2};
+        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
+
+        double[] z1Arr = {27.1,29.8,29.9,31.2,29.4,27.9,30.9,31.7,29.2,30.2,30.6,31.9,29.3,30.4,30.7,32.0};
+        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
+
+        double[] x11Arr = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4,8.6,7.8,8.0,8.3,8.7,7.9,8.0,8.6};
+        double[] x12Arr = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0,18.6,19.5,20.4,20.1,18.7,19.1,20.4,20.8};
+        TsData x11 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), x11Arr);
+        TsData x12 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), x12Arr);
+        TsData x2 = null;
+        double[] x31Arr = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.1,2.1,1.6,1.6,2.2,2.3,1.7,1.9,2.3};
+        TsData x3 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), x31Arr);
+
+        boolean[] constant = {false, false, true};
+        boolean[] trend = {false, false, false};
+        String[] ccdefinition = new String[]{"z1=y1+y2+y3"};
+        double[] rhos = {0.85,1.0,0.9};
+        FastMatrix errVariance = null;
+
+        Dictionary series = new Dictionary();
+        series.add("y1", Y1);
+        series.add("y2", Y2);
+        series.add("y3", Y3);
+
+        DictionaryGroups indicators = new DictionaryGroups();
+        indicators.add("y1", x11);
+        indicators.add("y1", x12);
+        indicators.add("y2", x2);
+        indicators.add("y3", x3);
+
+        Dictionary ccseries = new Dictionary();
+        ccseries.add("z1", z1);
+
+        MultivariateChowLinResults rslt = TemporalDisaggregation.multiChowLin(series, constant, trend,
+                indicators, ccseries, ccdefinition, 4, rhos, "fromUnivariate", null);
+
+        System.out.println(rslt.getDisaggregatedSeries().get("y1"));
     }
 }
