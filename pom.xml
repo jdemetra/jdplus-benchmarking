@@ -51,7 +51,7 @@
 
         <!-- annotations & processors -->
         <lombok.version>1.18.44</lombok.version>
-        <java-service.version>1.9.0</java-service.version>
+        <java-service.version>2.0.0</java-service.version>
         <java-design.version>1.9.0</java-design.version>
         <jspecify.version>1.0.0</jspecify.version>
 
@@ -182,12 +182,12 @@
                 <plugin>
                     <groupId>com.github.nbbrd.heylogs</groupId>
                     <artifactId>heylogs-maven-plugin</artifactId>
-                    <version>0.15.0</version>
+                    <version>0.17.1</version>
                 </plugin>
                 <plugin>
                     <groupId>io.github.ascopes</groupId>
                     <artifactId>protobuf-maven-plugin</artifactId>
-                    <version>5.0.2</version>
+                    <version>5.1.2</version>
                 </plugin>
                 <plugin>
                     <groupId>com.amashchenko.maven.plugin</groupId>
@@ -429,13 +429,6 @@
                         <inherited>false</inherited>
                     </execution>
                 </executions>
-                <configuration>
-                    <versioning>semver</versioning>
-                    <tagging>prefix:v</tagging>
-                    <rules>
-                        <rule>no-empty-release:OFF</rule>
-                    </rules>
-                </configuration>
             </plugin>
         </plugins>
     </build>
