@@ -15,7 +15,6 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
-import internal.ssf.Utility;
 import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 import jdplus.toolkit.base.api.data.DoubleSeq;
@@ -138,9 +137,9 @@ public class RawInterpolationProcessor {
             case SqrtDiffuse ->
                 DkToolkit.sqrtSmooth(rssf, ssfdata, true, false);
             case Augmented_NoCollapsing ->
-                AkfToolkit.smooth(rssf, ssfdata, true, false, true);
+                AkfToolkit.smooth(rssf, ssfdata, true, false, false, QAugmentation.DEFAULT_NOCOLLAPSING);
             case Augmented_Robust ->
-                Utility.smooth(rssf, ssfdata, true, false, QAugmentation.QType.QR);
+                AkfToolkit.smooth(rssf, ssfdata, true, false, true, QAugmentation.QType.QR);
             default ->
                 DkToolkit.smooth(rssf, ssfdata, true, false);
         };

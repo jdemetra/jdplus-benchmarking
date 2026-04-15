@@ -15,7 +15,6 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
-import internal.ssf.Utility;
 import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
 //import jdplus.toolkit.base.api.data.AggregationType;
@@ -286,9 +285,9 @@ public class RawDisaggregationProcessor {
             case SqrtDiffuse ->
                 DkToolkit.sqrtSmooth(ssf, ssfdata, true, false);
             case Augmented_NoCollapsing ->
-                AkfToolkit.smooth(ssf, ssfdata, true, false, true);
+                AkfToolkit.smooth(ssf, ssfdata, true, false, false, QAugmentation.DEFAULT_NOCOLLAPSING);
             case Augmented_Robust ->
-                Utility.smooth(ssf, ssfdata, true, false, QAugmentation.QType.QR);
+                AkfToolkit.smooth(ssf, ssfdata, true, false, true, QAugmentation.QType.QR);
             default ->
                 DkToolkit.smooth(ssf, ssfdata, true, false);
         };
