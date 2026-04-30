@@ -599,7 +599,7 @@ public class TemporalDisaggregation {
             yx.put(sName, new ModelData(y.get(sName), x.get(sName)));
         }
 
-        Map<String, TsData> z = ccseries.data();
+        Map<String, TsData> z = ccseries != null ? ccseries.data() : null;
 
         List<ContemporaneousConstraint> ccAll = new ArrayList<>();
         if (ccdefinition != null) {

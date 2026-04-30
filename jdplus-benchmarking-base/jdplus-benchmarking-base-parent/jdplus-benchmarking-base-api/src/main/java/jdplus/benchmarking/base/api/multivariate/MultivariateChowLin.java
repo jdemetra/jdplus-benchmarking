@@ -6,11 +6,10 @@ package jdplus.benchmarking.base.api.multivariate;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import jdplus.toolkit.base.api.design.Algorithm;
-import jdplus.toolkit.base.api.processing.ProcResults;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import nbbrd.design.Development;
-import nbbrd.service.Mutability;
 import nbbrd.service.Quantifier;
 import nbbrd.service.ServiceDefinition;
 
@@ -21,7 +20,9 @@ import nbbrd.service.ServiceDefinition;
 @Development(status = Development.Status.Beta)
 @lombok.experimental.UtilityClass
 public class MultivariateChowLin {
-    private final MultivariateChowLinLoader.Processor PROCESSOR = new MultivariateChowLinLoader.Processor();
+
+    private final AtomicReference<MultivariateChowLin.Processor> PROCESSOR = new AtomicReference<>(MultivariateChowLinLoader.Processor.load());
+    //private final MultivariateChowLinLoader.Processor PROCESSOR = new MultivariateChowLinLoader.Processor();
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -36,7 +37,8 @@ public class MultivariateChowLin {
     }
     
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     public interface Processor {
 
         MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> constraints, MultivariateChowLinSpec spec);

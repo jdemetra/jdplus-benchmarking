@@ -16,10 +16,7 @@
  */
 package jdplus.benchmarking.base.core.multivariate;
 
-import internal.ssf.FastStateSmoother2;
-
 import java.util.*;
-
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
@@ -36,6 +33,10 @@ import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.TsException;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import jdplus.toolkit.base.api.timeseries.TsUnit;
+import jdplus.toolkit.base.api.timeseries.regression.Constant;
+import jdplus.toolkit.base.api.timeseries.regression.LinearTrend;
+import jdplus.toolkit.base.api.timeseries.regression.UserVariable;
+import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import jdplus.toolkit.base.api.util.WeightedItem;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.data.DataBlockIterator;
@@ -43,7 +44,9 @@ import jdplus.toolkit.base.core.data.DataBlockStorage;
 import jdplus.toolkit.base.core.data.transformation.Cumulator;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.math.matrices.QuadraticForm;
+import jdplus.toolkit.base.core.ssf.dk.DefaultDiffuseFilteringResults;
 import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
+import jdplus.toolkit.base.core.ssf.dk.FastStateSmoother;
 import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
 import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
 import jdplus.toolkit.base.core.ssf.multivariate.SsfMatrix;
@@ -100,7 +103,6 @@ public class MultivariateChowLinEngine {
     public MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> ccData, MultivariateChowLinSpec spec)  {
 
         // TO DO
-        // - Write R part + try in R all the output
         // - Allow for covariance in errors variance matrix? -> complicated, not at first! Must be given by the user or estimated empirically from the residuals of univariate estimations (but then we need to implement a way to estimate the covariance between the residuals of the different series)
         // - Rescaling? A tester car possibles problèmes dans du multivarié...
 
@@ -453,7 +455,7 @@ public class MultivariateChowLinEngine {
         ISsf adapter = M2uAdapter.of(ssf);
         ISsfData data = M2uAdapter.of(new SsfMatrix(M));
 
-        FastStateSmoother2 smoother = new FastStateSmoother2(adapter);
+        FastStateSmoother smoother = new FastStateSmoother(adapter);
         DataBlockStorage states = smoother.process(data);
 
         int nxc = 0;
@@ -484,10 +486,11 @@ public class MultivariateChowLinEngine {
         Map<String, FastMatrix> regressors = new LinkedHashMap<>();
         Map<String, DoubleSeq> regCoef = new LinkedHashMap<>();
         Map<String, DoubleSeq> vregCoef = new LinkedHashMap<>();
+        Map<String, Variable[]> indic = new LinkedHashMap<>();
 
         List<String> seriesNames = new ArrayList<>(mData.keySet());
-        int c = ratio;
         int len = hDomain.getLength();
+        int c = ratio;
 
         IMultivariateSsf ssf = MultivariateSsfChowLin.builder(m)
                 .conversion(c)
@@ -506,16 +509,14 @@ public class MultivariateChowLinEngine {
             DataBlock b = M.column(i).extract(c - 1, Yo[i].length, c);
             b.copy(DoubleSeq.of(Yo[i]));
         }
-
         for (int i = 0; i < q; ++i) {
-            DataBlock row = M.column(i + m);
-            row.copyFrom(Zc[i], 0);
+            M.column(m + i).copyFrom(Zc[i], 0);
         }
 
         ISsf adapter = M2uAdapter.of(ssf);
         ISsfData data = M2uAdapter.of(new SsfMatrix(M));
-
-        DefaultSmoothingResults srslts = DkToolkit.sqrtSmooth(adapter, data, true, false);
+        DefaultSmoothingResults srslts =
+                DkToolkit.sqrtSmooth(adapter, data, true, false);
 
         int no = len * (m + q);
         double[] oh = new double[no];
@@ -525,24 +526,27 @@ public class MultivariateChowLinEngine {
             voh[i] = adapter.loading().ZVZ(i, srslts.P(i));
         }
 
+        int nxc = 0;
+
         for (int i = 0; i < m; ++i) {
-            double[] yhC = DoubleSeq.of(oh).extract(i, len,m+q).toArray();
-            double[] vyhC = DoubleSeq.of(voh).extract(i, len,m+q).toArray();
+
+            String sName = seriesNames.get(i);
+
+            double[] yhC = DoubleSeq.of(oh).extract(i, len,m + q).toArray();
+            double[] vyhC = DoubleSeq.of(voh).extract(i, len,m + q).toArray();
+
             double[] yh = new double[len];
             double[] vyh = new double[len];
-
 //            FastMatrix vyhCM = FastMatrix.diagonal(DoubleSeq.of(vyhC));
 //            DataBlock x = DataBlock.make(len);
 //            double[] vyhOld = new double[len];
-
             for (int k = 0; k < len; ++k) {
-                if (k % ratio == 0) {
+                if (k % c == 0) {
                     yh[k] = yhC[k];
                     vyh[k] = vyhC[k];
                 } else {
                     yh[k] = yhC[k] - yhC[k - 1];
                     vyh[k] = vyhC[k] + vyhC[k - 1]; //~ QuadraticForm.apply(V, [... -1 1 0 0 ...])
-
 //                    x.set(k - 1, -1);
 //                    x.set(k, 1);
 //                    vyhOld[k] = QuadraticForm.apply(vyhCM, x);
@@ -551,38 +555,59 @@ public class MultivariateChowLinEngine {
                 }
             }
 
-            disagg.put(seriesNames.get(i), TsData.ofInternal(hDomain.getStartPeriod(), yh));
-            edisagg.put(seriesNames.get(i), TsData.ofInternal(hDomain.getStartPeriod(), DoubleSeq.of(vyh).sqrt().toArray()));
-        }
-
-        int nxc = 0;
-        for (int i = 0; i < m; ++i) {
+            // regressors
             double[] rh = new double[len];
             int nx = Xo.get(i).getColumnsCount();
+
             if (nx == 0) {
                 Arrays.fill(rh, 0);
-                regCoef.put(seriesNames.get(i), null);
-                vregCoef.put(seriesNames.get(i), null);
+                regCoef.put(sName, null);
+                vregCoef.put(sName, null);
+                indic.put(sName, null);
             } else {
                 int ip = 2 * i + nxc;
+
                 double[] b = new double[nx];
                 double[] vb = new double[nx];
+
                 for (int k = 0; k < nx; ++k) {
                     b[k] = srslts.item(ip + 2 + k).get(0);
                     vb[k] = srslts.P(ip + 2 + k).get(0, 0);
                 }
-                regCoef.put(seriesNames.get(i), DoubleSeq.of(b));
-                vregCoef.put(seriesNames.get(i), DoubleSeq.of(vb));
 
-                for (int j = 0; j < len; ++j) {
+                regCoef.put(sName, DoubleSeq.of(b));
+                vregCoef.put(sName, DoubleSeq.of(vb));
+
+                for (int t = 0; t < len; ++t) {
                     for (int k = 0; k < nx; ++k) {
-                        rh[j] += b[k] * Xo.get(i).get(j, k);
+                        rh[t] += b[k] * Xo.get(i).get(t, k);
                     }
                 }
+
                 nxc += nx;
+
+                ArrayList<Variable> vars = new ArrayList<>();
+                if (isConstant[i]) {
+                    vars.add(Variable.variable("const", Constant.C));
+                }
+                if (isTrend[i]) {
+                    vars.add(Variable.variable("trend", new LinearTrend(hDomain.start())));
+                }
+                TsData[] xp = mData.get(sName).getX();
+                if(xp != null) {
+                    for (int k = 0; k < xp.length; ++k) {
+                        String vname = "var-" + (k + 1);
+                        vars.add(Variable.variable(vname, new UserVariable(vname, xp[k], null)));
+                    }
+                }
+
+                indic.put(sName, vars.toArray(Variable[]::new));
             }
-            regeffect.put(seriesNames.get(i), TsData.ofInternal(hDomain.getStartPeriod(), rh));
-            regressors.put(seriesNames.get(i), Xo.get(i));
+
+            disagg.put(sName, TsData.ofInternal(hDomain.getStartPeriod(), yh));
+            edisagg.put(sName, TsData.ofInternal(hDomain.getStartPeriod(), DoubleSeq.of(vyh).sqrt().toArray()));
+            regeffect.put(sName, TsData.ofInternal(hDomain.getStartPeriod(), rh));
+            regressors.put(sName, Xo.get(i));
         }
 
         return MultivariateChowLinResults.builder()
@@ -594,6 +619,7 @@ public class MultivariateChowLinEngine {
                 .coefficientsVariance(vregCoef)
                 .disaggregationDomain(this.hDomain)
                 .disaggregationRatio(this.ratio)
+                .regressorsNames(getRegressorsName(indic))
                 .build();
     }
 
@@ -605,6 +631,7 @@ public class MultivariateChowLinEngine {
         Map<String, FastMatrix> regressors = new LinkedHashMap<>();
         Map<String, DoubleSeq> regCoef = new LinkedHashMap<>();
         Map<String, DoubleSeq> vregCoef = new LinkedHashMap<>();
+        Map<String, List<String>> regNames = new LinkedHashMap<>();
 
         List<String> seriesNames = new ArrayList<>(mData.keySet());
         TsPeriod start = hDomain.getStartPeriod();
@@ -618,6 +645,7 @@ public class MultivariateChowLinEngine {
             regressors.put(name, td.getRegressors());
             regCoef.put(name, td.getCoefficients());
             vregCoef.put(name, td.getCoefficientsCovariance().diagonal());
+            regNames.put(name, Arrays.asList(td.getRegressorsName()));
         }
 
         return MultivariateChowLinResults.builder()
@@ -629,6 +657,7 @@ public class MultivariateChowLinEngine {
                 .coefficientsVariance(vregCoef)
                 .disaggregationDomain(this.hDomain)
                 .disaggregationRatio(this.ratio)
+                .regressorsNames(regNames)
                 .build();
     }
 
@@ -684,5 +713,65 @@ public class MultivariateChowLinEngine {
             default:
                 throw new IllegalArgumentException("Unknown errors variance method: " + method);
         }
+    }
+
+    public Map<String, List<String>> getRegressorsName(Map<String, Variable[]> indicators) {
+
+        Map<String, List<String>> names = new LinkedHashMap<>();
+
+        for (String sName : indicators.keySet()) {
+            Variable[] vars = indicators.get(sName);
+
+            if (vars == null || vars.length == 0) {
+                names.put(sName, Collections.emptyList());
+                continue;
+            }
+
+            List<String> vnames = new ArrayList<>(vars.length);
+            for (Variable v : vars) {
+                vnames.add(v.getName());
+            }
+
+            names.put(sName, vnames);
+        }
+
+        return names;
+    }
+
+
+    private Map<String, DoubleSeq> residuals(Map<String, TsData> hy, Map<String, FastMatrix> hx, Map<String, DoubleSeq> coeff, int ratio, ISsf ssf) {
+
+        Map<String, DoubleSeq> res = new LinkedHashMap<>();
+        List<String> seriesNames = new ArrayList<>(hy.keySet());
+
+
+//      YET TO ADAPT!
+//        for (String sName : seriesNames) {
+//            DoubleSeq hyi = hy.get(sName).getValues();
+//            FastMatrix hxi = hx.get(sName);
+//            DoubleSeq ci = coeff.get(sName);
+//
+//            double[] y = hyi.toArray();
+//            if (hxi != null && !hxi.isEmpty()) {
+//                for (int i = 0; i < y.length; i++) {
+//                    if (Double.isFinite(y[i])) {
+//                        y[i] = hyi.get(i) - hxi.row(i).dot(ci);
+//                    }
+//                }
+//            }
+//
+//            DefaultDiffuseFilteringResults fr =
+//                    DkToolkit.filter(ssf, new SsfData(y), false);
+//
+//            DoubleSeq errors = fr.errors(true, false);
+//
+//            int n = (errors.length() + ratio - 1) / ratio;
+//            DoubleSeq err = DoubleSeq.of(errors.extract(ratio - 1, n, ratio).toArray());
+//            err.mul(1 / model.getYfactor());
+//
+//            res.put(sName, err);
+//        }
+
+        return null;
     }
 }
