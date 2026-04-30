@@ -690,14 +690,15 @@ public class MultivariateChowLinEngine {
         switch (method) {
             case fromUnivariate:
                 for (int i = 0; i < length; ++i) {
-                    v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVar();
+                    v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVarDF(1);
+//                    v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVar();
                 }
-                double vSum = Arrays.stream(v).sum();
-                if (vSum != 0) {
-                    for (int i = 0; i < length; ++i) {
-                        v[i] = v[i] * length / vSum;
-                    }
-                }
+//                double vSum = Arrays.stream(v).sum();
+//                if (vSum != 0) {
+//                    for (int i = 0; i < length; ++i) {
+//                        v[i] = v[i] * length / vSum;
+//                    }
+//                }
                 return FastMatrix.diagonal(DoubleSeq.of(v));
             case allEquals:
                 Arrays.fill(v, 1);
