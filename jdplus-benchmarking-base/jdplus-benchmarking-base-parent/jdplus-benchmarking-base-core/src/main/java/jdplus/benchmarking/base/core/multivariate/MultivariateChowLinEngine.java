@@ -571,8 +571,8 @@ public class MultivariateChowLinEngine {
                 double[] vb = new double[nx];
 
                 for (int k = 0; k < nx; ++k) {
-                    b[k] = srslts.item(ip + 2 + k).get(0);
-                    vb[k] = srslts.P(ip + 2 + k).get(0, 0);
+                    b[k] = srslts.a(len - 1).get(ip + 2 + k);
+                    vb[k] = srslts.P(len - 1).get(ip + 2 + k, ip + 2 + k);
                 }
 
                 regCoef.put(sName, DoubleSeq.of(b));
