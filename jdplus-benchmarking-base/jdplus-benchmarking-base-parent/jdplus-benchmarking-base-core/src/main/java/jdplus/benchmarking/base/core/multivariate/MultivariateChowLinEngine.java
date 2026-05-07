@@ -181,6 +181,11 @@ public class MultivariateChowLinEngine {
             int len = lDomain.getLength() * defFreq;
             TsPeriod start = TsPeriod.of(TsUnit.ofAnnualFrequency(defFreq), lDomain.start());
             hDomain = TsDomain.of(start, len);
+        } else {
+            if(hDomain.getStartPeriod().annualPosition() != 0) {
+                // domain must start at the first period of the frequency
+                throw new TsException(TsException.INVALID_PERIOD);
+            }
         }
 
         lDomain = TsDomain.DEFAULT_EMPTY;
@@ -358,7 +363,14 @@ public class MultivariateChowLinEngine {
             FastMatrix x = Xo.get(k);
 
             if (x.isEmpty()) {
-                rsltsUnivariate.put(sName, RawDisaggregationProcessor.process(DoubleSeq.of(Y), 0, 0, spec));
+                // compute the number of forecast periods needed
+                int nf = 0;
+                int hFreq = hDomain.getAnnualFrequency();
+                TsPeriod lStartAtHFreq = TsPeriod.of(TsUnit.ofAnnualFrequency(hFreq), lDomain.start());
+                if (lStartAtHFreq.equals(hDomain.getStartPeriod())) {
+                     nf = hDomain.getLength() - lDomain.getLength() * hFreq;
+                }
+                rsltsUnivariate.put(sName, RawDisaggregationProcessor.process(DoubleSeq.of(Y), 0, nf, spec));
             } else {
                 rsltsUnivariate.put(sName, RawDisaggregationProcessor.process(DoubleSeq.of(Y), x, 0, spec));
             }
