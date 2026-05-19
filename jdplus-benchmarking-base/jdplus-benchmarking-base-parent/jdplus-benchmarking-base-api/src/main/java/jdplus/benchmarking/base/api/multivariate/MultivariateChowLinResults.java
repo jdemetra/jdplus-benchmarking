@@ -2,6 +2,7 @@ package jdplus.benchmarking.base.api.multivariate;
 
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.information.GenericExplorable;
+import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsDomain;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
@@ -40,6 +41,8 @@ public class MultivariateChowLinResults implements GenericExplorable {
     Map<String, DoubleSeq> coefficients;
 
     Map<String, DoubleSeq> coefficientsVariance;
+
+    Matrix innovationsVarCov;
 
     @lombok.NonNull
     TsDomain disaggregationDomain;

@@ -6,6 +6,7 @@ import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.DoublesMath;
 import jdplus.toolkit.base.api.information.InformationExtractor;
 import jdplus.toolkit.base.api.information.InformationMapping;
+import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import nbbrd.service.ServiceProvider;
@@ -22,6 +23,7 @@ public class MultivariateChowLinExtractor extends InformationMapping<Multivariat
         set(TemporalDisaggregationDictionaries.REG, Map.class, source -> source.getRegressors());
         set(TemporalDisaggregationDictionaries.COEFF, Map.class, source -> source.getCoefficients());
         set(TemporalDisaggregationDictionaries.COVAR, Map.class, source -> source.getCoefficientsVariance());
+        set("innovationsvarcov", Matrix.class, source -> source.getInnovationsVarCov());
         set(TemporalDisaggregationDictionaries.REGNAMES, Map.class, source -> source.getRegressorsNames());
         set(TemporalDisaggregationDictionaries.SPART, double[].class, source -> {
             Map<String, TsData> regeffect = source.getRegressionEffects();

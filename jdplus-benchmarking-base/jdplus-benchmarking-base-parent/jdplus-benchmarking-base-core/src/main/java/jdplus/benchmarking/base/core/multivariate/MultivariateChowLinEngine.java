@@ -629,6 +629,7 @@ public class MultivariateChowLinEngine {
                 .regressors(regressors)
                 .coefficients(regCoef)
                 .coefficientsVariance(vregCoef)
+                .innovationsVarCov(this.var)
                 .disaggregationDomain(this.hDomain)
                 .disaggregationRatio(this.ratio)
                 .regressorsNames(getRegressorsName(indic))
