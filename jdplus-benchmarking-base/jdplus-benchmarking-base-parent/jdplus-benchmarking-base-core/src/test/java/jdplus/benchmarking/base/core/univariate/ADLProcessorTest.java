@@ -26,6 +26,7 @@ import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
 import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
+//import static jdplus.benchmarking.base.api.univariate.ADLSpec.builder;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.timeseries.TsPeriod;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -171,6 +172,24 @@ public class ADLProcessorTest {
         TemporalDisaggregationResults rslt1 = TemporalDisaggregationProcessor.process(y, new TsData[]{q}, spec1);
 //        System.out.println(rslt1.getDisaggregatedSeries());
 //        System.out.println(rslt1.getStdevDisaggregatedSeries());
+        ADLResults rslts2 = ADLProcessor.process(y, new TsData[]{q}, ADLSpec.FERNANDEZ);
+        System.out.print(rslts.getDisaggregatedSeries());
+//        System.out.print(rslts.getStdevDisaggregatedSeries());
+    }
+
+    @Test
+    public void testFernandez2() {
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
+        ADLSpec spec = ADLSpec.builder()
+                .mean(false)
+                .xar(ADLSpec.XAR.SAME)
+                .phi(Parameter.fixed(1.0))
+                .build();
+
+        ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, spec);
+        System.out.print(rslts.getDisaggregatedSeries());
+//        System.out.print(rslts.getStdevDisaggregatedSeries());
     }
 
     @Test
@@ -420,5 +439,17 @@ public class ADLProcessorTest {
             System.out.println(crslt.getLikelihood().diffuseCorrection());
         }
 
+    }
+    
+    @Test
+    public void testADL11_2() {
+        TsData y = TsData.ofInternal(TsPeriod.yearly(1978), Data.PCRA);
+        TsData q = TsData.ofInternal(TsPeriod.quarterly(1977, 1), Data.IND_PCR);
+        
+        ADLSpec spec = ADLSpec.builder().aggregationType(AggregationType.Average).build();
+
+        ADLResults rslts = ADLProcessor.process(y, new TsData[]{q}, spec);
+        System.out.print(rslts.getDisaggregatedSeries());
+        System.out.print(rslts.getStdevDisaggregatedSeries());
     }
 }

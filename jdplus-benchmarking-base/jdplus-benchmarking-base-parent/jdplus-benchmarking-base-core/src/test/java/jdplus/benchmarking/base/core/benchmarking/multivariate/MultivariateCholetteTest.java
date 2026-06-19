@@ -27,8 +27,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ec.benchmarking.simplets.TsMultiBenchmarking;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import jdplus.benchmarking.base.core.ssf.ContemporaneousSsfCholette;
+import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
+import jdplus.benchmarking.base.core.ssf.MultivariateSsfCholette;
+import jdplus.toolkit.base.api.data.DoubleSeq;
+import jdplus.toolkit.base.core.data.DataBlock;
+import jdplus.toolkit.base.core.math.matrices.FastMatrix;
+import jdplus.toolkit.base.core.ssf.dk.DefaultDiffuseFilteringResults;
+import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
+import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
+import jdplus.toolkit.base.core.ssf.multivariate.SsfMatrix;
+import jdplus.toolkit.base.core.ssf.univariate.ISsf;
+import jdplus.toolkit.base.core.ssf.univariate.ISsfData;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,7 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class MultivariateCholetteTest {
     
-    // The following test works...
     @Test
     public void testTableFictiveData() {
         
@@ -127,8 +139,7 @@ public class MultivariateCholetteTest {
         
         Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
     }
-    
-    
+   
     @Test
     public void testTableFictiveData3() {
         
@@ -171,10 +182,60 @@ public class MultivariateCholetteTest {
                 .build();
         
         Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
-       // FAIL with LAMBDA = 1
     }
-    
-    
+
+    @Test
+    public void testTableFictiveData2CC() {
+
+        Map<String, TsData> input = new HashMap<>();
+
+        double[] s1 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s1", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1));
+
+        double[] s2 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s2", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2));
+
+        double[] s3 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
+
+        double[] s4 = {1,1,1,1,1,1,1,1,1,1,1,1};
+        input.put("s4", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s4));
+
+        double[] a = {32.55,35.25,35.35,36.65,34.925,33.425,36.425,37.225,35.075,35.575,35.875,37.075};
+        input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
+
+        double[] y1 = {29.8,30.2,30.6};
+        input.put("y1", TsData.ofInternal(TsPeriod.yearly(2021), y1));
+
+        double[] y2 = {80.2,81.6,82.4};
+        input.put("y2", TsData.ofInternal(TsPeriod.yearly(2021), y2));
+
+        double[] y3 = {8.0,8.1,8.3};
+        input.put("y3", TsData.ofInternal(TsPeriod.yearly(2021), y3));
+
+        double[] y4 = {21.8,22.1,22.3};
+        input.put("y4", TsData.ofInternal(TsPeriod.yearly(2021), y4));
+
+        ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("a=s1+s2+s3+s4");
+        ContemporaneousConstraint cc2 = ContemporaneousConstraint.parse("0=s3+s4-s1");
+        List<ContemporaneousConstraint> ccAll = List.of(cc1, cc2);
+
+        TemporalConstraint tc1 = TemporalConstraint.parse("y1=sum(s1)");
+        TemporalConstraint tc2 = TemporalConstraint.parse("y2=sum(s2)");
+        TemporalConstraint tc3 = TemporalConstraint.parse("y3=sum(s3)");
+        TemporalConstraint tc4 = TemporalConstraint.parse("y4=sum(s4)");
+        List<TemporalConstraint> tcAll = List.of(tc1, tc2, tc3, tc4);
+
+        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
+                .lambda(1)
+                .rho(1)
+                .contemporaneousConstraints(ccAll)
+                .temporalConstraints(tcAll)
+                .build();
+
+        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
+    }
+
     @Test
     public void testTable() {
         
@@ -320,107 +381,6 @@ public class MultivariateCholetteTest {
         return new ec.tstoolkit.timeseries.simplets.TsData(ec.tstoolkit.timeseries.simplets.TsFrequency.Yearly, 1980, 0, data, false);
     }
     
-// The following test works...
-//    @Test
-//    public void testTableFictiveData() {
-//
-//        Map<String, TsData> input = new HashMap<>();
-//
-//        double[] s1 = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4};
-//        input.put("s1", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1));
-//
-//        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
-//        input.put("s2", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2));
-//
-//        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
-//        input.put("s3", TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3));
-//
-//        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
-//        input.put("a", TsData.ofInternal(TsPeriod.quarterly(2021, 1), a));
-//
-//        double[] y1 = {30.0,30.5};
-//        input.put("y1", TsData.ofInternal(TsPeriod.yearly(2021), y1));
-//
-//        double[] y2 = {80.0,81.2};
-//        input.put("y2", TsData.ofInternal(TsPeriod.yearly(2021), y2));
-//
-//        double[] y3 = {8.0,8.1};
-//        input.put("y3", TsData.ofInternal(TsPeriod.yearly(2021), y3));        
-//
-//        ContemporaneousConstraint c1 = ContemporaneousConstraint.parse("a=s1+s2+s3");
-//
-//        TemporalConstraint c2 = TemporalConstraint.parse("y1=sum(s1)");
-//        TemporalConstraint c3 = TemporalConstraint.parse("y2=sum(s2)");
-//        TemporalConstraint c4 = TemporalConstraint.parse("y3=sum(s3)");
-//
-//        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
-//                .lambda(.5)
-//                .rho(1)
-//                .contemporaneousConstraint(c1)
-//                .temporalConstraint(c2)
-//                .temporalConstraint(c3)
-//                .temporalConstraint(c4)
-//                .build();
-//
-//        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
-//    }
-//
-//    // The following test does not work... (the only difference is that I added 2 more decimals to the second figure of s1)
-//    // Note that if I change the decimal, it works again...
-//    @Test
-//    public void testTableFictiveData2() {
-//
-//        Map<String, TsData> input = new HashMap<>();
-//
-//        double[] s1 = {7,7.228,8.1,7.5,8.5,7.8,8.1,8.4};
-//        TsData S1=TsData.ofInternal(TsPeriod.quarterly(2021, 1), s1);
-//        input.put("s1", S1);
-//
-//        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
-//        TsData S2=TsData.ofInternal(TsPeriod.quarterly(2021, 1), s2);
-//        input.put("s2", S2);
-//
-//        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};
-//        TsData S3=TsData.ofInternal(TsPeriod.quarterly(2021, 1), s3);
-//        input.put("s3", S3);
-//
-//        double[] a = {27.1,29.8,29.9,31.2,29.3,27.9,30.9,31.7};
-//        TsData A=TsData.ofInternal(TsPeriod.quarterly(2021, 1), a);
-//        input.put("a", A);
-//
-//        double[] y1 = {30.0,30.5};
-//        TsData Y1=TsData.ofInternal(TsPeriod.yearly(2021), y1);
-//        input.put("y1", Y1);
-//
-//        double[] y2 = {80.0,81.2};
-//        TsData Y2=TsData.ofInternal(TsPeriod.yearly(2021), y2);
-//        input.put("y2", Y2);
-//
-//        double[] y3 = {8.0,8.1};
-//        TsData Y3=TsData.ofInternal(TsPeriod.yearly(2021), y3);
-//        input.put("y3", Y3);        
-//
-//        ContemporaneousConstraint c1 = ContemporaneousConstraint.parse("a=s1+s2+s3");
-//
-//        TemporalConstraint c2 = TemporalConstraint.parse("y1=sum(s1)");
-//        TemporalConstraint c3 = TemporalConstraint.parse("y2=sum(s2)");
-//        TemporalConstraint c4 = TemporalConstraint.parse("y3=sum(s3)");
-//
-//        MultivariateCholetteSpec spec = MultivariateCholetteSpec.builder()
-//                .lambda(0.5)
-//                .rho(1)
-//                .contemporaneousConstraint(c1)
-//                .temporalConstraint(c2)
-//                .temporalConstraint(c3)
-//                .temporalConstraint(c4)
-//                .build();
-//
-//        Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
-//        assertTrue(distance(A, TsData.add(rslt.get("s1"), rslt.get("s2"), rslt.get("s3"))) < 1e-9);
-//        assertTrue(distance(Y1, rslt.get("s1").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
-//        assertTrue(distance(Y2, rslt.get("s2").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
-//        assertTrue(distance(Y3, rslt.get("s3").aggregate(TsUnit.YEAR, AggregationType.Sum, true))< 1e-9);
-//    }
 @Test
     public void testTableFictiveData4() {
         
@@ -464,6 +424,130 @@ public class MultivariateCholetteTest {
         
         Map<String, TsData> rslt = MultivariateCholette.benchmark(input, spec);
        // PASS with LAMBDA = 0.5
+    }
+    
+        @Test
+    public void testContemporaneousSsf() {
+        
+        double[] s1 = {7,7.228,8.1,7.5,8.5,7.8,8.1,8.4};
+        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
+        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};   
+        double[][] w = {s1,s2,s3};
+        
+        Constraint[] cs = new Constraint[1];
+        int pos = 0;
+        HashMap<Integer, Double> constraint = new HashMap<>();
+        constraint.put(0, 1.0);
+        constraint.put(1, 1.0);
+        constraint.put(2, 1.0);
+        Constraint acnt = new Constraint(constraint);
+        cs[pos++] = acnt;
+        
+        IMultivariateSsf ssf = ContemporaneousSsfCholette.builder(3)
+                .rho(1)
+                .weights(w)
+                .constraints(cs)
+                .build();
+        
+        double[] test = {0,0,0,0,0,0,0,0};
+        ssf.measurements().loading(0).Z(2, DataBlock.of(test));
+    
+    }
+    
+    @Test
+    public void testSsf() {
+        
+        double[] s1 = {7,7.228,8.1,7.5,8.5,7.8,8.1,8.4};
+        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
+        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};   
+        double[][] w = {s1,s2,s3};
+        double[] y1 = {30.0,30.6};
+        double[] y2 = {80.0,81.2};
+        double[] y3 = {8.0,8.1};
+        
+        Constraint[] cs = new Constraint[1];
+        int pos = 0;
+        HashMap<Integer, Double> constraint = new HashMap<>();
+        constraint.put(0, 1.0);
+        constraint.put(1, 1.0);
+        constraint.put(2, 1.0);
+        Constraint acnt = new Constraint(constraint);
+        cs[pos++] = acnt;
+        
+        IMultivariateSsf ssf = MultivariateSsfCholette.builder(3)
+                .conversion(4)
+                .rho(0.5)
+                .constraints(cs)
+                .weights(w)
+                .build();
+        
+        double[] test0 = {0,0,0,0,0,0};
+        double[] test1 = {1,2,3,4,5,6};
+          
+        int s = 6;
+        FastMatrix P = FastMatrix.make(s, s);
+        for(int i = 0; i < s; ++i){
+            for(int j = 0; j < s; ++j){
+                P.set(i, j, (i * 6) + j + 1);
+            }
+        }
+        FastMatrix P0 = FastMatrix.square(s);
+
+        // double rslt = ssf.loading(0).ZX(3, DataBlock.of(test1));
+        // ssf.loading(3).ZM(2, P, DataBlock.of(test0));
+        // ssf.loading(3).ZVZ(2, P);
+        ssf.loading(0).VpZdZ(2, P, 2.0);
+        // ssf.loading(0).XpZd(0, DataBlock.of(test0), 2.0);
+        // ssf.dynamics().T(2, P0);
+        // ssf.dynamics().TX(2, DataBlock.of(test1));
+        // ssf.dynamics().XT(3, DataBlock.of(test1));   
+        // ssf.initialization().Pf0(P0);
+    }
+    
+    @Test
+    public void testFiltering() {
+        
+        double[] s1 = {7,7.228,8.1,7.5,8.5,7.8,8.1,8.4};
+        double[] s2 = {18,19.5,19.0,19.7,18.5,19.0,20.3,20.0};
+        double[] s3 = {1.5,1.8,2,2.5,2.0,1.5,1.7,2.0};   
+        double[][] w = {s1,s2,s3};
+        double[] a = {27.1,29.8,29.9,31.2,29.4,27.9,30.9,31.7};
+        double[] y1 = {30.0,30.6};
+        double[] y2 = {80.0,81.2};
+        double[] y3 = {8.0,8.1};
+        
+        Constraint[] cs = new Constraint[1];
+        int pos = 0;
+        HashMap<Integer, Double> constraint = new HashMap<>();
+        constraint.put(0, 1.0);
+        constraint.put(1, 1.0);
+        constraint.put(2, 1.0);
+        Constraint acnt = new Constraint(constraint);
+        cs[pos++] = acnt;
+        
+        IMultivariateSsf ssf = MultivariateSsfCholette.builder(3)
+                .conversion(4)
+                .rho(0.9)
+                .constraints(cs)
+                .weights(w)
+                .build();
+        
+        // observations
+        FastMatrix M = FastMatrix.make(8, 4);
+        M.set(Double.NaN);
+        M.set(3, 0, y1[0]);
+        M.set(3, 1, y2[0]);
+        M.set(3, 2, y3[0]);
+        M.set(7, 0, y1[1]);
+        M.set(7, 1, y2[1]);
+        M.set(7, 2, y3[1]);
+        M.column(3).set(DoubleSeq.of(a));
+                
+        ISsf adapter = M2uAdapter.of(ssf);
+        ISsfData data = M2uAdapter.of(new SsfMatrix(M));
+        
+        DefaultDiffuseFilteringResults rslts1 = DkToolkit.filter(adapter, data, true);
+
     }
     
 }
