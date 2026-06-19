@@ -56,13 +56,14 @@
         <jspecify.version>1.0.0</jspecify.version>
 
         <!-- test frameworks -->
-        <junit.version>6.0.3</junit.version>
+        <junit.version>6.1.0</junit.version>
         <assertj-core.version>3.27.7</assertj-core.version>
 
         <!-- dependencies -->
         <jd2.version>2.2.6</jd2.version>
         <jdplus-main.version>3.7.2-SNAPSHOT</jdplus-main.version>
         <protobuf.version>4.30.2</protobuf.version>
+        <heylogs.version>0.19.1</heylogs.version>
     </properties>
 
     <modules>
@@ -151,23 +152,23 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.21.0</version>
+                    <version>3.22.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.5</version>
+                    <version>3.5.6</version>
                 </plugin>
                 <!-- Other plugins -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>3.10.0</version>
+                    <version>3.11.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.6.2</version>
+                    <version>3.6.3</version>
                 </plugin>
                 <plugin>
                     <groupId>org.gaul</groupId>
@@ -182,7 +183,7 @@
                 <plugin>
                     <groupId>com.github.nbbrd.heylogs</groupId>
                     <artifactId>heylogs-maven-plugin</artifactId>
-                    <version>0.17.1</version>
+                    <version>${heylogs.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>io.github.ascopes</groupId>
@@ -302,6 +303,11 @@
                         <artifactId>pomchecker-enforcer-rules</artifactId>
                         <version>1.15.0</version>
                     </dependency>
+                    <dependency>
+                        <groupId>com.github.nbbrd.heylogs</groupId>
+                        <artifactId>heylogs-enforcer-rules</artifactId>
+                        <version>${heylogs.version}</version>
+                    </dependency>
                 </dependencies>
                 <executions>
                     <execution>
@@ -346,6 +352,9 @@
                                     <release>false</release>
                                     <strict>false</strict>
                                 </checkMavenCentral>
+                                <!-- heylogs-enforcer-rules -->
+                                <checkChangelog/>
+                                <formatChangelog/>
                             </rules>
                         </configuration>
                     </execution>
@@ -415,18 +424,6 @@
                             <goal>check</goal>
                             <goal>testCheck</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.github.nbbrd.heylogs</groupId>
-                <artifactId>heylogs-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <inherited>false</inherited>
                     </execution>
                 </executions>
             </plugin>

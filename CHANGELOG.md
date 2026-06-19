@@ -12,14 +12,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This is a minor release of benchmarking extensions for JDemetra+ v3.  
 [JDemetra+ v3.6.0 or later](https://github.com/jdemetra/jdplus-main) version is required to run it.
 
-### Fixed
-
-- ![STAT] Correction in ADL
-
 ### Changed
 
 - ![OTHER] Migrate OSSRH to Central Portal
 - ![OTHER] Migrate protobuf-maven-plugin from org.xolstice.maven.plugins to io.github.ascopes
+
+### Fixed
+
+- ![STAT] Correction in ADL
 
 ## [2.0.1] - 2025-05-12
 
@@ -59,7 +59,7 @@ This is a major release of benchmarking extensions for JDemetra+ v3.
 [1.2.0]: https://github.com/jdemetra/jdplus-benchmarking/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jdemetra/jdplus-benchmarking/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jdemetra/jdplus-benchmarking/releases/tag/v1.0.0
-[STAT]: https://img.shields.io/badge/-STAT-068C09
-[OTHER]: https://img.shields.io/badge/-OTHER-e4e669
 [IO]: https://img.shields.io/badge/-IO-F813F7
+[OTHER]: https://img.shields.io/badge/-OTHER-e4e669
+[STAT]: https://img.shields.io/badge/-STAT-068C09
 [UI]: https://img.shields.io/badge/-UI-5319E7
