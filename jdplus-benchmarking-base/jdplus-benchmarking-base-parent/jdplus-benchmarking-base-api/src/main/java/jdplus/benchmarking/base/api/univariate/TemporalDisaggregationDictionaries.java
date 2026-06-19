@@ -15,6 +15,6 @@ public class TemporalDisaggregationDictionaries {
 
     public final String LIKELIHOOD = "likelihood", DISAGG = "disagg", EDISAGG = "edisagg", LDISAGG = "ldisagg", UDISAGG = "udisagg",
             RES = "residuals", ML = "ml", COEFF = "coeff", COVAR = "covar", REGEFFECT = "regeffect", SMOOTHINGEFFECT = "smoothingeffect", SPART = "smoothingpart",
-            REGNAMES = "regnames", PARAMETER = "parameter", EPARAMETER = "eparameter";
+            REGNAMES = "regnames", PARAMETER = "parameter", EPARAMETER = "eparameter", REG = "regressors";
     
 }

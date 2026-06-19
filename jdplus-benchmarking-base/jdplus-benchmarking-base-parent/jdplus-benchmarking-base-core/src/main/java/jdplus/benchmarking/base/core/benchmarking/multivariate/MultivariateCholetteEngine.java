@@ -261,6 +261,7 @@ class MultivariateCholetteEngine {
                 throw new TsException(TsException.INCOMPATIBLE_FREQ);
             } else {
                 idomain = idomain.intersection(d);
+                idomain = idomain.intersection(d);
                 if (idomain.isEmpty()) {
                     throw new TsException(TsException.DOMAIN_EMPTY);
                 }

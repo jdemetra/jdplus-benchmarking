@@ -27,6 +27,13 @@ import jdplus.toolkit.base.api.timeseries.TsUnit;
 import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.core.timeseries.simplets.TsDataToolkit;
 import java.time.temporal.ChronoUnit;
+import jdplus.toolkit.base.api.data.DoubleSeq;
+import jdplus.toolkit.base.core.ssf.benchmarking.SsfCholette;
+import jdplus.toolkit.base.core.ssf.dk.DefaultDiffuseFilteringResults;
+import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
+import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
+import jdplus.toolkit.base.core.ssf.univariate.ISsf;
+import jdplus.toolkit.base.core.ssf.univariate.SsfData;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -179,5 +186,36 @@ public class CholetteTest {
         TsData b = Denton.benchmark(TsUnit.of(3, ChronoUnit.MONTHS), t, spec);
         TsData bc = b.aggregate(TsUnit.YEAR, AggregationType.Sum, true);
         assertTrue(TsDataToolkit.subtract(t, bc).getValues().allMatch(x -> Math.abs(x) < 1e-9));
+    }
+    
+    @Test
+    public void testFiltering() {
+        
+        double[] s1 = {7,7.2,8.1,7.5,8.5,7.8,8.1,8.4};
+        double[] y1 = {30.0,30.6};
+        double[] y1Hf = {Double.NaN, Double.NaN, Double.NaN, 30.0, Double.NaN, Double.NaN, Double.NaN, 30.6};
+        
+        DataBlock y = DataBlock.make(5);
+        y.set(i -> (1 + i));
+
+        CholetteSpec spec = CholetteSpec.builder()
+                .lambda(1)
+                .rho(1)
+                .bias(CholetteSpec.BiasCorrection.None)
+                .build();
+        
+        TsPeriod q = TsPeriod.quarterly(2012, 1);
+        TsPeriod a = TsPeriod.yearly(2012);
+        TsData t = TsData.of(a, DoubleSeq.of(y1));
+        TsData s = TsData.of(q, DoubleSeq.of(s1));
+        TsData b = Cholette.benchmark(s, t, spec);
+        
+        ISsf ssf = SsfCholette.builder(4)
+                    .start(0)
+                    .rho(1.0)
+                    .weights(DoubleSeq.of(s1))
+                    .build();
+        
+        DefaultDiffuseFilteringResults rslts1 = DkToolkit.filter(ssf, new SsfData(y1Hf), true);   
     }
 }
