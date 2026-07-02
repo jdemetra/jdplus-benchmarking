@@ -5,7 +5,6 @@
  */
 package jdplus.benchmarking.base.core.benchmarking.multivariate;
 
-import internal.ssf.FastStateSmoother2;
 import jdplus.benchmarking.base.core.ssf.ContemporaneousSsfCholette;
 import jdplus.benchmarking.base.core.ssf.MultivariateSsfCholette;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
@@ -29,6 +28,7 @@ import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.data.DataBlockStorage;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
+import jdplus.toolkit.base.core.ssf.dk.FastStateSmoother;
 import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
 import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
 import jdplus.toolkit.base.core.ssf.multivariate.SsfMatrix;
@@ -261,6 +261,7 @@ class MultivariateCholetteEngine {
                 throw new TsException(TsException.INCOMPATIBLE_FREQ);
             } else {
                 idomain = idomain.intersection(d);
+                idomain = idomain.intersection(d);
                 if (idomain.isEmpty()) {
                     throw new TsException(TsException.DOMAIN_EMPTY);
                 }
@@ -378,7 +379,7 @@ class MultivariateCholetteEngine {
         ISsf adapter = M2uAdapter.of(ssf);
         ISsfData data = M2uAdapter.of(new SsfMatrix(M));
         
-        FastStateSmoother2 smoother = new FastStateSmoother2(adapter);
+        FastStateSmoother smoother = new FastStateSmoother(adapter);
         DataBlockStorage states = smoother.process(data);
 
         int neq = nvars + ncnts;

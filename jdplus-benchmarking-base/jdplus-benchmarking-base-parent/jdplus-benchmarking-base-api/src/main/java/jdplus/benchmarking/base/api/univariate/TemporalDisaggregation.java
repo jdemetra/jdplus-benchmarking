@@ -18,13 +18,13 @@ package jdplus.benchmarking.base.api.univariate;
 
 import jdplus.toolkit.base.api.design.Algorithm;
 import jdplus.toolkit.base.api.processing.ProcResults;
-import nbbrd.design.Development;
-import nbbrd.service.ServiceDefinition;
 import jdplus.toolkit.base.api.timeseries.TsData;
-import jdplus.toolkit.base.api.timeseries.TsDomain;
-import java.util.List;
-import nbbrd.service.Mutability;
+import nbbrd.design.Development;
 import nbbrd.service.Quantifier;
+import nbbrd.service.ServiceDefinition;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -34,7 +34,7 @@ import nbbrd.service.Quantifier;
 @lombok.experimental.UtilityClass
 public class TemporalDisaggregation {
 
-    private final TemporalDisaggregationLoader.Processor PROCESSOR = new TemporalDisaggregationLoader.Processor();
+    private final AtomicReference<TemporalDisaggregation.Processor> PROCESSOR = new AtomicReference<>(TemporalDisaggregationLoader.Processor.load());
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -53,7 +53,8 @@ public class TemporalDisaggregation {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     public interface Processor {
 
         ProcResults process(TsData aggregatedSeries, TsData[] indicators, TemporalDisaggregationSpec spec, List<String> items);

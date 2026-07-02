@@ -12,4 +12,5 @@ module jdplus.benchmarking.base.r {
     requires jdplus.toolkit.base.r;
 
     exports jdplus.benchmarking.base.r;
+    exports jdplus.benchmarking.base.r.util;
 }

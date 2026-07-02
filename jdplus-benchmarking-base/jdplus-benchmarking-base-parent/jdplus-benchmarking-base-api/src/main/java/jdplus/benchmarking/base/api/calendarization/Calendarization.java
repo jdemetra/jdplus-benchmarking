@@ -17,11 +17,12 @@
 package jdplus.benchmarking.base.api.calendarization;
 
 import jdplus.toolkit.base.api.design.Algorithm;
-import nbbrd.design.Development;
-import nbbrd.service.ServiceDefinition;
 import jdplus.toolkit.base.api.timeseries.CalendarTimeSeries;
-import nbbrd.service.Mutability;
+import nbbrd.design.Development;
 import nbbrd.service.Quantifier;
+import nbbrd.service.ServiceDefinition;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -31,7 +32,7 @@ import nbbrd.service.Quantifier;
 @lombok.experimental.UtilityClass
 public class Calendarization {
 
-    private final CalendarizationLoader.Processor PROCESSOR = new CalendarizationLoader.Processor();
+    private final AtomicReference<Calendarization.Processor> PROCESSOR = new AtomicReference<>(CalendarizationLoader.Processor.load());
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -46,7 +47,8 @@ public class Calendarization {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     @FunctionalInterface
     public static interface Processor {
 

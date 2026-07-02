@@ -17,12 +17,13 @@
 package jdplus.benchmarking.base.api.benchmarking.multivariate;
 
 import jdplus.toolkit.base.api.design.Algorithm;
-import nbbrd.design.Development;
-import nbbrd.service.ServiceDefinition;
 import jdplus.toolkit.base.api.timeseries.TsData;
-import java.util.Map;
-import nbbrd.service.Mutability;
+import nbbrd.design.Development;
 import nbbrd.service.Quantifier;
+import nbbrd.service.ServiceDefinition;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -32,7 +33,7 @@ import nbbrd.service.Quantifier;
 @lombok.experimental.UtilityClass
 public class MultivariateCholette {
 
-    private final MultivariateCholetteLoader.Processor PROCESSOR = new MultivariateCholetteLoader.Processor();
+    private final AtomicReference<MultivariateCholette.Processor> PROCESSOR = new AtomicReference<>(MultivariateCholetteLoader.Processor.load());
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -47,7 +48,8 @@ public class MultivariateCholette {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     @FunctionalInterface
     public static interface Processor {
 

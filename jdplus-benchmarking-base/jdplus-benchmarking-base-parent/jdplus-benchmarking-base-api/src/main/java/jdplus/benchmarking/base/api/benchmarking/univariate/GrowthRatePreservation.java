@@ -16,12 +16,13 @@
  */
 package jdplus.benchmarking.base.api.benchmarking.univariate;
 
-import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.api.design.Algorithm;
+import jdplus.toolkit.base.api.timeseries.TsData;
 import nbbrd.design.Development;
-import nbbrd.service.Mutability;
 import nbbrd.service.Quantifier;
 import nbbrd.service.ServiceDefinition;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -31,7 +32,7 @@ import nbbrd.service.ServiceDefinition;
 @lombok.experimental.UtilityClass
 public class GrowthRatePreservation {
 
-    private final GrowthRatePreservationLoader.Processor PROCESSOR = new GrowthRatePreservationLoader.Processor();
+    private final AtomicReference<GrowthRatePreservation.Processor> PROCESSOR = new AtomicReference<>(GrowthRatePreservationLoader.Processor.load());
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -46,7 +47,8 @@ public class GrowthRatePreservation {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     public interface Processor {
 
         TsData benchmark(TsData highFreqSeries, TsData aggregationConstraint, GrpSpec spec);

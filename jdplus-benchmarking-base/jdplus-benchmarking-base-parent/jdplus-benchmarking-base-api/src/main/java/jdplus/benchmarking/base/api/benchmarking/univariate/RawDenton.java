@@ -19,9 +19,10 @@ package jdplus.benchmarking.base.api.benchmarking.univariate;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.design.Algorithm;
 import nbbrd.design.Development;
-import nbbrd.service.Mutability;
 import nbbrd.service.Quantifier;
 import nbbrd.service.ServiceDefinition;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -31,7 +32,7 @@ import nbbrd.service.ServiceDefinition;
 @lombok.experimental.UtilityClass
 public class RawDenton {
 
-    private final RawDentonLoader.Processor PROCESSOR = new RawDentonLoader.Processor();
+    private final AtomicReference<RawDenton.Processor> PROCESSOR = new AtomicReference<>(RawDentonLoader.Processor.load());
 
     public void setProcessor(Processor algorithm) {
         PROCESSOR.set(algorithm);
@@ -50,7 +51,8 @@ public class RawDenton {
     }
 
     @Algorithm
-    @ServiceDefinition(quantifier = Quantifier.SINGLE, mutability = Mutability.CONCURRENT, noFallback = true)
+    @SuppressWarnings("SingleFallbackNotExpected")
+    @ServiceDefinition(quantifier = Quantifier.SINGLE)
     public interface Processor {
 
         double[] benchmark(DoubleSeq highFreqSeries, DoubleSeq aggregationConstraint, int startOffset, RawDentonSpec spec);

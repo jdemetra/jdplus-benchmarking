@@ -36,6 +36,7 @@ import jdplus.toolkit.base.core.ssf.DataBlockResults;
 import jdplus.toolkit.base.core.ssf.ISsfLoading;
 import jdplus.toolkit.base.core.ssf.StateComponent;
 import jdplus.toolkit.base.core.ssf.akf.AkfToolkit;
+import jdplus.toolkit.base.core.ssf.akf.QAugmentation;
 import jdplus.toolkit.base.core.ssf.arima.AR1;
 import jdplus.toolkit.base.core.ssf.arima.Arima_1_1_0;
 import jdplus.toolkit.base.core.ssf.arima.Rw;
@@ -284,9 +285,9 @@ public class RawDisaggregationProcessor {
             case SqrtDiffuse ->
                 DkToolkit.sqrtSmooth(ssf, ssfdata, true, false);
             case Augmented_NoCollapsing ->
-                AkfToolkit.smooth(ssf, ssfdata, true, false, true);
+                AkfToolkit.smooth(ssf, ssfdata, true, false, false, QAugmentation.DEFAULT_NOCOLLAPSING);
             case Augmented_Robust ->
-                AkfToolkit.robustSmooth(ssf, ssfdata, true, false).getSmoothing();
+                AkfToolkit.smooth(ssf, ssfdata, true, false, true, QAugmentation.QType.QR);
             default ->
                 DkToolkit.smooth(ssf, ssfdata, true, false);
         };
