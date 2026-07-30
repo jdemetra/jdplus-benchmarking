@@ -16,23 +16,22 @@
  */
 package jdplus.benchmarking.base.core.multivariate;
 
-import java.util.*;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
+import jdplus.benchmarking.base.api.multivariate.ModelData;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
-import jdplus.benchmarking.base.api.multivariate.ModelData;
-import jdplus.benchmarking.base.api.univariate.*;
+import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
+import jdplus.benchmarking.base.api.univariate.EstimationSpec;
+import jdplus.benchmarking.base.api.univariate.ModelSpec;
+import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.benchmarking.base.core.ssf.MultivariateSsfChowLin;
-import jdplus.benchmarking.base.core.univariate.*;
+import jdplus.benchmarking.base.core.univariate.RawDisaggregationProcessor;
+import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
-import jdplus.toolkit.base.api.timeseries.TsData;
-import jdplus.toolkit.base.api.timeseries.TsDomain;
-import jdplus.toolkit.base.api.timeseries.TsException;
-import jdplus.toolkit.base.api.timeseries.TsPeriod;
-import jdplus.toolkit.base.api.timeseries.TsUnit;
+import jdplus.toolkit.base.api.timeseries.*;
 import jdplus.toolkit.base.api.timeseries.regression.Constant;
 import jdplus.toolkit.base.api.timeseries.regression.LinearTrend;
 import jdplus.toolkit.base.api.timeseries.regression.UserVariable;
@@ -43,16 +42,18 @@ import jdplus.toolkit.base.core.data.DataBlockIterator;
 import jdplus.toolkit.base.core.data.DataBlockStorage;
 import jdplus.toolkit.base.core.data.transformation.Cumulator;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
-import jdplus.toolkit.base.core.math.matrices.QuadraticForm;
-import jdplus.toolkit.base.core.ssf.dk.DefaultDiffuseFilteringResults;
 import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
 import jdplus.toolkit.base.core.ssf.dk.FastStateSmoother;
 import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
 import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
 import jdplus.toolkit.base.core.ssf.multivariate.SsfMatrix;
-import jdplus.toolkit.base.core.ssf.univariate.*;
+import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
+import jdplus.toolkit.base.core.ssf.univariate.ISsf;
+import jdplus.toolkit.base.core.ssf.univariate.ISsfData;
 import jdplus.toolkit.base.core.stats.DescriptiveStatistics;
 import jdplus.toolkit.base.core.timeseries.simplets.TsDataToolkit;
+
+import java.util.*;
 
 /**
  *
@@ -737,7 +738,7 @@ public class MultivariateChowLinEngine {
             Variable[] vars = indicators.get(sName);
 
             if (vars == null || vars.length == 0) {
-                names.put(sName, Collections.emptyList());
+                names.put(sName, List.of());
                 continue;
             }
 
