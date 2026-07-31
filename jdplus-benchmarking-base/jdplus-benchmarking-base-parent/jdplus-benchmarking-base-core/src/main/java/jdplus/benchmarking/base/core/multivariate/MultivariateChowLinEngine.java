@@ -16,22 +16,23 @@
  */
 package jdplus.benchmarking.base.core.multivariate;
 
+import java.util.*;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
-import jdplus.benchmarking.base.api.multivariate.ModelData;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
-import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
-import jdplus.benchmarking.base.api.univariate.EstimationSpec;
-import jdplus.benchmarking.base.api.univariate.ModelSpec;
-import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
+import jdplus.benchmarking.base.api.multivariate.ModelData;
+import jdplus.benchmarking.base.api.univariate.*;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.benchmarking.base.core.ssf.MultivariateSsfChowLin;
-import jdplus.benchmarking.base.core.univariate.RawDisaggregationProcessor;
-import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
+import jdplus.benchmarking.base.core.univariate.*;
 import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.ssf.SsfInitialization;
-import jdplus.toolkit.base.api.timeseries.*;
+import jdplus.toolkit.base.api.timeseries.TsData;
+import jdplus.toolkit.base.api.timeseries.TsDomain;
+import jdplus.toolkit.base.api.timeseries.TsException;
+import jdplus.toolkit.base.api.timeseries.TsPeriod;
+import jdplus.toolkit.base.api.timeseries.TsUnit;
 import jdplus.toolkit.base.api.timeseries.regression.Constant;
 import jdplus.toolkit.base.api.timeseries.regression.LinearTrend;
 import jdplus.toolkit.base.api.timeseries.regression.UserVariable;
@@ -47,13 +48,9 @@ import jdplus.toolkit.base.core.ssf.dk.FastStateSmoother;
 import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
 import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
 import jdplus.toolkit.base.core.ssf.multivariate.SsfMatrix;
-import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
-import jdplus.toolkit.base.core.ssf.univariate.ISsf;
-import jdplus.toolkit.base.core.ssf.univariate.ISsfData;
+import jdplus.toolkit.base.core.ssf.univariate.*;
 import jdplus.toolkit.base.core.stats.DescriptiveStatistics;
 import jdplus.toolkit.base.core.timeseries.simplets.TsDataToolkit;
-
-import java.util.*;
 
 /**
  *
@@ -96,6 +93,7 @@ public class MultivariateChowLinEngine {
     private boolean[] isConstant, isTrend;
     /* errors variance matrix */
     private FastMatrix var;
+    private boolean includeCov, shrinkCov;
     private int ratio;
     private TsDomain lDomain, hDomain;
     /* full residuals from univariate estimations */
@@ -117,6 +115,8 @@ public class MultivariateChowLinEngine {
         this.isConstant = getOrDefault(spec.getConstant(), m, false, "Mismatch between the number of series and the length of the constant vector");
         this.isTrend = getOrDefault(spec.getTrend(), m, false, "Mismatch between the number of series and the length of the trend vector");
         this.resUnivariate = new double[m][];
+        this.includeCov = spec.isIncludeCov();
+        this.shrinkCov = spec.isShrinkCov();
 
         buildDomains(spec.getDefaultPeriod());
         buildTemporalConstraints();
@@ -145,7 +145,6 @@ public class MultivariateChowLinEngine {
 
         buildContemporaneousConstraints(spec.getContemporaneousConstraints());
 
-//        computeDisaggOnly(rslts);
         return compute();
     }
 
@@ -369,7 +368,7 @@ public class MultivariateChowLinEngine {
                 int hFreq = hDomain.getAnnualFrequency();
                 TsPeriod lStartAtHFreq = TsPeriod.of(TsUnit.ofAnnualFrequency(hFreq), lDomain.start());
                 if (lStartAtHFreq.equals(hDomain.getStartPeriod())) {
-                     nf = hDomain.getLength() - lDomain.getLength() * hFreq;
+                    nf = hDomain.getLength() - lDomain.getLength() * hFreq;
                 }
                 rsltsUnivariate.put(sName, RawDisaggregationProcessor.process(DoubleSeq.of(Y), 0, nf, spec));
             } else {
@@ -703,17 +702,27 @@ public class MultivariateChowLinEngine {
         double[] v = new double[length];
         switch (method) {
             case fromUnivariate:
-                for (int i = 0; i < length; ++i) {
-                    v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVarDF(1);
-//                    v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVar();
+                if (this.includeCov) {
+                    // Cleaned residuals
+                    double[][] resCleanArr =  removeColumnsWithNaN(this.resUnivariate);
+                    int nr = resCleanArr[0].length;
+                    FastMatrix res = FastMatrix.make(nr, length);
+                    for (int i = 0; i < length; ++i) {
+                        res.column(i).add(DoubleSeq.of(resCleanArr[i]));
+                    }
+                    FastMatrix vcov = CovarianceEstimator.sampleCovariance(res);
+                    if (this.shrinkCov) {
+                        FastMatrix vcovShrunk = CovarianceEstimator.shrinkCovariance(res, vcov);
+                        return vcovShrunk;
+                    } else {
+                        return vcov;
+                    }
+                } else {
+                    for (int i = 0; i < length; ++i) {
+                        v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVarDF(1);
+                    }
+                    return FastMatrix.diagonal(DoubleSeq.of(v));
                 }
-//                double vSum = Arrays.stream(v).sum();
-//                if (vSum != 0) {
-//                    for (int i = 0; i < length; ++i) {
-//                        v[i] = v[i] * length / vSum;
-//                    }
-//                }
-                return FastMatrix.diagonal(DoubleSeq.of(v));
             case allEquals:
                 Arrays.fill(v, 1);
                 return FastMatrix.diagonal(DoubleSeq.of(v));
@@ -721,7 +730,7 @@ public class MultivariateChowLinEngine {
                 if (var == null) {
                     throw new IllegalArgumentException("Errors Variance unspecified even though userDefined method has been selected");
                 }
-                if (!var.isSquare() || var.getColumnsCount() != length) {
+                if (var.getColumnsCount() != length) {
                     throw new IllegalArgumentException("Errors Variance misspecified. The dimension should be " + length);
                 }
                 return var;
@@ -788,5 +797,21 @@ public class MultivariateChowLinEngine {
 //        }
 
         return null;
+    }
+
+    public static double[][] removeColumnsWithNaN(double[][] matrix) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+
+        int[] validCols = java.util.stream.IntStream.range(0, cols)
+                .filter(col -> java.util.stream.IntStream.range(0, rows)
+                        .noneMatch(row -> Double.isNaN(matrix[row][col])))
+                .toArray();
+
+        return java.util.Arrays.stream(matrix)
+                .map(row -> java.util.Arrays.stream(validCols)
+                        .mapToDouble(col -> row[col])
+                        .toArray())
+                .toArray(double[][]::new);
     }
 }

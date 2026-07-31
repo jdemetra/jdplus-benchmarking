@@ -16,32 +16,16 @@
  */
 package jdplus.benchmarking.base.core.univariate;
 
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
-import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
-import jdplus.benchmarking.base.core.ssf.MultivariateSsfChowLin;
-import jdplus.benchmarking.base.core.ssf.SsfADL;
 import jdplus.benchmarking.base.core.ssf.TransitionRegSsf;
-import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
-import jdplus.toolkit.base.api.data.Parameter;
-import jdplus.toolkit.base.api.timeseries.TsData;
-import jdplus.toolkit.base.api.timeseries.TsPeriod;
-import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.ssf.ISsfLoading;
 import jdplus.toolkit.base.core.ssf.StateComponent;
 import jdplus.toolkit.base.core.ssf.arima.AR1;
 import jdplus.toolkit.base.core.ssf.arima.Rw;
 import jdplus.toolkit.base.core.ssf.benchmarking.SsfCumulator;
-import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
-import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
-import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
 import jdplus.toolkit.base.core.ssf.univariate.Ssf;
-import jdplus.toolkit.base.core.ssf.univariate.SsfData;
 import org.junit.jupiter.api.Test;
-import tck.demetra.data.Data;
-
-import java.util.HashMap;
 
 /**
  *
