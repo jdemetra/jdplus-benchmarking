@@ -27,7 +27,6 @@ import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
 import jdplus.toolkit.base.core.ssf.multivariate.ISsfErrors;
 import jdplus.toolkit.base.core.ssf.multivariate.ISsfMeasurements;
 import jdplus.toolkit.base.core.ssf.multivariate.MultivariateSsf;
-import jdplus.toolkit.base.core.math.matrices.SymmetricMatrix;
 import nbbrd.design.BuilderPattern;
 import nbbrd.design.Development;
 
@@ -37,7 +36,7 @@ import nbbrd.design.Development;
  */
 @Development(status = Development.Status.Beta)
 @lombok.experimental.UtilityClass
-public class MultivariateSsfChowLin {
+public class MultivariateSsfChowLinWithoutCovariance {
 
     public Builder builder(int nvars) {
         return new Builder(nvars);
@@ -95,7 +94,6 @@ public class MultivariateSsfChowLin {
         final int c;
         final double[] rho;
         final FastMatrix errV;
-        final boolean errVDiag;
         final int[] nxc, nxcc;
         final int Np;
         final HashMap<Integer, FastMatrix> xc;
@@ -117,7 +115,6 @@ public class MultivariateSsfChowLin {
             this.c = c;
             this.rho = rho;
             this.errV = errV;
-            this.errVDiag = errV.isDiagonal();
             this.nxc = nxc;
             this.nxcc = nxcc;
             this.Np = Np;
@@ -145,13 +142,14 @@ public class MultivariateSsfChowLin {
         @Override
         public int getStateDim() {
             return 2 * info.nvars + info.Np;
+
         }
 
         @Override
         public boolean isDiffuse() {
             if(info.Np > 0){
                 return true;
-            } else {
+            }else{
                 for (double r : info.rho){
                     if (r == 1) {
                         return true;
@@ -197,89 +195,16 @@ public class MultivariateSsfChowLin {
 
         @Override
         public void Pf0(FastMatrix pf0) {
-
-            if(info.errVDiag) {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    if(info.rho[i] != 1){
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                if(info.rho[i] != 1){
+                    if(info.errV.isDiagonal()){
                         double v = info.errV.get(i, i) / (1 - info.rho[i] * info.rho[i]);
                         pf0.set(ip + 1, ip + 1, v);
+                    } else{
+                        throw new IllegalArgumentException("Non-diagonal error covariance not implemented yet");
                     }
                 }
-
-            } else {
-                // size of the stationary part
-                int ns = 0;
-                for (int i = 0; i < info.nvars; ++i) {
-                    if(info.rho[i] != 1) {
-                        ++ns;
-                    }
-                }
-                // Unrestricted VAR(1) process: covariance matrix given by Lyupanov iteration (G = AGA' + V)
-                if (ns > 0) {
-                    // Build matrix A and V for the stationary part
-                    FastMatrix A = FastMatrix.make(ns, ns);
-                    FastMatrix V = FastMatrix.make(ns, ns);
-
-                    int ik = 0;
-                    for (int i = 0; i < info.nvars; ++i) {
-                        if (info.rho[i] == 1.0) {
-                            continue;
-                        }
-                        A.set(ik, ik, info.rho[i]);
-
-                        int jk = 0;
-                        for (int j = 0; j < info.nvars; ++j) {
-                            if(info.rho[j] == 1.0) {
-                                continue;
-                            }
-                            V.set(ik, jk, info.errV.get(i, j));
-                            ++jk;
-                        }
-                        ++ik;
-                    }
-
-                    // Compute G
-                    FastMatrix G = solveLyapunov(A, V, 1e-8, 1000);
-
-                    // Fill pf0
-                    int il = 0;
-                    for (int i = 0; i < info.nvars; ++i) {
-                        if (info.rho[i] == 1.0) {
-                            continue;
-                        }
-
-                        int ip = 2 * i + info.nxcc[i];
-
-                        int jl = 0;
-                        for (int j = 0; j < info.nvars; ++j) {
-                            if(info.rho[j] == 1.0) {
-                                continue;
-                            }
-                            int jp = 2 * j + info.nxcc[j];
-                            pf0.set(ip + 1, jp + 1, G.get(il, jl));
-                            ++jl;
-                        }
-                        ++il;
-                    }
-                }
-
-                // Chow-Lin only -> Lyapunov for all series (all rhos < 1)
-                /*
-                FastMatrix A = FastMatrix.diagonal(DoubleSeq.of(info.rho));
-                FastMatrix V = info.errV.deepClone();
-
-               // Lyapunov: G = AGA' + V
-                FastMatrix G = solveLyapunov(A, V, 1e-8, 1000);
-
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    for (int j = 0; j < info.nvars; ++j) {
-                        int jp = 2 * j + info.nxcc[j];
-                        pf0.set(ip + 1, jp + 1, G.get(i, j));
-                    }
-                }
-                */
             }
         }
 
@@ -296,31 +221,6 @@ public class MultivariateSsfChowLin {
                     }
                 }
             }
-        }
-
-        private FastMatrix solveLyapunov(FastMatrix A, FastMatrix V, double tol, int maxIter) {
-            int p = A.getRowsCount();
-            FastMatrix G = FastMatrix.make(p, p);
-
-            // Initialize G
-            for (int i = 0; i < p; ++i) {
-                for (int j = 0; j < p; ++j) {
-                    G.set(i, j, V.get(i, j));
-                }
-            }
-
-            for (int iter = 0; iter < maxIter; ++iter) {
-                FastMatrix GNew = SymmetricMatrix.XSXt(G, A);
-                GNew.add(V);
-
-                if (GNew.minus(G).isZero(tol)) {
-                    return GNew;
-                }
-
-                G = GNew;
-            }
-
-            return(G);
         }
     }
 
@@ -339,39 +239,21 @@ public class MultivariateSsfChowLin {
 
         @Override
         public void V(int pos, FastMatrix qm) {
-            if (info.errVDiag) {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    qm.set(ip + 1, ip + 1, info.errV.get(i, i));
-                }
-            } else {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    for (int j = 0; j < info.nvars; ++j) {
-                        int jp = 2 * j + info.nxcc[j];
-                        qm.set(ip + 1, jp + 1, info.errV.get(i, j));
-                    }
-                }
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                qm.set(ip + 1, ip + 1, info.errV.get(i, i));
+//                for(int j = 0; j < info.nvars; ++j){
+//                    int jp = 2 * j + info.nxcc[j];
+//                    qm.set(ip + 1, jp + 1, info.errV.get(i, j));
+//                }
             }
         }
 
         @Override
         public void S(int pos, FastMatrix cm) {
-            if (info.errVDiag) {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    cm.set(ip + 1, i, Math.sqrt(info.errV.get(i, i)));
-                }
-            } else {
-                FastMatrix errS = info.errV.deepClone();
-                SymmetricMatrix.lcholesky(errS, 0);
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    for (int j = 0; j <= i; ++j) {
-                        cm.set(ip + 1, j, errS.get(i, j));
-                    }
-                }
-
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                cm.set(ip + 1, i, Math.sqrt(info.errV.get(i, i)));
             }
         }
 
@@ -426,34 +308,21 @@ public class MultivariateSsfChowLin {
 
         @Override
         public void addSU(int pos, DataBlock x, DataBlock u) {
-            if (info.errVDiag) {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    x.add(ip + 1, info.errV.get(i, i) * u.get(i)); // S * S'* u
-                }
-            } else {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    x.add(ip + 1, info.errV.row(i).dot(u)); // S * S'* u
-                }
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                x.add(ip + 1, info.errV.get(i, i) * u.get(i)); // S * S'* u
             }
         }
 
         @Override
         public void addV(int pos, FastMatrix p) {
-            if (info.errVDiag) {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    p.add(ip + 1, ip + 1, info.errV.get(i, i));
-                }
-            } else {
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    for (int j = 0; j < info.nvars; ++j) {
-                        int jp = 2 * j + info.nxcc[j];
-                        p.add(ip + 1, jp + 1, info.errV.get(i, j));
-                    }
-                }
+            for (int i = 0; i < info.nvars; ++i) {
+                int ip = 2 * i + info.nxcc[i];
+                p.add(ip + 1, ip + 1, info.errV.get(i, i));
+//                for(int j = 0; j < info.nvars; ++j){
+//                    int jp = 2 * j + info.nxcc[j];
+//                    p.add(ip + 1, jp + 1, info.errV.get(i, j));
+//                }
             }
         }
 
@@ -761,5 +630,3 @@ public class MultivariateSsfChowLin {
         }
     }
 }
-
-

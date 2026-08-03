@@ -590,6 +590,8 @@ public class TemporalDisaggregation {
                                                    int frequency,
                                                    double[] rhos,
                                                    String varMethod,
+                                                   boolean includeCov,
+                                                   boolean shrinkCov,
                                                    Matrix var) {
 
         Map<String, TsData> y = series.data();
@@ -618,6 +620,8 @@ public class TemporalDisaggregation {
                 .defaultPeriod(frequency)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.valueOf(varMethod))
                 .var(var)
+                .includeCov(includeCov)
+                .shrinkCov(shrinkCov)
                 .build();
 
         return MultivariateChowLin.process(yx, z, spec);
