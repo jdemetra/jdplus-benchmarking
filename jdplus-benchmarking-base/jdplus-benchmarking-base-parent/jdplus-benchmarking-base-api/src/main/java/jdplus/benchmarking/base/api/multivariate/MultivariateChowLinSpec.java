@@ -53,9 +53,9 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
     private boolean[] constant, trend;
     private double[] rhos;
     private errorsVarianceMethod varMethod;
-    private Matrix var;
     private boolean includeCov;
     private boolean shrinkCov;
+    private Matrix var;
     private boolean fixedRhos;
     private double truncatedRhos;
     private SsfInitialization algorithm;
@@ -111,9 +111,9 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
                 .constant(null)
                 .trend(null)
                 .varMethod(DEF_VAR_METHOD)
-                .var(null)
                 .includeCov(DEF_INCLUDECOV)
                 .shrinkCov(DEF_SHRINKCOV)
+                .var(null)
                 .fixedRhos(DEF_FIXEDRHOS)
                 .truncatedRhos(DEF_TRUNCATEDRHOS)
                 .zeroInitialization(DEF_ZERO)
