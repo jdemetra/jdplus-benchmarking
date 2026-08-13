@@ -301,6 +301,9 @@ public class MultivariateChowLinTest {
         System.out.println(rslts.getDisaggregatedSeries().get("y1"));
         System.out.println(rslts.getDisaggregatedSeries().get("y2"));
         System.out.println(rslts.getDisaggregatedSeries().get("y3"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y1"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y2"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y3"));
     }
 
     @Test
@@ -583,6 +586,7 @@ public class MultivariateChowLinTest {
 
         LinkedHashMap<String, ModelData> yx = new LinkedHashMap<>();
         Map<String, TsData> z = new HashMap<>();
+        double K=10;
 
 //        double[] Y1Arr = {25.8,26.2,26.6};
 //        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
@@ -594,13 +598,13 @@ public class MultivariateChowLinTest {
 //        TsData Y4 = TsData.ofInternal(TsPeriod.yearly(2021), Y4Arr);
 
         double[] Y1Arr = {29.8,30.2,30.6};
-        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr);
+        TsData Y1 = TsData.ofInternal(TsPeriod.yearly(2021), Y1Arr).multiply(K);
         double[] Y2Arr = {80.2,81.6,82.4};
-        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr);
+        TsData Y2 = TsData.ofInternal(TsPeriod.yearly(2021), Y2Arr).multiply(K);
         double[] Y3Arr = {8.0,8.1,8.3};
-        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr);
+        TsData Y3 = TsData.ofInternal(TsPeriod.yearly(2021), Y3Arr).multiply(K);
         double[] Y4Arr = {21.8,22.1,22.3};
-        TsData Y4 = TsData.ofInternal(TsPeriod.yearly(2021), Y4Arr);
+        TsData Y4 = TsData.ofInternal(TsPeriod.yearly(2021), Y4Arr).multiply(K);
 
         ModelData i1 = new ModelData(Y1, null);
         yx.put("y1", i1);
@@ -612,13 +616,13 @@ public class MultivariateChowLinTest {
         yx.put("y4", i4);
 
         double[] z1Arr = {32.55,35.25,35.35,36.65,34.925,33.425,36.425,37.225,35.075,35.575,35.875,37.075};
-        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
+        TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr).multiply(K);
         z.put("z1", z1);
 //        double[] z2Arr = {1,1,1,1,1,1,1,1,1,1,1,1};
 //        TsData z2 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z2Arr);
 //        z.put("z2", z2);
         double[] z2Arr = {0,0,0,0,0,0,0,0,0,0,0,0};
-        TsData z2 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z2Arr);
+        TsData z2 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z2Arr).multiply(K);
         z.put("z2", z2);
 
         double[] rhos = {0.85,1.0,0.9,1.0};
@@ -643,6 +647,10 @@ public class MultivariateChowLinTest {
         System.out.println(rslts.getDisaggregatedSeries().get("y2"));
         System.out.println(rslts.getDisaggregatedSeries().get("y3"));
         System.out.println(rslts.getDisaggregatedSeries().get("y4"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y1"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y2"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y3"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y4"));
     }
 
 

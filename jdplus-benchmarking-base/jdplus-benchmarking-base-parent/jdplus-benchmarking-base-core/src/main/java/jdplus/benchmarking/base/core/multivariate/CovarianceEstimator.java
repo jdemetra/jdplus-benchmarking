@@ -1,5 +1,6 @@
 package jdplus.benchmarking.base.core.multivariate;
 
+import jdplus.toolkit.base.api.data.DoubleSeq;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.data.DataBlockIterator;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
@@ -37,6 +38,30 @@ public class CovarianceEstimator {
                 for (int k = 0; k < n; ++k) {
                     s += (cols[i].get(k) - means[i]) * (cols[j].get(k) - means[j]);
                 }
+                double c = s / (n - 1);
+
+                cov.set(i, j, c);
+                cov.set(j, i, c);
+            }
+        }
+        return cov;
+    }
+
+    public static FastMatrix sampleCovariance2(FastMatrix X) {
+        int n = X.getRowsCount();
+        int p = X.getColumnsCount();
+
+        FastMatrix cov = FastMatrix.square(p);
+
+        DoubleSeq[] cols = new DoubleSeq[p];
+
+        for (int i = 0; i < p; ++i) {
+            cols[i] = X.column(i).removeMean();
+        }
+
+        for (int i = 0; i < p; ++i) {
+            for (int j = i; j < p; ++j) {
+                double s = cols[i].dot(cols[j]);
                 double c = s / (n - 1);
 
                 cov.set(i, j, c);
@@ -120,4 +145,5 @@ public class CovarianceEstimator {
 
         return Math.max(0, Math.min(1, numerator / denominator));
     }
+
 }
