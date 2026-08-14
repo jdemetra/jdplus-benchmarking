@@ -44,7 +44,7 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
     };
 
     public static MultivariateChowLinSpec.errorsVarianceMethod DEF_VAR_METHOD = MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate;
-    public static final boolean DEF_INCLUDECOV = false, DEF_SHRINKCOV = true, DEF_RESCALEVAR = false, DEF_AVERAGE = false, DEF_FIXEDRHOS = true, DEF_DIFFUSE = false, DEF_ZERO = false;
+    public static final boolean DEF_INCLUDECOV = false, DEF_SHRINKCOV = true, DEF_RESCALEVARIANCE = false, DEF_AVERAGE = false, DEF_FIXEDRHOS = true, DEF_DIFFUSE = false, DEF_ZERO = false;
     public static final int DEF_PERIOD = 4, DEF_TRUNCATEDRHOS = -1;
     public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
 
@@ -56,7 +56,7 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
     private boolean includeCov;
     private boolean shrinkCov;
     private Matrix var;
-    private boolean rescaleVar;
+    private boolean rescaleVariance;
     private boolean fixedRhos;
     private double truncatedRhos;
     private SsfInitialization algorithm;
@@ -115,7 +115,7 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
                 .includeCov(DEF_INCLUDECOV)
                 .shrinkCov(DEF_SHRINKCOV)
                 .var(null)
-                .rescaleVar(DEF_RESCALEVAR)
+                .rescaleVariance(DEF_RESCALEVARIANCE)
                 .fixedRhos(DEF_FIXEDRHOS)
                 .truncatedRhos(DEF_TRUNCATEDRHOS)
                 .zeroInitialization(DEF_ZERO)
