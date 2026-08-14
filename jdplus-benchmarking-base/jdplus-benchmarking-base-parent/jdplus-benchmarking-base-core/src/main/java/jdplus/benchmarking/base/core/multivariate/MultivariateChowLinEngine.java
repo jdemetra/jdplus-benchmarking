@@ -96,8 +96,11 @@ public class MultivariateChowLinEngine {
     /* variance-covariance and correlation matrix of the innovations */
     private FastMatrix var;
     private FastMatrix cor;
-    private boolean includeCov, shrinkCov, rescaleVar;
+    private boolean includeCov, shrinkCov;
     private double lambda; // shrinkage parameter
+
+    /* rescaling of the variance of the state vector estimates */
+    private boolean rescaleVariance;
 
     private int ratio;
     private TsDomain lDomain, hDomain;
@@ -119,7 +122,7 @@ public class MultivariateChowLinEngine {
         this.resUnivariate = new double[m][];
         this.includeCov = spec.isIncludeCov();
         this.shrinkCov = spec.isShrinkCov();
-        this.rescaleVar = spec.isRescaleVar();
+        this.rescaleVariance = spec.isRescaleVariance();
 
         buildDomains(spec.getDefaultPeriod());
         buildTemporalConstraints();
@@ -427,7 +430,7 @@ public class MultivariateChowLinEngine {
 
         // compute scaling factor
         double ev;
-        if (this.rescaleVar) {
+        if (this.rescaleVariance) {
             DefaultDiffuseFilteringResults ff = DkToolkit.filter(adapter, data, true);
             DoubleSeq e = ff.errors();
             DoubleSeq evar = ff.errorVariances();

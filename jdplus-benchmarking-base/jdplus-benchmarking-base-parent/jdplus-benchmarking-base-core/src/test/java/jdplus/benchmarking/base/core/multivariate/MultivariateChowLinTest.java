@@ -134,7 +134,7 @@ public class MultivariateChowLinTest {
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
 //                .var(errVariance)
-                .rescaleVar(false)
+                .rescaleVariance(false)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -236,7 +236,7 @@ public class MultivariateChowLinTest {
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .includeCov(true)
                 .shrinkCov(true)
-                .rescaleVar(true)
+                .rescaleVariance(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -297,7 +297,7 @@ public class MultivariateChowLinTest {
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
-                .rescaleVar(false)
+                .rescaleVariance(false)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -364,7 +364,7 @@ public class MultivariateChowLinTest {
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
-                .rescaleVar(true)
+                .rescaleVariance(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -463,7 +463,7 @@ public class MultivariateChowLinTest {
                 .contemporaneousConstraint(cc1)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
-                .rescaleVar(true)
+                .rescaleVariance(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -526,7 +526,7 @@ public class MultivariateChowLinTest {
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
-                .rescaleVar(true)
+                .rescaleVariance(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, null, spec);
