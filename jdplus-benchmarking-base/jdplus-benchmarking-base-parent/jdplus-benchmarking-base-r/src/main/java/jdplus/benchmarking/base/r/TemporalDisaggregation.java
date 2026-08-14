@@ -592,7 +592,8 @@ public class TemporalDisaggregation {
                                                    String varMethod,
                                                    boolean includeCov,
                                                    boolean shrinkCov,
-                                                   Matrix var) {
+                                                   Matrix var,
+                                                   boolean rescaleVar) {
 
         Map<String, TsData> y = series.data();
         Map<String, TsData[]> x = indicators.data();
@@ -619,9 +620,10 @@ public class TemporalDisaggregation {
                 .contemporaneousConstraints(ccAll)
                 .defaultPeriod(frequency)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.valueOf(varMethod))
-                .var(var)
                 .includeCov(includeCov)
                 .shrinkCov(shrinkCov)
+                .var(var)
+                .rescaleVar(rescaleVar)
                 .build();
 
         return MultivariateChowLin.process(yx, z, spec);

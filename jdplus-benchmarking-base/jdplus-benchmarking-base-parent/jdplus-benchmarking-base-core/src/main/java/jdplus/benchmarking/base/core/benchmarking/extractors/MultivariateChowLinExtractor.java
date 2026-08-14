@@ -24,6 +24,8 @@ public class MultivariateChowLinExtractor extends InformationMapping<Multivariat
         set(TemporalDisaggregationDictionaries.COEFF, Map.class, source -> source.getCoefficients());
         set(TemporalDisaggregationDictionaries.COVAR, Map.class, source -> source.getCoefficientsVariance());
         set("innovationsvarcov", Matrix.class, source -> source.getInnovationsVarCov());
+        set("innovationscor", Matrix.class, source -> source.getInnovationsCor());
+        set("shrinkagecoef", Double.class, source -> source.getShrinkageCoefficient());
         set(TemporalDisaggregationDictionaries.REGNAMES, Map.class, source -> source.getRegressorsNames());
         set(TemporalDisaggregationDictionaries.SPART, double[].class, source -> {
             Map<String, TsData> regeffect = source.getRegressionEffects();

@@ -134,6 +134,7 @@ public class MultivariateChowLinTest {
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
 //                .var(errVariance)
+                .rescaleVar(false)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -235,6 +236,7 @@ public class MultivariateChowLinTest {
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .includeCov(true)
                 .shrinkCov(true)
+                .rescaleVar(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -295,6 +297,7 @@ public class MultivariateChowLinTest {
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
+                .rescaleVar(false)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -341,6 +344,7 @@ public class MultivariateChowLinTest {
         double[] rhos = {0.85,1.0,0.9};
 //        double[] rhos = {1.0,1.0,0.9};
         boolean[] csts = {true, false, true};
+//        boolean[] csts = {false, false, true};
         boolean[] trends = {false, false, false};
         double[] errVarianceR1 = {7.0,2.0,1.0};
         double[] errVarianceR2 = {2.0,18.0,2.0};
@@ -360,6 +364,7 @@ public class MultivariateChowLinTest {
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
+                .rescaleVar(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -458,6 +463,7 @@ public class MultivariateChowLinTest {
                 .contemporaneousConstraint(cc1)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
+                .rescaleVar(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
@@ -520,6 +526,7 @@ public class MultivariateChowLinTest {
 //                .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate)
                 .varMethod(MultivariateChowLinSpec.errorsVarianceMethod.userDefined)
                 .var(errVariance)
+                .rescaleVar(true)
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, null, spec);

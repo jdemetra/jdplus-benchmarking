@@ -21,11 +21,6 @@ import java.util.Map;
 @Development(status = Development.Status.Beta)
 public class MultivariateChowLinResults implements GenericExplorable {
 
-    /**
-     * Regression variables
-     */
-    // Map<String, Variable[]> indicators;
-
     @lombok.NonNull
     Map<String, TsData> disaggregatedSeries;
 
@@ -43,6 +38,10 @@ public class MultivariateChowLinResults implements GenericExplorable {
     Map<String, DoubleSeq> coefficientsVariance;
 
     Matrix innovationsVarCov;
+
+    Matrix innovationsCor;
+
+    double shrinkageCoefficient;
 
     @lombok.NonNull
     TsDomain disaggregationDomain;

@@ -174,9 +174,11 @@ public class TemporalDisaggregationTest {
 
         MultivariateChowLinResults rslt = TemporalDisaggregation.multiChowLin(series, constant, trend,
                 indicators, ccseries, ccdefinition, 4, rhos, "fromUnivariate",
-                false, false, null);
+                false, false, null, false);
 
         System.out.println(rslt.getDisaggregatedSeries().get("y1"));
+        System.out.println(rslt.getCoefficientsVariance().get("y1"));
+        System.out.println(rslt.getCoefficientsVariance().get("y2"));
     }
 
     @Test
@@ -269,7 +271,7 @@ public class TemporalDisaggregationTest {
 
         MultivariateChowLinResults rslt = TemporalDisaggregation.multiChowLin(series, constant, trend,
                 indicators, ccseries, ccdefinition, 4, rhos, "fromUnivariate",
-                false, false, null);
+                false, false, null, false);
 
         System.out.println(rslt.getDisaggregatedSeries().get("y1"));
     }
@@ -364,7 +366,7 @@ public class TemporalDisaggregationTest {
 
         MultivariateChowLinResults rslt = TemporalDisaggregation.multiChowLin(series, constant, trend,
                 indicators, ccseries, ccdefinition, 4, rhos, "fromUnivariate",
-                false, false, null);
+                false, false, null, true);
 
         System.out.println(rslt.getDisaggregatedSeries().get("y1"));
     }
