@@ -47,6 +47,7 @@ public class CovarianceEstimator {
         return cov;
     }
 
+    // Same as sampleCovariance() but faster
     public static FastMatrix sampleCovariance2(FastMatrix X) {
         int n = X.getRowsCount();
         int p = X.getColumnsCount();
@@ -71,23 +72,49 @@ public class CovarianceEstimator {
         return cov;
     }
 
-    public static FastMatrix shrinkCovariance(FastMatrix data, FastMatrix covariance) {
-        return shrinkCovariance(covariance, estimateLambda(data));
+    public static FastMatrix covToCorr(FastMatrix covariance) {
+        int n = covariance.getRowsCount();
+
+        FastMatrix correlation = FastMatrix.make(n, n);
+
+        DataBlock invStd = covariance.diagonal().deepClone();
+        invStd.apply(x -> 1.0 / Math.sqrt(x));
+
+        for (int i = 0; i < n; ++i) {
+            correlation.set(i, i, 1.0);
+            for (int j = i + 1; j < n; ++j) {
+                double r = covariance.get(i, j) * invStd.get(i) * invStd.get(j);
+                correlation.set(i, j, r);
+                correlation.set(j, i, r);
+            }
+        }
+        return correlation;
     }
 
-    public static FastMatrix shrinkCovariance(FastMatrix vcov, double lambda) {
-        FastMatrix vcovShrunk = vcov.deepClone();
-        int p = vcovShrunk.getRowsCount();
+    public static ShrinkageResults shrinkCovariance(FastMatrix data, FastMatrix covariance) {
+
+        double lambda = estimateLambda(data);
+        FastMatrix covarianceShrunk = shrinkCovariance(covariance, lambda);
+
+        return ShrinkageResults.builder()
+                .lambda(lambda)
+                .covariance(covarianceShrunk)
+                .build();
+    }
+
+    public static FastMatrix shrinkCovariance(FastMatrix cov, double lambda) {
+        FastMatrix covShrunk = cov.deepClone();
+        int p = covShrunk.getRowsCount();
         double f = 1.0 - lambda;
 
         for (int i = 0; i < p; ++i) {
             for (int j = i + 1; j < p; ++j) {
-                double c = f * vcov.get(i, j);
-                vcovShrunk.set(i, j, c);
-                vcovShrunk.set(j, i, c);
+                double c = f * cov.get(i, j);
+                covShrunk.set(i, j, c);
+                covShrunk.set(j, i, c);
             }
         }
-        return vcovShrunk;
+        return covShrunk;
     }
 
 
