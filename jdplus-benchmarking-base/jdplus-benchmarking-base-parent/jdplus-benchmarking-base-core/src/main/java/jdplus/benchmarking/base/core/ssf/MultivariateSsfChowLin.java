@@ -20,6 +20,7 @@ import java.util.HashMap;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.toolkit.base.core.data.DataBlock;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
+import jdplus.toolkit.base.core.math.matrices.SymmetricMatrix;
 import jdplus.toolkit.base.core.ssf.ISsfDynamics;
 import jdplus.toolkit.base.core.ssf.ISsfInitialization;
 import jdplus.toolkit.base.core.ssf.ISsfLoading;
@@ -27,7 +28,6 @@ import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
 import jdplus.toolkit.base.core.ssf.multivariate.ISsfErrors;
 import jdplus.toolkit.base.core.ssf.multivariate.ISsfMeasurements;
 import jdplus.toolkit.base.core.ssf.multivariate.MultivariateSsf;
-import jdplus.toolkit.base.core.math.matrices.SymmetricMatrix;
 import nbbrd.design.BuilderPattern;
 import nbbrd.design.Development;
 
@@ -86,7 +86,6 @@ public class MultivariateSsfChowLin {
             Data data = new Data(nvars, conversion, rho, errV, xc, constraints);
             return new MultivariateSsf(new Initialization(data), new Dynamics(data), new Measurements(data));
         }
-
     }
 
     static class Data {
@@ -101,7 +100,13 @@ public class MultivariateSsfChowLin {
         final HashMap<Integer, FastMatrix> xc;
         final Constraint[] constraints;
 
-        Data(int nvars, int c, double[] rho, FastMatrix errV, HashMap<Integer, FastMatrix> xc, Constraint[] constraints) {
+        Data(
+                int nvars,
+                int c,
+                double[] rho,
+                FastMatrix errV,
+                HashMap<Integer, FastMatrix> xc,
+                Constraint[] constraints) {
 
             int[] nxc = new int[nvars];
             int[] nxcc = new int[nvars];
@@ -149,10 +154,10 @@ public class MultivariateSsfChowLin {
 
         @Override
         public boolean isDiffuse() {
-            if(info.Np > 0){
+            if (info.Np > 0) {
                 return true;
             } else {
-                for (double r : info.rho){
+                for (double r : info.rho) {
                     if (r == 1) {
                         return true;
                     }
@@ -164,7 +169,7 @@ public class MultivariateSsfChowLin {
         @Override
         public int getDiffuseDim() {
             int nrd = 0;
-            for (double r : info.rho){
+            for (double r : info.rho) {
                 if (r == 1) {
                     nrd += 1;
                 }
@@ -177,11 +182,11 @@ public class MultivariateSsfChowLin {
             int nd = 0;
             for (int i = 0; i < info.nvars; ++i) {
                 int ip = 2 * i + info.nxcc[i];
-                if(info.rho[i] == 1){
+                if (info.rho[i] == 1) {
                     b.set(ip + 1, nd, 1);
                     nd += 1;
                 }
-                if (info.nxc[i] > 0){
+                if (info.nxc[i] > 0) {
                     for (int p = 0; p < info.nxc[i]; ++p) {
                         b.set(ip + 2 + p, nd, 1);
                         nd += 1;
@@ -198,10 +203,10 @@ public class MultivariateSsfChowLin {
         @Override
         public void Pf0(FastMatrix pf0) {
 
-            if(info.errVDiag) {
+            if (info.errVDiag) {
                 for (int i = 0; i < info.nvars; ++i) {
                     int ip = 2 * i + info.nxcc[i];
-                    if(info.rho[i] != 1){
+                    if (info.rho[i] != 1) {
                         double v = info.errV.get(i, i) / (1 - info.rho[i] * info.rho[i]);
                         pf0.set(ip + 1, ip + 1, v);
                     }
@@ -211,7 +216,7 @@ public class MultivariateSsfChowLin {
                 // size of the stationary part
                 int ns = 0;
                 for (int i = 0; i < info.nvars; ++i) {
-                    if(info.rho[i] != 1) {
+                    if (info.rho[i] != 1) {
                         ++ns;
                     }
                 }
@@ -230,7 +235,7 @@ public class MultivariateSsfChowLin {
 
                         int jk = 0;
                         for (int j = 0; j < info.nvars; ++j) {
-                            if(info.rho[j] == 1.0) {
+                            if (info.rho[j] == 1.0) {
                                 continue;
                             }
                             V.set(ik, jk, info.errV.get(i, j));
@@ -253,7 +258,7 @@ public class MultivariateSsfChowLin {
 
                         int jl = 0;
                         for (int j = 0; j < info.nvars; ++j) {
-                            if(info.rho[j] == 1.0) {
+                            if (info.rho[j] == 1.0) {
                                 continue;
                             }
                             int jp = 2 * j + info.nxcc[j];
@@ -266,20 +271,20 @@ public class MultivariateSsfChowLin {
 
                 // Chow-Lin only -> Lyapunov for all series (all rhos < 1)
                 /*
-                FastMatrix A = FastMatrix.diagonal(DoubleSeq.of(info.rho));
-                FastMatrix V = info.errV.deepClone();
+                 FastMatrix A = FastMatrix.diagonal(DoubleSeq.of(info.rho));
+                 FastMatrix V = info.errV.deepClone();
 
-               // Lyapunov: G = AGA' + V
-                FastMatrix G = solveLyapunov(A, V, 1e-8, 1000);
+                // Lyapunov: G = AGA' + V
+                 FastMatrix G = solveLyapunov(A, V, 1e-8, 1000);
 
-                for (int i = 0; i < info.nvars; ++i) {
-                    int ip = 2 * i + info.nxcc[i];
-                    for (int j = 0; j < info.nvars; ++j) {
-                        int jp = 2 * j + info.nxcc[j];
-                        pf0.set(ip + 1, jp + 1, G.get(i, j));
-                    }
-                }
-                */
+                 for (int i = 0; i < info.nvars; ++i) {
+                     int ip = 2 * i + info.nxcc[i];
+                     for (int j = 0; j < info.nvars; ++j) {
+                         int jp = 2 * j + info.nxcc[j];
+                         pf0.set(ip + 1, jp + 1, G.get(i, j));
+                     }
+                 }
+                 */
             }
         }
 
@@ -287,10 +292,10 @@ public class MultivariateSsfChowLin {
         public void Pi0(FastMatrix pi0) {
             for (int i = 0; i < info.nvars; ++i) {
                 int ip = 2 * i + info.nxcc[i];
-                if(info.rho[i] == 1){
+                if (info.rho[i] == 1) {
                     pi0.set(ip + 1, ip + 1, 1);
                 }
-                if (info.nxc[i] > 0){
+                if (info.nxc[i] > 0) {
                     for (int p = 0; p < info.nxc[i]; ++p) {
                         pi0.set(ip + 2 + p, ip + 2 + p, 1);
                     }
@@ -320,7 +325,7 @@ public class MultivariateSsfChowLin {
                 G = GNew;
             }
 
-            return(G);
+            return (G);
         }
     }
 
@@ -371,7 +376,6 @@ public class MultivariateSsfChowLin {
                         cm.set(ip + 1, j, errS.get(i, j));
                     }
                 }
-
             }
         }
 
@@ -396,7 +400,7 @@ public class MultivariateSsfChowLin {
                         tr.set(ip, ip, 1);
                     }
                 }
-                if (info.nxc[i] > 0){
+                if (info.nxc[i] > 0) {
                     for (int p = 0; p < info.nxc[i]; ++p) {
                         tr.set(ip + 2 + p, ip + 2 + p, 1);
                     }
@@ -541,9 +545,11 @@ public class MultivariateSsfChowLin {
                 int iv = 2 * v + info.nxcc[v];
                 if (pos % info.c != 0) {
                     z.set(iv, 1);
+                } else {
+                    z.set(0);
                 }
                 z.set(iv + 1, 1);
-                if (info.nxc[v] > 0){
+                if (info.nxc[v] > 0) {
                     for (int p = 0; p < info.nxc[v]; ++p) {
                         z.set(iv + 2 + p, info.xc(pos, v, p));
                     }
@@ -556,7 +562,7 @@ public class MultivariateSsfChowLin {
                     int il = 2 * l + info.nxcc[l];
                     z.set(il, cnt.getWeights()[i]);
                     z.set(il + 1, cnt.getWeights()[i]);
-                    if (info.nxc[l] > 0){
+                    if (info.nxc[l] > 0) {
                         for (int p = 0; p < info.nxc[l]; ++p) {
                             z.set(il + 2 + p, info.mxc(pos, l, p, cnt.getWeights()[i]));
                         }
@@ -571,7 +577,7 @@ public class MultivariateSsfChowLin {
                 int iv = 2 * v + info.nxcc[v];
                 double r = (pos % info.c == 0) ? 0 : x.get(iv);
                 r += x.get(iv + 1);
-                if (info.nxc[v] > 0){
+                if (info.nxc[v] > 0) {
                     for (int p = 0; p < info.nxc[v]; ++p) {
                         r += x.get(iv + 2 + p) * info.xc(pos, v, p);
                     }
@@ -586,7 +592,7 @@ public class MultivariateSsfChowLin {
                     int il = 2 * l + info.nxcc[l];
                     sum += cnt.getWeights()[i] * x.get(il);
                     sum += cnt.getWeights()[i] * x.get(il + 1);
-                    if (info.nxc[l] > 0){
+                    if (info.nxc[l] > 0) {
                         for (int p = 0; p < info.nxc[l]; ++p) {
                             sum += info.mxc(pos, l, p, cnt.getWeights()[i]) * x.get(il + 2 + p);
                         }
@@ -604,7 +610,7 @@ public class MultivariateSsfChowLin {
                     x.copy(m.row(iv));
                 }
                 x.add(m.row(iv + 1));
-                if (info.nxc[v] > 0){
+                if (info.nxc[v] > 0) {
                     for (int p = 0; p < info.nxc[v]; ++p) {
                         x.addAY(info.xc(pos, v, p), m.row(iv + 2 + p));
                     }
@@ -618,7 +624,7 @@ public class MultivariateSsfChowLin {
                     int il = 2 * l + info.nxcc[l];
                     x.addAY(cnt.getWeights()[i], m.row(il));
                     x.addAY(cnt.getWeights()[i], m.row(il + 1));
-                    if (info.nxc[l] > 0){
+                    if (info.nxc[l] > 0) {
                         for (int p = 0; p < info.nxc[l]; ++p) {
                             x.addAY(info.mxc(pos, l, p, cnt.getWeights()[i]), m.row(il + 2 + p));
                         }
@@ -637,7 +643,7 @@ public class MultivariateSsfChowLin {
                     s += vm.get(iv, iv + 1);
                     s += vm.get(iv + 1, iv);
                 }
-                if (info.nxc[v] > 0){
+                if (info.nxc[v] > 0) {
                     for (int i = 0; i < info.nxc[v]; ++i) {
                         for (int j = 0; j < info.nxc[v]; ++j) {
                             s += info.xc(pos, v, i) * vm.get(iv + 2 + i, iv + 2 + j) * info.xc(pos, v, j);
@@ -651,7 +657,7 @@ public class MultivariateSsfChowLin {
                 return s;
             } else {
                 // TO OPTIMIZE...
-                int w = v-info.nvars;
+                int w = v - info.nvars;
                 Constraint cnt = info.constraints[w];
                 double[] z = new double[info.nvars * 2 + info.Np];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
@@ -659,7 +665,7 @@ public class MultivariateSsfChowLin {
                     int ik = 2 * k + info.nxcc[k];
                     z[ik] = cnt.getWeights()[i];
                     z[ik + 1] = cnt.getWeights()[i];
-                    if (info.nxc[k] > 0){
+                    if (info.nxc[k] > 0) {
                         for (int p = 0; p < info.nxc[k]; ++p) {
                             z[ik + 2 + p] = info.mxc(pos, k, p, cnt.getWeights()[i]);
                         }
@@ -685,7 +691,7 @@ public class MultivariateSsfChowLin {
                     vm.add(iv + 1, iv, d);
                     vm.add(iv, iv + 1, d);
                 }
-                if (info.nxc[v] > 0){
+                if (info.nxc[v] > 0) {
                     for (int i = 0; i < info.nxc[v]; ++i) {
                         for (int j = 0; j < info.nxc[v]; ++j) {
                             vm.add(iv + 2 + i, iv + 2 + j, d * info.xc(pos, v, i) * info.xc(pos, v, j));
@@ -698,9 +704,9 @@ public class MultivariateSsfChowLin {
                         }
                     }
                 }
-            }  else {
+            } else {
                 // TO OPTIMIZE...
-                int w = v-info.nvars;
+                int w = v - info.nvars;
                 Constraint cnt = info.constraints[w];
                 double[] z = new double[info.nvars * 2 + info.Np];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
@@ -708,7 +714,7 @@ public class MultivariateSsfChowLin {
                     int ik = 2 * k + info.nxcc[k];
                     z[ik] = cnt.getWeights()[i];
                     z[ik + 1] = cnt.getWeights()[i];
-                    if (info.nxc[k] > 0){
+                    if (info.nxc[k] > 0) {
                         for (int p = 0; p < info.nxc[k]; ++p) {
                             z[ik + 2 + p] = info.mxc(pos, k, p, cnt.getWeights()[i]);
                         }
@@ -733,20 +739,20 @@ public class MultivariateSsfChowLin {
                     x.add(iv, d);
                 }
                 x.add(iv + 1, d);
-                if (info.nxc[v] > 0){
+                if (info.nxc[v] > 0) {
                     for (int p = 0; p < info.nxc[v]; ++p) {
                         x.add(iv + 2 + p, info.xc(pos, v, p) * d);
                     }
                 }
             } else {
-                int w= v- info.nvars;
+                int w = v - info.nvars;
                 Constraint cnt = info.constraints[w];
                 for (int i = 0; i < cnt.getIndex().length; ++i) {
                     int k = cnt.getIndex()[i];
                     int ik = 2 * k + info.nxcc[k];
                     x.add(ik, cnt.getWeights()[i] * d);
                     x.add(ik + 1, cnt.getWeights()[i] * d);
-                    if (info.nxc[k] > 0){
+                    if (info.nxc[k] > 0) {
                         for (int p = 0; p < info.nxc[k]; ++p) {
                             x.add(ik + 2 + p, info.mxc(pos, k, p, cnt.getWeights()[i]) * d);
                         }
@@ -761,5 +767,3 @@ public class MultivariateSsfChowLin {
         }
     }
 }
-
-

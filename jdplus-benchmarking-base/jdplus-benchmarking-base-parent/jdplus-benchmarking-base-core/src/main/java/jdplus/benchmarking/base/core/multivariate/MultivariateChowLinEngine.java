@@ -16,11 +16,12 @@
  */
 package jdplus.benchmarking.base.core.multivariate;
 
+import internal.ssf.AkfToolkit;
 import java.util.*;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
+import jdplus.benchmarking.base.api.multivariate.ModelData;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
-import jdplus.benchmarking.base.api.multivariate.ModelData;
 import jdplus.benchmarking.base.api.univariate.*;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.benchmarking.base.core.ssf.MultivariateSsfChowLin;
@@ -44,6 +45,7 @@ import jdplus.toolkit.base.core.data.DataBlockIterator;
 import jdplus.toolkit.base.core.data.transformation.Cumulator;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.math.matrices.QuadraticForm;
+import jdplus.toolkit.base.core.ssf.akf.QAugmentation;
 import jdplus.toolkit.base.core.ssf.dk.DefaultDiffuseFilteringResults;
 import jdplus.toolkit.base.core.ssf.dk.DkToolkit;
 import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
@@ -70,7 +72,7 @@ public class MultivariateChowLinEngine {
 
     /* temporal constraints data */
     private double[][] Yo;
-    //private final LinkedHashMap<Integer, TsData> Yo = new LinkedHashMap<>();
+    // private final LinkedHashMap<Integer, TsData> Yo = new LinkedHashMap<>();
 
     /* regressors */
     private final LinkedHashMap<Integer, FastMatrix> Xo = new LinkedHashMap<>();
@@ -108,7 +110,8 @@ public class MultivariateChowLinEngine {
     /* full residuals from univariate estimations */
     private double[][] resUnivariate = null;
 
-    public MultivariateChowLinResults process(LinkedHashMap<String, ModelData> mData, Map<String, TsData> ccData, MultivariateChowLinSpec spec) {
+    public MultivariateChowLinResults process(
+            LinkedHashMap<String, ModelData> mData, Map<String, TsData> ccData, MultivariateChowLinSpec spec) {
 
         this.mData.putAll(mData);
         this.m = mData.size();
@@ -116,9 +119,15 @@ public class MultivariateChowLinEngine {
             this.ccData.putAll(ccData);
         }
         this.q = spec.getContemporaneousConstraints().size();
-        this.rhos = getOrDefault(spec.getRhos(), m, 1, "Mismatch between the number of series and the number of declared rho's");
-        this.isConstant = getOrDefault(spec.getConstant(), m, false, "Mismatch between the number of series and the length of the constant vector");
-        this.isTrend = getOrDefault(spec.getTrend(), m, false, "Mismatch between the number of series and the length of the trend vector");
+        this.rhos = getOrDefault(
+                spec.getRhos(), m, 1, "Mismatch between the number of series and the number of declared rho's");
+        this.isConstant = getOrDefault(
+                spec.getConstant(),
+                m,
+                false,
+                "Mismatch between the number of series and the length of the constant vector");
+        this.isTrend = getOrDefault(
+                spec.getTrend(), m, false, "Mismatch between the number of series and the length of the trend vector");
         this.resUnivariate = new double[m][];
         this.includeCov = spec.isIncludeCov();
         this.shrinkCov = spec.isShrinkCov();
@@ -143,7 +152,8 @@ public class MultivariateChowLinEngine {
             for (int k = 0; k < seriesNames.size(); k++) {
                 String name = seriesNames.get(k);
                 RawTemporalDisaggregationResults td = rsltsUnivariate.get(name);
-                this.resUnivariate[k] = td.getResidualsDiagnostics().getFullResiduals().toArray();
+                this.resUnivariate[k] =
+                        td.getResidualsDiagnostics().getFullResiduals().toArray();
             }
         }
 
@@ -256,7 +266,9 @@ public class MultivariateChowLinEngine {
                 }
                 if (nxp > 0) {
                     for (TsData s : xp) {
-                        if (s == null) throw new IllegalArgumentException("Indicator data not found");
+                        if (s == null) {
+                            throw new IllegalArgumentException("Indicator data not found");
+                        }
                         TsData sDom = TsDataToolkit.fitToDomain(s, hDomain);
                         xmCols.next().copy(sDom.getValues());
                     }
@@ -286,9 +298,8 @@ public class MultivariateChowLinEngine {
                 .algorithm(SsfInitialization.SqrtDiffuse)
                 .build();
 
-        EstimationSpec espec = EstimationSpec.builder()
-                .estimationPrecision(1e-9)
-                .build();
+        EstimationSpec espec =
+                EstimationSpec.builder().estimationPrecision(1e-9).build();
 
         RawDisaggregationSpec spec;
 
@@ -348,7 +359,8 @@ public class MultivariateChowLinEngine {
                     throw new IllegalArgumentException("Component definition cannot be a constraint: " + wc.getItem());
                 }
                 if (!mData.containsKey(wc.getItem())) {
-                    throw new IllegalArgumentException("This component of the contemporaneous constraint not found in the data: " + wc.getItem());
+                    throw new IllegalArgumentException(
+                            "This component of the contemporaneous constraint not found in the data: " + wc.getItem());
                 }
             }
         }
@@ -425,8 +437,9 @@ public class MultivariateChowLinEngine {
 
         ISsf adapter = M2uAdapter.of(ssf);
         ISsfData data = M2uAdapter.of(new SsfMatrix(M));
-        DefaultSmoothingResults srslts
-                = DkToolkit.sqrtSmooth(adapter, data, true, false);
+        DefaultSmoothingResults srslts =
+                AkfToolkit.smooth(adapter, data, true, false, true, QAugmentation.QType.NORMAL);
+        //  DkToolkit.sqrtSmooth(adapter, data, true, false);
 
         // compute scaling factor
         double ev;
@@ -448,7 +461,7 @@ public class MultivariateChowLinEngine {
                 ecur.skip(q);
                 vcur.skip(q);
             }
-            ev = Math.sqrt(ssq / ne);
+            ev = ssq / ne;
         } else {
             ev = 1.0;
         }
@@ -476,9 +489,6 @@ public class MultivariateChowLinEngine {
                 yh[k] = Z.dot(a);
                 vyh[k] = ev * QuadraticForm.apply(P, Z);
             }
-
-            // To fix: absurd variance values in the first lf period (check initialization)
-            Arrays.fill(vyh, 0, ratio, Double.NaN);
 
             // regressors
             double[] rh = new double[len];
@@ -530,7 +540,10 @@ public class MultivariateChowLinEngine {
                 indic.put(sName, vars.toArray(Variable[]::new));
             }
             disagg.put(sName, TsData.ofInternal(hDomain.getStartPeriod(), yh));
-            edisagg.put(sName, TsData.ofInternal(hDomain.getStartPeriod(), DoubleSeq.of(vyh).sqrt().toArray()));
+            edisagg.put(
+                    sName,
+                    TsData.ofInternal(
+                            hDomain.getStartPeriod(), DoubleSeq.of(vyh).sqrt().toArray()));
             regeffect.put(sName, TsData.ofInternal(hDomain.getStartPeriod(), rh));
             regressors.put(sName, Xo.get(i));
         }
@@ -551,7 +564,8 @@ public class MultivariateChowLinEngine {
                 .build();
     }
 
-    private MultivariateChowLinResults getResultsFromRsltsUnivariate(Map<String, RawTemporalDisaggregationResults> rsltsUnivariate) {
+    private MultivariateChowLinResults getResultsFromRsltsUnivariate(
+            Map<String, RawTemporalDisaggregationResults> rsltsUnivariate) {
 
         Map<String, TsData> disagg = new LinkedHashMap<>();
         Map<String, TsData> edisagg = new LinkedHashMap<>();
@@ -567,9 +581,13 @@ public class MultivariateChowLinEngine {
         for (String name : seriesNames) {
             RawTemporalDisaggregationResults td = rsltsUnivariate.get(name);
 
-            disagg.put(name, TsData.ofInternal(start, td.getDisaggregatedSeries().toArray()));
-            edisagg.put(name, TsData.ofInternal(start, td.getStdevDisaggregatedSeries().toArray()));
-            regeffect.put(name, TsData.ofInternal(start, td.getRegressionEffects().toArray()));
+            disagg.put(
+                    name, TsData.ofInternal(start, td.getDisaggregatedSeries().toArray()));
+            edisagg.put(
+                    name,
+                    TsData.ofInternal(start, td.getStdevDisaggregatedSeries().toArray()));
+            regeffect.put(
+                    name, TsData.ofInternal(start, td.getRegressionEffects().toArray()));
             regressors.put(name, td.getRegressors());
             regCoef.put(name, td.getCoefficients());
             vregCoef.put(name, td.getCoefficientsCovariance().diagonal());
@@ -635,7 +653,8 @@ public class MultivariateChowLinEngine {
                     }
                 } else {
                     for (int i = 0; i < length; ++i) {
-                        v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i]).getVarDF(1);
+                        v[i] = DescriptiveStatistics.ofInternal(this.resUnivariate[i])
+                                .getVarDF(1);
                     }
                     return FastMatrix.diagonal(DoubleSeq.of(v));
                 }
@@ -646,15 +665,16 @@ public class MultivariateChowLinEngine {
             }
             case userDefined -> {
                 if (var == null) {
-                    throw new IllegalArgumentException("Errors Variance unspecified even though userDefined method has been selected");
+                    throw new IllegalArgumentException(
+                            "Errors Variance unspecified even though userDefined method has been selected");
                 }
                 if (var.getColumnsCount() != length) {
-                    throw new IllegalArgumentException("Errors Variance misspecified. The dimension should be " + length);
+                    throw new IllegalArgumentException(
+                            "Errors Variance misspecified. The dimension should be " + length);
                 }
                 return var;
             }
-            default ->
-                throw new IllegalArgumentException("Unknown errors variance method: " + method);
+            default -> throw new IllegalArgumentException("Unknown errors variance method: " + method);
         }
     }
 
@@ -681,13 +701,13 @@ public class MultivariateChowLinEngine {
         return names;
     }
 
-    private Map<String, DoubleSeq> residuals(Map<String, TsData> hy, Map<String, FastMatrix> hx, Map<String, DoubleSeq> coeff, int ratio, ISsf ssf) {
+    private Map<String, DoubleSeq> residuals(
+            Map<String, TsData> hy, Map<String, FastMatrix> hx, Map<String, DoubleSeq> coeff, int ratio, ISsf ssf) {
 
         Map<String, DoubleSeq> res = new LinkedHashMap<>();
         List<String> seriesNames = new ArrayList<>(hy.keySet());
 
         // YET TO DO!
-
         return null;
     }
 
@@ -696,14 +716,14 @@ public class MultivariateChowLinEngine {
         int cols = matrix[0].length;
 
         int[] validCols = java.util.stream.IntStream.range(0, cols)
-                .filter(col -> java.util.stream.IntStream.range(0, rows)
-                .noneMatch(row -> Double.isNaN(matrix[row][col])))
+                .filter(col ->
+                        java.util.stream.IntStream.range(0, rows).noneMatch(row -> Double.isNaN(matrix[row][col])))
                 .toArray();
 
         return java.util.Arrays.stream(matrix)
                 .map(row -> java.util.Arrays.stream(validCols)
-                .mapToDouble(col -> row[col])
-                .toArray())
+                        .mapToDouble(col -> row[col])
+                        .toArray())
                 .toArray(double[][]::new);
     }
 }

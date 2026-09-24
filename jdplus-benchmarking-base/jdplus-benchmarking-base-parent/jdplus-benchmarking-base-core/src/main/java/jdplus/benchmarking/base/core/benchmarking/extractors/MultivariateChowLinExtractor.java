@@ -1,5 +1,6 @@
 package jdplus.benchmarking.base.core.benchmarking.extractors;
 
+import java.util.*;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationDictionaries;
 import jdplus.toolkit.base.api.data.DoubleSeq;
@@ -8,10 +9,7 @@ import jdplus.toolkit.base.api.information.InformationExtractor;
 import jdplus.toolkit.base.api.information.InformationMapping;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.timeseries.TsData;
-import jdplus.toolkit.base.api.timeseries.regression.Variable;
 import nbbrd.service.ServiceProvider;
-
-import java.util.*;
 
 @ServiceProvider(InformationExtractor.class)
 public class MultivariateChowLinExtractor extends InformationMapping<MultivariateChowLinResults> {
@@ -35,7 +33,7 @@ public class MultivariateChowLinExtractor extends InformationMapping<Multivariat
                 TsData re = regeffect.get(sName);
                 if (re == null || re.isEmpty()) {
                     sp[index] = Double.NaN;
-                } else{
+                } else {
                     DoubleSeq T = source.getDisaggregatedSeries().get(sName).getValues();
                     DoubleSeq R = re.getValues();
                     DoubleSeq S = DoublesMath.subtract(T, R);
@@ -45,7 +43,7 @@ public class MultivariateChowLinExtractor extends InformationMapping<Multivariat
                 }
                 ++index;
             }
-            return(sp);
+            return (sp);
         });
     }
 
