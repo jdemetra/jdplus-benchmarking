@@ -1,48 +1,42 @@
 /*
  * Copyright 2022 National Bank of Belgium
  *
- * Licensed under the EUPL, Version 1.2 or – as soon they will be approved 
+ * Licensed under the EUPL, Version 1.2 or – as soon they will be approved
  * by the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
  * You may obtain a copy of the Licence at:
  *
  * https://joinup.ec.europa.eu/software/page/eupl
  *
- * Unless required by applicable law or agreed to in writing, software 
+ * Unless required by applicable law or agreed to in writing, software
  * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the Licence for the specific language governing permissions and 
+ * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
 package jdplus.benchmarking.base.r;
 
+import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_EPS;
+import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_RESCALE;
+import static jdplus.benchmarking.base.api.univariate.ADLSpec.builder;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
 import jdplus.benchmarking.base.api.multivariate.ModelData;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLin;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinResults;
 import jdplus.benchmarking.base.api.multivariate.MultivariateChowLinSpec;
-import jdplus.benchmarking.base.r.util.DictionaryGroups;
-import jdplus.toolkit.base.api.data.AggregationType;
-import jdplus.toolkit.base.api.data.Parameter;
-import jdplus.toolkit.base.api.ssf.SsfInitialization;
-import jdplus.benchmarking.base.api.univariate.ModelBasedDentonSpec;
-import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationIResults;
-import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationISpec;
-import jdplus.toolkit.base.api.timeseries.TsData;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-
 import jdplus.benchmarking.base.api.univariate.ADLSpec;
-import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_EPS;
-import static jdplus.benchmarking.base.api.univariate.ADLSpec.DEF_RESCALE;
-import static jdplus.benchmarking.base.api.univariate.ADLSpec.builder;
 import jdplus.benchmarking.base.api.univariate.AlgorithmSpec;
 import jdplus.benchmarking.base.api.univariate.EstimationSpec;
+import jdplus.benchmarking.base.api.univariate.ModelBasedDentonSpec;
 import jdplus.benchmarking.base.api.univariate.ModelSpec;
 import jdplus.benchmarking.base.api.univariate.RawDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.RawInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.ResidualsModel;
+import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationISpec;
 import jdplus.benchmarking.base.api.univariate.TemporalDisaggregationSpec;
 import jdplus.benchmarking.base.api.univariate.TemporalInterpolationSpec;
 import jdplus.benchmarking.base.api.univariate.TsEstimationSpec;
@@ -51,15 +45,21 @@ import jdplus.benchmarking.base.core.univariate.ADLResults;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonProcessor;
 import jdplus.benchmarking.base.core.univariate.ModelBasedDentonResults;
 import jdplus.benchmarking.base.core.univariate.ProcessorI;
-import jdplus.benchmarking.base.core.univariate.RawInterpolationProcessor;
 import jdplus.benchmarking.base.core.univariate.RawDisaggregationProcessor;
+import jdplus.benchmarking.base.core.univariate.RawInterpolationProcessor;
 import jdplus.benchmarking.base.core.univariate.RawTemporalDisaggregationResults;
+import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationIResults;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationProcessor;
 import jdplus.benchmarking.base.core.univariate.TemporalDisaggregationResults;
 import jdplus.benchmarking.base.core.univariate.TemporalInterpolationProcessor;
+import jdplus.benchmarking.base.r.util.DictionaryGroups;
+import jdplus.toolkit.base.api.data.AggregationType;
 import jdplus.toolkit.base.api.data.DoubleSeq;
+import jdplus.toolkit.base.api.data.Parameter;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
+import jdplus.toolkit.base.api.ssf.SsfInitialization;
 import jdplus.toolkit.base.api.timeseries.TimeSelector;
+import jdplus.toolkit.base.api.timeseries.TsData;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.r.util.Dictionary;
 
@@ -70,8 +70,15 @@ import jdplus.toolkit.base.r.util.Dictionary;
 @lombok.experimental.UtilityClass
 public class TemporalDisaggregation {
 
-    public TemporalDisaggregationIResults processI(TsData y, TsData indicator, String model, String aggregation, int obspos,
-            double rho, boolean fixedrho, double truncatedRho) {
+    public TemporalDisaggregationIResults processI(
+            TsData y,
+            TsData indicator,
+            String model,
+            String aggregation,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho) {
         TemporalDisaggregationISpec spec = TemporalDisaggregationISpec.builder()
                 .constant(true)
                 .residualsModel(ResidualsModel.valueOf(model))
@@ -83,9 +90,18 @@ public class TemporalDisaggregation {
         return ProcessorI.process(y, indicator, spec);
     }
 
-    public ModelBasedDentonResults processModelBasedDenton(TsData y, TsData indicator, int differencing, String aggregation, int obspos, String[] odates, double[] ovar, String[] fdates, double[] fval) {
-        ModelBasedDentonSpec.Builder builder = ModelBasedDentonSpec.builder()
-                .aggregationType(AggregationType.valueOf(aggregation));
+    public ModelBasedDentonResults processModelBasedDenton(
+            TsData y,
+            TsData indicator,
+            int differencing,
+            String aggregation,
+            int obspos,
+            String[] odates,
+            double[] ovar,
+            String[] fdates,
+            double[] fval) {
+        ModelBasedDentonSpec.Builder builder =
+                ModelBasedDentonSpec.builder().aggregationType(AggregationType.valueOf(aggregation));
         if (odates != null && ovar != null) {
             if (odates.length != ovar.length) {
                 throw new IllegalArgumentException();
@@ -105,10 +121,22 @@ public class TemporalDisaggregation {
         return ModelBasedDentonProcessor.process(y, indicator, builder.build());
     }
 
-    public TemporalDisaggregationResults process(TsData y, boolean constant, boolean trend, TsData[] indicators,
-            String model, int freq, int nExt, String aggregation, int obspos,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
+    public TemporalDisaggregationResults process(
+            TsData y,
+            boolean constant,
+            boolean trend,
+            TsData[] indicators,
+            String model,
+            int freq,
+            int nExt,
+            String aggregation,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs) {
         AggregationType type = AggregationType.valueOf(aggregation);
         ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
@@ -167,9 +195,19 @@ public class TemporalDisaggregation {
         }
     }
 
-    public TemporalDisaggregationResults processDisaggregation(TsData y, boolean constant, boolean trend, TsData[] indicators,
-            String model, boolean average, double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
+    public TemporalDisaggregationResults processDisaggregation(
+            TsData y,
+            boolean constant,
+            boolean trend,
+            TsData[] indicators,
+            String model,
+            boolean average,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs) {
         if (indicators == null) {
             throw new IllegalArgumentException("Indicators should not be null");
         }
@@ -202,10 +240,21 @@ public class TemporalDisaggregation {
         return TemporalDisaggregationProcessor.process(y, indicators, spec);
     }
 
-    public TemporalDisaggregationResults processDisaggregation(TsData y, boolean constant, boolean trend,
-            String model, int freq, boolean average,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+    public TemporalDisaggregationResults processDisaggregation(
+            TsData y,
+            boolean constant,
+            boolean trend,
+            String model,
+            int freq,
+            boolean average,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs,
+            int nbackcasts,
+            int nforecasts) {
         ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
                 .trend(trend)
@@ -233,10 +282,19 @@ public class TemporalDisaggregation {
         return TemporalDisaggregationProcessor.process(y, nbackcasts, nforecasts, spec);
     }
 
-    public TemporalDisaggregationResults processInterpolation(TsData y, boolean constant, boolean trend, TsData[] indicators,
-            String model, int obspos,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
+    public TemporalDisaggregationResults processInterpolation(
+            TsData y,
+            boolean constant,
+            boolean trend,
+            TsData[] indicators,
+            String model,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs) {
 
         ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
@@ -265,13 +323,23 @@ public class TemporalDisaggregation {
                 .observationPosition(obspos)
                 .build();
         return TemporalInterpolationProcessor.process(y, indicators, spec);
-
     }
 
-    public TemporalDisaggregationResults processInterpolation(TsData y, boolean constant, boolean trend,
-            String model, int freq, int obspos,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+    public TemporalDisaggregationResults processInterpolation(
+            TsData y,
+            boolean constant,
+            boolean trend,
+            String model,
+            int freq,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs,
+            int nbackcasts,
+            int nforecasts) {
 
         ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
@@ -299,13 +367,24 @@ public class TemporalDisaggregation {
                 .defaultPeriod(freq)
                 .build();
         return TemporalInterpolationProcessor.process(y, nbackcasts, nforecasts, spec);
-
     }
 
-    public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend,
-            String model, int frequencyRatio, int nbcasts, int nfcasts, String aggregation, int obspos,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
+    public RawTemporalDisaggregationResults processRaw(
+            double[] y,
+            boolean constant,
+            boolean trend,
+            String model,
+            int frequencyRatio,
+            int nbcasts,
+            int nfcasts,
+            String aggregation,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs) {
 
         AggregationType type = AggregationType.valueOf(aggregation);
 
@@ -348,10 +427,22 @@ public class TemporalDisaggregation {
         }
     }
 
-    public RawTemporalDisaggregationResults processRaw(double[] y, boolean constant, boolean trend, Matrix indicators, int startOffset,
-            String model, int frequencyRatio, String aggregation, int obspos,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
+    public RawTemporalDisaggregationResults processRaw(
+            double[] y,
+            boolean constant,
+            boolean trend,
+            Matrix indicators,
+            int startOffset,
+            String model,
+            int frequencyRatio,
+            String aggregation,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs) {
 
         if (indicators == null) {
             indicators = Matrix.empty();
@@ -404,10 +495,21 @@ public class TemporalDisaggregation {
         }
     }
 
-    public RawTemporalDisaggregationResults processRawDisaggregation(double[] y, boolean constant, boolean trend, Matrix indicators, int startOffset,
-            String model, int frequencyRatio, boolean average,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
+    public RawTemporalDisaggregationResults processRawDisaggregation(
+            double[] y,
+            boolean constant,
+            boolean trend,
+            Matrix indicators,
+            int startOffset,
+            String model,
+            int frequencyRatio,
+            boolean average,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs) {
 
         if (indicators == null) {
             indicators = Matrix.empty();
@@ -448,10 +550,21 @@ public class TemporalDisaggregation {
         return RawDisaggregationProcessor.process(DoubleSeq.of(y), X, startOffset, spec);
     }
 
-    public RawTemporalDisaggregationResults processRawDisaggregation(double[] y, boolean constant, boolean trend,
-            String model, int frequencyRatio, boolean average,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+    public RawTemporalDisaggregationResults processRawDisaggregation(
+            double[] y,
+            boolean constant,
+            boolean trend,
+            String model,
+            int frequencyRatio,
+            boolean average,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs,
+            int nbackcasts,
+            int nforecasts) {
 
         ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
@@ -481,10 +594,21 @@ public class TemporalDisaggregation {
         return RawDisaggregationProcessor.process(DoubleSeq.of(y), nbackcasts, nforecasts, spec);
     }
 
-    public RawTemporalDisaggregationResults processRawInterpolation(double[] y, boolean constant, boolean trend, Matrix indicators, int startOffset,
-            String model, int frequencyRatio, int obspos,
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs) {
+    public RawTemporalDisaggregationResults processRawInterpolation(
+            double[] y,
+            boolean constant,
+            boolean trend,
+            Matrix indicators,
+            int startOffset,
+            String model,
+            int frequencyRatio,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs) {
 
         if (indicators == null) {
             indicators = Matrix.empty();
@@ -523,10 +647,21 @@ public class TemporalDisaggregation {
         return RawInterpolationProcessor.process(DoubleSeq.of(y), X, startOffset, spec);
     }
 
-    public RawTemporalDisaggregationResults processRawInterpolation(double[] y, boolean constant, boolean trend,
-            String model, int frequencyRatio, int obspos, 
-            double rho, boolean fixedrho, double truncatedRho, boolean zeroinit,
-            String algorithm, boolean diffuseregs, int nbackcasts, int nforecasts) {
+    public RawTemporalDisaggregationResults processRawInterpolation(
+            double[] y,
+            boolean constant,
+            boolean trend,
+            String model,
+            int frequencyRatio,
+            int obspos,
+            double rho,
+            boolean fixedrho,
+            double truncatedRho,
+            boolean zeroinit,
+            String algorithm,
+            boolean diffuseregs,
+            int nbackcasts,
+            int nforecasts) {
 
         ModelSpec mspec = ModelSpec.builder()
                 .constant(constant)
@@ -555,8 +690,18 @@ public class TemporalDisaggregation {
         return RawInterpolationProcessor.process(DoubleSeq.of(y), nbackcasts, nforecasts, spec);
     }
 
-    public ADLResults processADL(TsData y, boolean constant, boolean trend, TsData[] indicators,
-            String aggregation, double phi, boolean fixedphi, double truncatedPhi, String xar, String ssfType, boolean diffuse) {
+    public ADLResults processADL(
+            TsData y,
+            boolean constant,
+            boolean trend,
+            TsData[] indicators,
+            String aggregation,
+            double phi,
+            boolean fixedphi,
+            double truncatedPhi,
+            String xar,
+            String ssfType,
+            boolean diffuse) {
         if (indicators == null) {
             return null;
         }
@@ -567,7 +712,10 @@ public class TemporalDisaggregation {
                 .trend(trend)
                 .xar(ADLSpec.XAR.valueOf(xar))
                 .ssfType(ADLSpec.SsfType.valueOf(ssfType))
-                .phi(fixedphi ? Parameter.fixed(phi) : (Double.isFinite(phi) ? Parameter.initial(phi) : Parameter.undefined()))
+                .phi(
+                        fixedphi
+                                ? Parameter.fixed(phi)
+                                : (Double.isFinite(phi) ? Parameter.initial(phi) : Parameter.undefined()))
                 .truncation(truncatedPhi <= -1 ? null : truncatedPhi)
                 .estimationPrecision(DEF_EPS)
                 .diffuseRegressors(diffuse)
@@ -578,22 +726,22 @@ public class TemporalDisaggregation {
             indicators[i] = indicators[i].cleanExtremities();
         }
         return ADLProcessor.process(y, indicators, spec);
-
     }
 
-    public MultivariateChowLinResults multiChowLin(Dictionary series,
-                                                   boolean[] constant,
-                                                   boolean[] trend,
-                                                   DictionaryGroups indicators,
-                                                   Dictionary ccseries,
-                                                   String[] ccdefinition,
-                                                   int frequency,
-                                                   double[] rhos,
-                                                   String varMethod,
-                                                   boolean includeCov,
-                                                   boolean shrinkCov,
-                                                   Matrix var,
-                                                   boolean rescaleVariance) {
+    public MultivariateChowLinResults multiChowLin(
+            Dictionary series,
+            boolean[] constant,
+            boolean[] trend,
+            DictionaryGroups indicators,
+            Dictionary ccseries,
+            String[] ccdefinition,
+            int frequency,
+            double[] rhos,
+            String varMethod,
+            boolean includeCov,
+            boolean shrinkCov,
+            Matrix var,
+            boolean rescaleVariance) {
 
         Map<String, TsData> y = series.data();
         Map<String, TsData[]> x = indicators.data();

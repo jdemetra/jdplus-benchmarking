@@ -18,7 +18,6 @@ package jdplus.benchmarking.base.api.multivariate;
 
 import java.util.List;
 import jdplus.benchmarking.base.api.benchmarking.multivariate.ContemporaneousConstraint;
-import jdplus.benchmarking.base.api.benchmarking.univariate.CholetteSpec;
 import jdplus.toolkit.base.api.math.matrices.Matrix;
 import jdplus.toolkit.base.api.processing.AlgorithmDescriptor;
 import jdplus.toolkit.base.api.processing.ProcSpecification;
@@ -34,17 +33,27 @@ import nbbrd.design.Development;
  */
 @Development(status = Development.Status.Beta)
 @lombok.Value
-@lombok.Builder(toBuilder=true, buildMethodName="buildWithoutValidation")
+@lombok.Builder(toBuilder = true, buildMethodName = "buildWithoutValidation")
 public class MultivariateChowLinSpec implements ProcSpecification, Validatable<MultivariateChowLinSpec> {
 
-    public static final AlgorithmDescriptor ALGORITHM = new AlgorithmDescriptor("temporaldisaggregation", "multivariatechowlin", null);
+    public static final AlgorithmDescriptor ALGORITHM =
+            new AlgorithmDescriptor("temporaldisaggregation", "multivariatechowlin", null);
 
     public static enum errorsVarianceMethod {
-        fromUnivariate, allEquals, userDefined
+        fromUnivariate,
+        allEquals,
+        userDefined
     };
 
-    public static MultivariateChowLinSpec.errorsVarianceMethod DEF_VAR_METHOD = MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate;
-    public static final boolean DEF_INCLUDECOV = false, DEF_SHRINKCOV = true, DEF_RESCALEVARIANCE = false, DEF_AVERAGE = false, DEF_FIXEDRHOS = true, DEF_DIFFUSE = false, DEF_ZERO = false;
+    public static MultivariateChowLinSpec.errorsVarianceMethod DEF_VAR_METHOD =
+            MultivariateChowLinSpec.errorsVarianceMethod.fromUnivariate;
+    public static final boolean DEF_INCLUDECOV = false,
+            DEF_SHRINKCOV = true,
+            DEF_RESCALEVARIANCE = false,
+            DEF_AVERAGE = false,
+            DEF_FIXEDRHOS = true,
+            DEF_DIFFUSE = false,
+            DEF_ZERO = false;
     public static final int DEF_PERIOD = 4, DEF_TRUNCATEDRHOS = -1;
     public static final SsfInitialization DEF_ALGORITHM = SsfInitialization.SqrtDiffuse;
 
@@ -63,8 +72,7 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
     private boolean diffuseRegressors;
     private boolean zeroInitialization;
 
-    @lombok.NonNull
-    @lombok.Singular
+    @lombok.NonNull @lombok.Singular
     private List<ContemporaneousConstraint> contemporaneousConstraints;
 
     @Override
@@ -74,8 +82,8 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
 
     @Override
     public MultivariateChowLinSpec validate() throws IllegalArgumentException {
-        for (int i = 0; i < rhos.length; ++i){
-            if (rhos[i] <= -1 || rhos[i] > 1){
+        for (int i = 0; i < rhos.length; ++i) {
+            if (rhos[i] <= -1 || rhos[i] > 1) {
                 throw new IllegalArgumentException("All rho's should be in ]-1,1]");
             }
         }
@@ -92,18 +100,16 @@ public class MultivariateChowLinSpec implements ProcSpecification, Validatable<M
 
             try {
                 SymmetricMatrix.lcholesky(L, 0);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new IllegalArgumentException("The error variance matrix is not positive definite");
             }
         }
         return this;
     }
 
-    public static class Builder implements Validatable.Builder<MultivariateChowLinSpec>{
-    }
+    public static class Builder implements Validatable.Builder<MultivariateChowLinSpec> {}
 
-    public static Builder builder(){
+    public static Builder builder() {
 
         return new Builder()
                 .defaultPeriod(DEF_PERIOD)

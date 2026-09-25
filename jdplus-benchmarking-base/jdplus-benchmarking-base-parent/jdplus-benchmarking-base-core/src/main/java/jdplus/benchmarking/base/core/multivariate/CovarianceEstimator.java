@@ -14,7 +14,6 @@ import jdplus.toolkit.base.core.stats.samples.Moments;
  *
  * @author LEMASSO
  */
-
 @lombok.experimental.UtilityClass
 public class CovarianceEstimator {
 
@@ -117,7 +116,6 @@ public class CovarianceEstimator {
         return covShrunk;
     }
 
-
     public static double estimateLambda(FastMatrix X) {
 
         int n = X.getRowsCount();
@@ -172,5 +170,4 @@ public class CovarianceEstimator {
 
         return Math.max(0, Math.min(1, numerator / denominator));
     }
-
 }
