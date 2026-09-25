@@ -438,7 +438,7 @@ public class MultivariateChowLinEngine {
         ISsf adapter = M2uAdapter.of(ssf);
         ISsfData data = M2uAdapter.of(new SsfMatrix(M));
         DefaultSmoothingResults srslts =
-                AkfToolkit.smooth(adapter, data, true, false, true, QAugmentation.QType.NORMAL);
+                AkfToolkit.smooth(adapter, data, true, false, false, QAugmentation.QType.NORMAL);
         //  DkToolkit.sqrtSmooth(adapter, data, true, false);
 
         // compute scaling factor

@@ -19,6 +19,7 @@ package jdplus.benchmarking.base.core.ssf;
 import java.util.HashMap;
 import jdplus.benchmarking.base.core.benchmarking.multivariate.Constraint;
 import jdplus.toolkit.base.core.data.DataBlock;
+import jdplus.toolkit.base.core.math.linearsystem.LinearSystemSolver;
 import jdplus.toolkit.base.core.math.matrices.FastMatrix;
 import jdplus.toolkit.base.core.math.matrices.SymmetricMatrix;
 import jdplus.toolkit.base.core.ssf.ISsfDynamics;
@@ -246,18 +247,17 @@ public class MultivariateSsfChowLin {
 
                     // Compute G
                     FastMatrix G = solveLyapunov(A, V, 1e-8, 1000);
+                    //                    FastMatrix G = solveLyapunov2(A, V);
 
                     // Fill pf0
-                    int il = 0;
-                    for (int i = 0; i < info.nvars; ++i) {
+                    for (int i = 0, il = 0; i < info.nvars; ++i) {
                         if (info.rho[i] == 1.0) {
                             continue;
                         }
 
                         int ip = 2 * i + info.nxcc[i];
 
-                        int jl = 0;
-                        for (int j = 0; j < info.nvars; ++j) {
+                        for (int j = 0, jl = 0; j < info.nvars; ++j) {
                             if (info.rho[j] == 1.0) {
                                 continue;
                             }
@@ -285,6 +285,21 @@ public class MultivariateSsfChowLin {
                      }
                  }
                  */
+                for (int i = 0; i < info.nvars; ++i) {
+                    if (info.rho[i] != 1.0) {
+                        continue;
+                    }
+
+                    int ip = 2 * i + info.nxcc[i];
+
+                    for (int j = 0; j < info.nvars; ++j) {
+                        if (info.rho[j] != 1.0) {
+                            continue;
+                        }
+                        int jp = 2 * j + info.nxcc[j];
+                        pf0.set(ip + 1, jp + 1, info.errV.get(i, j));
+                    }
+                }
             }
         }
 
@@ -295,14 +310,21 @@ public class MultivariateSsfChowLin {
                 if (info.rho[i] == 1) {
                     pi0.set(ip + 1, ip + 1, 1);
                 }
-                if (info.nxc[i] > 0) {
-                    for (int p = 0; p < info.nxc[i]; ++p) {
-                        pi0.set(ip + 2 + p, ip + 2 + p, 1);
-                    }
+                for (int p = 0; p < info.nxc[i]; ++p) {
+                    pi0.set(ip + 2 + p, ip + 2 + p, 1);
                 }
             }
         }
 
+        /**
+         * Find G such that G = A G A' + V (starting with G = V)
+         *
+         * @param A
+         * @param V
+         * @param tol
+         * @param maxIter
+         * @return
+         */
         private FastMatrix solveLyapunov(FastMatrix A, FastMatrix V, double tol, int maxIter) {
             int p = A.getRowsCount();
             FastMatrix G = FastMatrix.make(p, p);
@@ -327,6 +349,44 @@ public class MultivariateSsfChowLin {
 
             return (G);
         }
+    }
+
+    private FastMatrix solveLyapunov2(FastMatrix A, FastMatrix V) {
+        int dim = A.getRowsCount();
+        int np = (dim * (dim + 1)) / 2;
+        FastMatrix M = FastMatrix.square(np);
+        double[] b = new double[np];
+        for (int c = 0, i = 0; c < dim; ++c) {
+            for (int r = c; r < dim; ++r, ++i) {
+                b[i] = V.get(r, c);
+                M.set(i, i, 1);
+                for (int k = 0; k < dim; ++k) {
+                    double zc = A.get(c, k);
+                    if (zc != 0) {
+                        for (int l = 0; l < dim; ++l) {
+                            double zr = A.get(r, l);
+                            double z = zr * zc;
+                            if (z != 0) {
+                                int p = l <= k ? pos(k, l, dim) : pos(l, k, dim);
+                                M.add(i, p, -z);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        FastMatrix C = FastMatrix.square(dim);
+        LinearSystemSolver.fastSolver().solve(M, DataBlock.of(b));
+        for (int i = 0, j = 0; i < dim; i++) {
+            C.column(i).drop(i, 0).copyFrom(b, j);
+            j += dim - i;
+        }
+        SymmetricMatrix.fromLower(C);
+        return C;
+    }
+
+    private static int pos(int r, int c, int n) {
+        return r + c * (2 * n - c - 1) / 2;
     }
 
     static class Dynamics implements ISsfDynamics {

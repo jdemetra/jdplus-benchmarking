@@ -209,12 +209,12 @@ public class MultivariateChowLinTest {
         TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2009, 1), z1Arr);
         z.put("z1", z1);
 
-                double rho = 1;
-                double[] rhos = {rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho};
-                boolean c = false;
-                boolean[] csts = {c, c, c, c, c, c, c, c, c, c, c, c};
-//        double[] rhos = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-//        boolean[] csts = {false, false, false, false, false, false, false, false, false, false, false, false};
+        double rho = 1;
+        double[] rhos = {rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho};
+        boolean c = false;
+        boolean[] csts = {c, c, c, c, c, c, c, c, c, c, c, c};
+        //        double[] rhos = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+        //        boolean[] csts = {false, false, false, false, false, false, false, false, false, false, false, false};
         boolean[] trends = {false, false, false, false, false, false, false, false, false, false, false, false};
 
         ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("z1=y1+y2+y3+y4+y5+y6+y7+y8+y9+y10+y11+y12");
@@ -231,7 +231,7 @@ public class MultivariateChowLinTest {
                 .build();
 
         MultivariateChowLinResults rslts = MultivariateChowLin.process(yx, z, spec);
-        System.out.println(rslts.getDisaggregatedSeries().get("y1"));
+        System.out.println(rslts.getStdevDisaggregatedSeries().get("y1"));
     }
 
     @Test
@@ -404,12 +404,12 @@ public class MultivariateChowLinTest {
         TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2009, 1), z1Arr);
         z.put("z1", z1);
 
-                double rho = 1;
-                double[] rhos = {rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho};
-                boolean c = false;
-                boolean[] csts = {c, c, c, c, c, c, c, c, c, c, c, c};
-//        double[] rhos = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-//        boolean[] csts = {false, false, false, false, false, false, false, false, false, false, false, false};
+        double rho = 1;
+        double[] rhos = {rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho, rho};
+        boolean c = false;
+        boolean[] csts = {c, c, c, c, c, c, c, c, c, c, c, c};
+        //        double[] rhos = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+        //        boolean[] csts = {false, false, false, false, false, false, false, false, false, false, false, false};
         boolean[] trends = {false, false, false, false, false, false, false, false, false, false, false, false};
 
         ContemporaneousConstraint cc1 = ContemporaneousConstraint.parse("z1=y1+y2+y3+y4+y5+y6+y7+y8+y9+y10+y11+y12");
@@ -632,9 +632,9 @@ public class MultivariateChowLinTest {
         TsData z1 = TsData.ofInternal(TsPeriod.quarterly(2021, 1), z1Arr);
         z.put("z1", z1);
 
-        double[] rhos = {0.85, 0.5, 0.9};
+        double[] rhos = {1, .8, 1};
         //        double[] rhos = {1.0,1.0,0.9};
-        boolean[] csts = {true, false, true};
+        boolean[] csts = {false, true, false};
         boolean[] trends = {false, false, false};
         double[] errVarianceR1 = {7.0, 2.0, 1.0};
         double[] errVarianceR2 = {2.0, 18.0, 2.0};
