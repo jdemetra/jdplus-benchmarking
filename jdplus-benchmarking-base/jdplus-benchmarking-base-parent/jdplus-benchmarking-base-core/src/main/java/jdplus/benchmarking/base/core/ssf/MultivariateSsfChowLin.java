@@ -210,6 +210,8 @@ public class MultivariateSsfChowLin {
                     if (info.rho[i] != 1) {
                         double v = info.errV.get(i, i) / (1 - info.rho[i] * info.rho[i]);
                         pf0.set(ip + 1, ip + 1, v);
+                    } else {
+                        pf0.set(ip + 1, ip + 1, info.errV.get(i, i));
                     }
                 }
 
