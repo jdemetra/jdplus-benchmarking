@@ -1,0 +1,216 @@
+/*
+ * Copyright 2022 National Bank of Belgium
+ *
+ * Licensed under the EUPL, Version 1.2 or – as soon they will be approved
+ * by the European Commission - subsequent versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+package internal.ssf;
+
+import jdplus.toolkit.base.core.ssf.StateInfo;
+import jdplus.toolkit.base.core.ssf.StateStorage;
+import jdplus.toolkit.base.core.ssf.akf.DefaultAugmentedFilteringResults;
+import jdplus.toolkit.base.core.ssf.akf.QAugmentation;
+import jdplus.toolkit.base.core.ssf.akf.QAugmentation.QType;
+import jdplus.toolkit.base.core.ssf.akf.QPredictionErrorDecomposition;
+import jdplus.toolkit.base.core.ssf.akf.QRFilter;
+import jdplus.toolkit.base.core.ssf.ckms.CkmsDiffuseInitializer;
+import jdplus.toolkit.base.core.ssf.ckms.CkmsFilter;
+import jdplus.toolkit.base.core.ssf.likelihood.DiffuseLikelihood;
+import jdplus.toolkit.base.core.ssf.likelihood.MarginalLikelihood;
+import jdplus.toolkit.base.core.ssf.likelihood.ProfileLikelihood;
+import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsf;
+import jdplus.toolkit.base.core.ssf.multivariate.IMultivariateSsfData;
+import jdplus.toolkit.base.core.ssf.multivariate.M2uAdapter;
+import jdplus.toolkit.base.core.ssf.univariate.DefaultSmoothingResults;
+import jdplus.toolkit.base.core.ssf.univariate.ILikelihoodComputer;
+import jdplus.toolkit.base.core.ssf.univariate.ISsf;
+import jdplus.toolkit.base.core.ssf.univariate.ISsfData;
+import jdplus.toolkit.base.core.ssf.univariate.OrdinaryFilter;
+
+/**
+ *
+ * @author Jean Palate
+ */
+@lombok.experimental.UtilityClass
+public class AkfToolkit {
+
+    public ILikelihoodComputer<MarginalLikelihood> marginalLikelihoodComputer(
+            final boolean scalingfactor, boolean res) {
+        return (ssf, data) -> {
+            QRFilter qr = new QRFilter();
+            qr.process(ssf, data);
+            return qr.marginalLikelihood(scalingfactor, res);
+        };
+    }
+
+    public ILikelihoodComputer<ProfileLikelihood> profileLikelihoodComputer() {
+        return (ssf, data) -> {
+            QRFilter qr = new QRFilter();
+            if (!qr.process(ssf, data)) {
+                return null;
+            }
+            return qr.profileLikelihood();
+        };
+    }
+
+    public ILikelihoodComputer<DiffuseLikelihood> robustLikelihoodComputer(final boolean scalingfactor, boolean res) {
+        return (ssf, data) -> {
+            QRFilter qr = new QRFilter();
+            if (!qr.process(ssf, data)) {
+                return null;
+            }
+            return qr.diffuseLikelihood(scalingfactor, res);
+        };
+    }
+
+    public ILikelihoodComputer<DiffuseLikelihood> likelihoodComputer(
+            boolean collapsing, boolean scalingfactor, boolean res) {
+        return collapsing ? new LLComputer2(scalingfactor, res) : new LLComputer1(scalingfactor, res);
+    }
+
+    public ILikelihoodComputer<DiffuseLikelihood> fastLikelihoodComputer(boolean scalingfactor, boolean res) {
+        return (ISsf ssf, ISsfData data) -> {
+            QPredictionErrorDecomposition decomp = new QPredictionErrorDecomposition(res);
+            decomp.prepare(ssf, data.length());
+            CkmsDiffuseInitializer ff = new CkmsDiffuseInitializer(new AugmentedFilterInitializer(decomp));
+            CkmsFilter ffilter = new CkmsFilter(ff);
+            ffilter.process(ssf, data, decomp);
+            return decomp.likelihood(scalingfactor);
+        };
+    }
+
+    public DefaultAugmentedFilteringResults filter(
+            ISsf ssf, ISsfData data, boolean all, boolean collapsing, QAugmentation.QType type) {
+        QAugmentation Q = QAugmentation.of(type);
+        DefaultAugmentedFilteringResults frslts =
+                all ? DefaultAugmentedFilteringResults.full(Q) : DefaultAugmentedFilteringResults.light(Q);
+        frslts.prepare(ssf, 0, data.length());
+        if (collapsing) {
+            AugmentedFilterInitializer initializer = new AugmentedFilterInitializer(frslts);
+            OrdinaryFilter filter = new OrdinaryFilter(initializer);
+            filter.process(ssf, data, frslts);
+        } else {
+            AugmentedFilter filter = new AugmentedFilter();
+            filter.process(ssf, data, frslts);
+        }
+        return frslts;
+    }
+
+    public DefaultSmoothingResults smooth(
+            ISsf ssf,
+            ISsfData data,
+            boolean all,
+            boolean rescaleVariance,
+            boolean collapsing,
+            QAugmentation.QType type) {
+        AugmentedSmoother smoother = new AugmentedSmoother();
+        smoother.setCalcVariances(all);
+        DefaultSmoothingResults sresults = all ? DefaultSmoothingResults.full() : DefaultSmoothingResults.light();
+        sresults.prepare(ssf.getStateDim(), 0, data.length());
+        DefaultAugmentedFilteringResults fresults = filter(ssf, data, all, collapsing, type);
+        if (smoother.process(ssf, data.length(), fresults, sresults)) {
+            if (rescaleVariance) {
+                sresults.rescaleVariances(var(data.length(), fresults));
+            }
+            return sresults;
+        } else {
+            return null;
+        }
+    }
+
+    public StateStorage smooth(
+            IMultivariateSsf ssf,
+            IMultivariateSsfData data,
+            boolean all,
+            boolean rescaleVariance,
+            boolean collapsing,
+            QAugmentation.QType qtype) {
+        ISsf ussf = M2uAdapter.of(ssf);
+        ISsfData udata = M2uAdapter.of(data);
+        DefaultSmoothingResults sr = smooth(ussf, udata, all, false, collapsing, qtype);
+        StateStorage ss = all ? StateStorage.full(StateInfo.Smoothed) : StateStorage.light(StateInfo.Smoothed);
+        int m = data.getVarsCount(), n = data.getObsCount();
+        ss.prepare(ussf.getStateDim(), 0, n);
+        if (all) {
+            for (int i = 0; i < n; ++i) {
+                ss.save(i, sr.a(i * m), sr.P(i * m));
+            }
+        } else {
+            for (int i = 0; i < n; ++i) {
+                ss.save(i, sr.a(i * m), null);
+            }
+        }
+        return ss;
+    }
+
+    @Deprecated
+    public StateStorage robustSmooth(
+            IMultivariateSsf ssf, IMultivariateSsfData data, boolean all, boolean rescaleVariance) {
+        return smooth(ssf, data, all, rescaleVariance, false, QAugmentation.DEFAULT_NOCOLLAPSING);
+    }
+
+    private static class LLComputer1 implements ILikelihoodComputer<DiffuseLikelihood> {
+
+        private final boolean scalingfactor, res;
+
+        private LLComputer1(boolean scalingfactor, boolean res) {
+            this.scalingfactor = scalingfactor;
+            this.res = res;
+        }
+
+        @Override
+        public DiffuseLikelihood compute(ISsf ssf, ISsfData data) {
+            AugmentedFilter akf = new AugmentedFilter();
+            QPredictionErrorDecomposition pe = new QPredictionErrorDecomposition(QType.NORMAL, res);
+            pe.prepare(ssf, data.length());
+            if (!akf.process(ssf, data, pe)) {
+                return null;
+            }
+            return pe.likelihood(scalingfactor);
+        }
+    }
+
+    private static class LLComputer2 implements ILikelihoodComputer<DiffuseLikelihood> {
+
+        private final boolean scalingfactor, res;
+
+        private LLComputer2(boolean scalingfactor, boolean res) {
+            this.scalingfactor = scalingfactor;
+            this.res = res;
+        }
+
+        @Override
+        public DiffuseLikelihood compute(ISsf ssf, ISsfData data) {
+            QPredictionErrorDecomposition pe = new QPredictionErrorDecomposition(QType.PARTIAL_TRIANGULARIZATION, res);
+            pe.prepare(ssf, data.length());
+            AugmentedFilterInitializer initializer = new AugmentedFilterInitializer(pe);
+            OrdinaryFilter filter = new OrdinaryFilter(initializer);
+            filter.process(ssf, data, pe);
+            return pe.likelihood(scalingfactor);
+        }
+    }
+
+    public double var(int n, DefaultAugmentedFilteringResults frslts) {
+        double ssq = frslts.getAugmentation().ssq();
+        int nd = frslts.getCollapsingPosition();
+        int m = frslts.getAugmentation().getDegreesOfFreedom();
+        for (int i = nd; i < n; ++i) {
+            double e = frslts.error(i);
+            if (Double.isFinite(e)) {
+                ++m;
+                ssq += e * e / frslts.errorVariance(i);
+            }
+        }
+        return ssq / m;
+    }
+}
